@@ -3,6 +3,9 @@ namespace GTIP
     // Fleet stays 17. Army Group is a separate ArmyGroup object, not a Regiment.
     public static class HierarchyModel
     {
+        public static float CommanderExperienceMinimum(float nativeMinimum, bool active, bool actualArmy)
+            => active && actualArmy ? 0f : nativeMinimum;
+
         public static int SafeArmyRank(int current, int minimum, int count)
         {
             if (count <= 0) return current;

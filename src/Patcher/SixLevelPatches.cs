@@ -84,6 +84,17 @@ internal static class SixLevelPatches
         var comparison = naming.Body.Instructions.Single(i => i.Operand is FieldReference f && f.Name == "unittyp" && i.Next.OpCode == OpCodes.Ldc_I4_S && Convert.ToInt32(i.Next.Operand) == 16);
         naming.Body.GetILProcessor().InsertAfter(comparison.Next, Instruction.Create(OpCodes.Call, Helper("SixLevelRuntime", "ArmyType")));
         hooks.Add("Regiment.UpdateUnitNameDefault");
+        // Type 18 also denotes native Army Group eligibility when no Regiment
+        // is supplied. Remove only that extra experience gate for actual Armies.
+        var suitability = module.Types.Single(t => t.Name == "GameVars").NestedTypes.Single(t => t.Name == "Commander")
+            .Methods.Single(m => m.Name == "CheckSuitableRank" && m.Parameters[0].ParameterType.FullName == "System.Int32");
+        var experience = suitability.Body.Instructions.Single(i => i.OpCode == OpCodes.Ldsfld &&
+            i.Operand is FieldReference f && f.Name == "minimumexpcommanderarmygroup");
+        var sil = suitability.Body.GetILProcessor();
+        var unitArgument = sil.Create(OpCodes.Ldarg, suitability.Parameters.Single(p => p.Name == "unit"));
+        sil.InsertAfter(experience, unitArgument);
+        sil.InsertAfter(unitArgument, sil.Create(OpCodes.Call, Helper("SixLevelRuntime", "CommanderExperienceMinimum")));
+        hooks.Add("GameVars.Commander.CheckSuitableRank");
         // Insertions can push existing short branches past their signed-byte range.
         foreach (var t in Types(module.Types)) foreach (var m in t.Methods.Where(m => m.HasBody))
             if (m.Body.Instructions.Any(i => i.Operand is MethodReference r && r.DeclaringType.Namespace == "GTIP"))
@@ -106,6 +117,11 @@ internal static class SixLevelPatches
             originals++;
         }
         if (originals != 18) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
+        var suitability = game.MainModule.Types.Single(t => t.Name == "GameVars").NestedTypes.Single(t => t.Name == "Commander")
+            .Methods.Single(m => m.Name == "CheckSuitableRank" && m.Parameters[0].ParameterType.FullName == "System.Int32");
+        if (suitability.Body.Instructions.Count(i => i.Operand is MethodReference r &&
+            r.DeclaringType.Namespace == "GTIP" && r.Name == "CommanderExperienceMinimum") != 1)
+            throw new InvalidOperationException("Commander experience eligibility hook missing");
         foreach (var type in Types(game.MainModule.Types)) foreach (var method in type.Methods.Where(m => m.HasBody))
             foreach (var instruction in method.Body.Instructions)
                 if (instruction.Operand is MethodReference r && r.Name.StartsWith("GTIP_Original_"))

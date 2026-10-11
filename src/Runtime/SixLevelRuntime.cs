@@ -8,6 +8,9 @@ namespace GTIP
     {
         public static bool Active => !DLC_WL.dlc_scenarioactive && GamePrefs.commandhierarchyshift == -1;
         public static int ArmyType(int original) => Active ? HierarchyModel.Army : original;
+        public static float CommanderExperienceMinimum(float nativeMinimum, Regiment unit)
+            => HierarchyModel.CommanderExperienceMinimum(nativeMinimum, Active,
+                unit != null && unit.unittyp == HierarchyModel.Army);
 
         public static bool UpgradeArmy(CampaignMainPanel panel, bool checkOnly)
         {

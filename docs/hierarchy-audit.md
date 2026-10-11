@@ -114,3 +114,20 @@ not bypass order delays, force movement speed, or change independent Corps order
 Three regression checks cover a detached campaign Army receiving a pending path,
 preserved Corps detachment, and immediate placement. Total: 36 stub checks
 (19 hierarchy/rank, 11 formation, 6 insertion). Live movement remains to be retested.
+
+## 0.2.4 Army commander replacement
+
+The native CheckSuitableRank method treats type 18 as Army Group eligibility.
+Besides rank bounds, it requires minimumexpcommanderarmygroup when an officer is
+at the minimum rank. The added Army HQ shares that ID, so suitable-rank MGs can
+be excluded by the Army Group experience check. For an actual type-18 Regiment
+in shifted main-campaign mode, the hook supplies zero for that experience
+threshold. Checks without an Army Regiment (including Army Group selection),
+other modes, minimum/maximum ranks, availability, branch, and state restrictions
+retain native behavior. Union Config/ranks0.txt maps the shifted Army to type 16,
+which requires rank 7 (Major General) both before and after organization reform;
+Brigadier Generals are below that threshold.
+
+39 stub checks pass (22 hierarchy/rank, 11 formation, 6 insertion); serialization
+also verifies the new eligibility hook. This identifies a code-level exclusion,
+not the complete eligibility state of the specific officers in the user's save.

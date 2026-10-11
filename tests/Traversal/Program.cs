@@ -51,6 +51,9 @@ Check(actualTypes.Last().gameObject.Messages.Count == 1 && actualTypes.Take(4).A
 Check(HierarchyModel.SafeArmyRank(10, 7, 10) == 7, "Type-18 dummy rank 10 is repaired before indexing rank labels");
 Check(Enumerable.Range(0, 10).All(rank => HierarchyModel.SafeArmyRank(rank, 7, 10) == rank), "Repair preserves every valid existing commander rank");
 Check(HierarchyModel.SafeArmyRank(-1, 12, 10) == 9, "Invalid saved rank and excessive configured minimum stay within rank arrays");
+Check(HierarchyModel.CommanderExperienceMinimum(.2f, true, true) == 0f, "Actual Army does not inherit Army Group experience requirement");
+Check(HierarchyModel.CommanderExperienceMinimum(.2f, true, false) == .2f, "Army Group and other eligibility checks keep native experience requirement");
+Check(HierarchyModel.CommanderExperienceMinimum(.2f, false, true) == .2f, "Inactive hierarchy mode keeps native experience requirement");
 Console.WriteLine("All hierarchy checks passed. These use stubs and do not validate Unity gameplay or save files.");
 
 public static class DLC_WL { public static bool dlc_scenarioactive; }

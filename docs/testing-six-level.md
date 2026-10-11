@@ -78,3 +78,13 @@ fresh movement order to the Army during daylight. After the normal delay, verify
 that its HQ moves toward the destination. Independent Corps remain separately
 commanded, matching the native campaign detachment rules. Check a Corps and a
 Division still move normally, then save/reload and repeat the Army order.
+
+## Retesting commander replacement in 0.2.4
+
+Restart and confirm GTIP v0.2.4, load the test save, select the actual Army HQ,
+and open Replace. With Suitable rank and Unassigned enabled, an available Union
+Major General should no longer be hidden solely for lacking Army Group command
+experience. Brigadier Generals remain below the Army minimum rank. Check state,
+branch and duty-status filters if a particular MG is still excluded. Assign an
+eligible MG, then save/reload and confirm the assignment persists. Actual Army
+Group commander eligibility must retain its native experience restriction.
