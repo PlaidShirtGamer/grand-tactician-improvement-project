@@ -25,6 +25,8 @@ namespace GTIP
             corps.permanentlydetached = true;
             BattleUnits.UpdateAllParentUnits(corps.gameObject, true);
             army.UpdateGroupStrength(overridecalc: true, ignoreactivestate: true);
+            BattleUnits.UpdateUnitList();
+            ToolsUnitList.SetDirty();
             return army;
         }
 

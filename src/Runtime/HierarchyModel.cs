@@ -3,6 +3,12 @@ namespace GTIP
     // Fleet stays 17. Army Group is a separate ArmyGroup object, not a Regiment.
     public static class HierarchyModel
     {
+        public static int SafeArmyRank(int current, int minimum, int count)
+        {
+            if (count <= 0) return current;
+            return current >= 0 && current < count ? current : System.Math.Max(0, System.Math.Min(count - 1, minimum));
+        }
+
         public const int Brigade = 14, Division = 15, Corps = 16, Fleet = 17, Army = 18;
         public static int ChildHeadquarters(int type)
         {

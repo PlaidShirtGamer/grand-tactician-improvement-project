@@ -48,6 +48,9 @@ for (int i = 0; i < actualTypes.Length - 1; i++) actualTypes[i].Children.Add(act
 HierarchyCommands.Dispatch(units, actualTypes[0], 13, "Test", 42, false, false, false);
 Check(actualTypes.Last().gameObject.Messages.Count == 1 && actualTypes.Take(4).All(r => r.gameObject.Messages.Count == 0),
     "Real Army-to-Regiment ID chain delivers combat-unit orders through four HQs");
+Check(HierarchyModel.SafeArmyRank(10, 7, 10) == 7, "Type-18 dummy rank 10 is repaired before indexing rank labels");
+Check(Enumerable.Range(0, 10).All(rank => HierarchyModel.SafeArmyRank(rank, 7, 10) == rank), "Repair preserves every valid existing commander rank");
+Check(HierarchyModel.SafeArmyRank(-1, 12, 10) == 9, "Invalid saved rank and excessive configured minimum stay within rank arrays");
 Console.WriteLine("All hierarchy checks passed. These use stubs and do not validate Unity gameplay or save files.");
 
 public static class DLC_WL { public static bool dlc_scenarioactive; }

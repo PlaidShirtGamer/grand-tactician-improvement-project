@@ -45,9 +45,44 @@ namespace GTIP
             {
                 created.tag = "Army";
                 unit.overridesymbol = HierarchyModel.Army;
+                RepairArmyCommander(unit);
                 Debug.Log("[GTIP] Army HQ created/loaded: " + created.name);
             }
             return created;
+        }
+
+        public static void RepairArmyCommander(Regiment unit)
+        {
+            if (!Active || unit == null || unit.unittyp != HierarchyModel.Army ||
+                unit.commander < 0 || unit.commander >= GameVars.commander.Count) return;
+            var commander = GameVars.commander[unit.commander];
+            int count = Math.Min(GameVars.commanderranks, GameVars.rankabbrev.Length);
+            if (commander.rank < 0 || commander.rank >= count)
+            {
+                commander.rank = HierarchyModel.SafeArmyRank(commander.rank, GameVars.GetMinRankForUnittyp(HierarchyModel.Army, unit.alliance), count);
+                commander.refreshcommand = true;
+            }
+        }
+
+        public static void CommanderPanel(BattleUI ui, PanelHandler.Panel panel, Regiment unit, int commander,
+            int image, PanelHandler handler, Tools.Date date, int offset)
+        {
+            RepairArmyCommander(unit ?? ui.selectedunitreg);
+            NativeAccess.Call(ui, "GTIP_Original_CommanderPanel", panel, unit, commander, image, handler, date, offset);
+        }
+
+        public static void UpgradeButtons(CampaignMainPanel panel)
+        {
+            NativeAccess.Call(panel, "GTIP_Original_UpgradeButtons");
+            if (!Active) return;
+            var handler = NativeAccess.Get<PanelHandler>(panel, "panelhandler");
+            var ui = NativeAccess.Get<BattleUI>(panel, "bui");
+            var root = ui.selectedunitreg == null ? null : BattleUnits.GetHighestParent(ui.selectedunitreg);
+            var button = handler.GetButtonReference(handler.panel[handler.panel_oob], 566);
+            if (button != null)
+                button.ExchangeTooltipText(root != null && root.unittyp == HierarchyModel.Division ? "Upgrade Division to Corps" : "Upgrade Corps to Army",
+                    root != null && root.unittyp == HierarchyModel.Division ? "Upgrade this independent Division to a Corps." :
+                    "Create an Army headquarters above this Corps, preserving its commander and subordinate units.");
         }
 
         public static int ImportedType(int inferred, int savedSymbol)

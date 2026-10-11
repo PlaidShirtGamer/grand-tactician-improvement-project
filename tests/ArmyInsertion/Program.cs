@@ -48,6 +48,7 @@ public class ArmyGroup
 }
 public class BattleUnits
 {
+    public static void UpdateUnitList() { }
     public bool FailCreation;
     public static Regiment Refreshed;
     public static Regiment GetHighestParent(Regiment unit)
@@ -56,6 +57,7 @@ public class BattleUnits
         => FailCreation ? null : new Regiment { unittyp = type, alliance = _alliance };
     public static void UpdateAllParentUnits(GameObject obj, bool self) { Refreshed = obj.Unit; }
 }
+public static class ToolsUnitList { public static void SetDirty() { } }
 namespace UnityEngine
 {
     public struct Vector3 { }

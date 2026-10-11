@@ -73,7 +73,11 @@ namespace GTIP
                     if (next != null) node.Children.Add(next);
                 }
                 float width = 0;
-                foreach (var child in node.Children) width += child.Width + view.sparex;
+                bool combatColumn = false;
+                foreach (var child in node.Children)
+                    if (child.Unit.unittyp > 13) width += child.Width + view.sparex;
+                    else combatColumn = true;
+                if (combatColumn) width += view.iconsizex + view.sparex;
                 node.Width = Math.Max(view.iconsizex, width - view.sparex);
                 return node;
             }
@@ -81,7 +85,15 @@ namespace GTIP
             {
                 node.X = left + node.Width / 2;
                 node.Y = 30 + node.Depth * (view.iconsizey + view.sparey + 20);
-                foreach (var child in node.Children) { Place(child, left); left += child.Width + view.sparex; }
+                foreach (var child in node.Children)
+                    if (child.Unit.unittyp > 13) { Place(child, left); left += child.Width + view.sparex; }
+                int row = 0;
+                foreach (var child in node.Children)
+                    if (child.Unit.unittyp <= 13)
+                    {
+                        child.X = left + view.iconsizex / 2;
+                        child.Y = node.Y + view.iconsizey + view.sparey + 20 + row++ * (view.iconsizey + view.spareybrigs);
+                    }
             }
             Place(Build(root, null), 20);
             var iconType = typeof(OOB).GetNestedType("IconData", BindingFlags.NonPublic);
@@ -96,9 +108,25 @@ namespace GTIP
                 if (node.Unit.unittyp >= 0 && node.Unit.unittyp < view.unitsinhierarchylevel.Length) view.unitsinhierarchylevel[node.Unit.unittyp]++;
                 if (node.Unit.unittyp <= 13) view.maxbrigades++;
                 NativeAccess.Set(node.Icon, "referencebuttonrecttf", NativeAccess.Call(view, "AddUnitIcon", node.Unit, node.X, -node.Y, false));
-                if (node.Parent != null)
-                    Tools.DrawLineUI(lines, new Vector2(node.Parent.X, -node.Parent.Y - view.iconsizey / 2),
-                        new Vector2(node.X, -node.Y + view.iconsizey / 2), 2, new Color(.16f, .16f, .16f, .36f));
+            }
+            // Native buttons apply their own prefab scale. Draw in their actual
+            // local coordinate system rather than the unscaled logical layout.
+            foreach (var node in nodes)
+            {
+                if (node.Parent == null) continue;
+                var childRect = NativeAccess.Get<RectTransform>(node.Icon, "referencebuttonrecttf");
+                var parentRect = NativeAccess.Get<RectTransform>(node.Parent.Icon, "referencebuttonrecttf");
+                Vector2 from = parentRect.localPosition;
+                Vector2 to = childRect.localPosition;
+                from.y -= view.iconsizey * parentRect.localScale.y / 3;
+                to.y += view.iconsizey * childRect.localScale.y / 3;
+                float joint = from.y - view.sparey * parentRect.localScale.y / 2;
+                var a = new Vector2(from.x, joint);
+                var b = new Vector2(to.x, joint);
+                var color = new Color(.16f, .16f, .16f, .36f);
+                Tools.DrawLineUI(lines, from, a, 2, color);
+                Tools.DrawLineUI(lines, a, b, 2, color);
+                Tools.DrawLineUI(lines, b, to, 2, color);
             }
             view.panelhandler.ActivateDragAndDrop(new[] { 123 });
             view.UpdatePlusIcons();

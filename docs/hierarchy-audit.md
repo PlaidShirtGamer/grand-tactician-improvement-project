@@ -1,6 +1,6 @@
 # Hierarchy audit of the supplied test install
 
-Status: **v0.2.1 experimental six-tier implementation; gameplay acceptance pending**.
+Status: **v0.2.2 experimental six-tier implementation; gameplay acceptance pending**.
 
 The target is Regiment → Brigade → Division → Corps → Army → Army Group
 in the main campaign, without activating Whiskey & Lemons career mechanics.
@@ -36,7 +36,7 @@ in the main campaign, without activating Whiskey & Lemons career mechanics.
 | Save/load | `ImportExportUnitData` stores hierarchy shift and unit records; army-group references are separate | Round-trip a complete six-tier tree, commander references, and fleet controls |
 | Initial campaign OOBs | Existing scenarios already have their own hierarchy and sizes | Add a deliberate scenario conversion strategy; smaller recruitment caps alone do not split existing units |
 
-## Implementation boundary in 0.2.1
+## Implementation boundary in 0.2.2
 
 The new runtime uses land HQ IDs 14 (Brigade), 15 (Division), 16 (Corps), and
 18 (Army), with combat units below Brigade and native ArmyGroup objects above
@@ -52,14 +52,14 @@ from its persisted override marker, including for empty Armies. Historical
 starting forces are not automatically split or restructured.
 
 The patcher checks the original assembly hash and exact hook signatures, expands
-short IL branches affected by insertions, then verifies all 15 preserved-method
+short IL branches affected by insertions, then verifies all 18 preserved-method
 wrappers after serialization. It also rejects native call sites bypassing those
-wrappers. Sixteen hierarchy checks and eight formation checks use stubs; they
+wrappers. Nineteen hierarchy checks and eight formation checks use stubs; they
 cover the real ID chain, fleet preservation, empty Army import mapping, movement
 to deepest branches, and restoration of detached units after a layout failure.
 They do not establish successful Unity execution or actual save-file round trips.
 
-Version 0.1.2's menu placement was confirmed by the user. Version 0.2.1 retains
+Version 0.1.2's menu placement was confirmed by the user. Version 0.2.2 retains
 that placement and updates the version text. The earlier successful campaign
 and battle smoke tests predate the new Army tier and do not validate this build.
 See [testing-six-level.md](testing-six-level.md) for the acceptance procedure.
@@ -80,3 +80,22 @@ See [testing-six-level.md](testing-six-level.md) for the acceptance procedure.
 9. Decide and implement a migration policy before loading existing saves.
 
 Until these pass, there is no supported installation for six-tier gameplay.
+
+## 0.2.2 regression fixes
+
+The reported commander-panel failure was traced to an out-of-range rank index:
+the native dummy-commander constructor assigns rank 10 to type 18, and
+BattleUI.UpdateCommanderPanel indexes rankabbrev with that value. The resulting
+exception interrupts UI updates, leaving commander names and unit details stale.
+The runtime repairs invalid Army commander ranks on creation/loading and before
+panel rendering, without replacing commander IDs or changing valid ranks.
+
+The upgrade tooltip now distinguishes Division-to-Corps from Corps-to-Army.
+Army OOBs stack combat units under Brigades and draw orthogonal connectors in
+the actual icon coordinate system. The campaign sidebar visits parents before
+children, indents by depth, and refreshes after Army insertion.
+
+Validation: 33 stub checks pass (19 hierarchy/rank, 8 formation, 6 insertion),
+and 18 preserved-method wrappers pass serialized assembly verification. Unity
+layout and campaign movement still require in-game testing. The interrupted UI
+update is a likely cause of blocked map input; movement is not yet confirmed.
