@@ -1,9 +1,25 @@
-# Testing GTIP 0.2.0
+# Testing GTIP 0.2.1
+
+## Existing Corps attached directly to an Army Group
+
+Version 0.2.0 missed the upgrade and group-assignment paths. In 0.2.1, select
+an existing top-level Corps (including one already assigned to an Army Group)
+and use the Corps-to-Army upgrade control. This inserts a new Army HQ above
+the Corps, retaining the Corps, its commander and subordinates, and its Army
+Group membership through the new Army. In-battle and garrison upgrades are
+not offered. A Division uses the original upgrade to Corps first.
+
+Assigning a standalone Corps to an Army Group also inserts the missing Army
+HQ. Old saves are not silently reorganized during loading. For the reported
+XX Corps example, the expected result after upgrading is Army Group → new
+Army HQ → XX Corps → Divisions → Brigades → Regiments.
+
+## Full acceptance test
 
 This build implements the extra Army HQ. It still requires an in-game acceptance
 test; successfully loading an older save alone does not exercise the new tier.
 
-1. Launch the test installation and confirm **GTIP v0.2.0** on the main menu.
+1. Launch the test installation and confirm **GTIP v0.2.1** on the main menu.
 2. Start or load a disposable main-campaign save with hierarchy shift -1,
    outside the Whiskey & Lemons career scenario. Save under a new name.
 3. Use **Raise Army** and select a state. It should create an Army, not a Corps.

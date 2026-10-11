@@ -11,6 +11,8 @@ dotnet run --project (Join-Path $PSScriptRoot 'tests/Traversal/Traversal.csproj'
 if ($LASTEXITCODE -ne 0) { throw 'Traversal tests failed' }
 dotnet run --project (Join-Path $PSScriptRoot 'tests/Formation/Formation.csproj') -c Release -p:UseSharedCompilation=false
 if ($LASTEXITCODE -ne 0) { throw 'Formation tests failed' }
+dotnet run --project (Join-Path $PSScriptRoot 'tests/ArmyInsertion/ArmyInsertion.csproj') -c Release -p:UseSharedCompilation=false
+if ($LASTEXITCODE -ne 0) { throw 'Army insertion tests failed' }
 $patcherDir = Join-Path $PSScriptRoot 'src/Patcher/bin/Release/net8.0'
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'src/Runtime/bin/Release/netstandard2.0/GTIP.Runtime.dll') -Destination $patcherDir
 dotnet (Join-Path $patcherDir 'Patcher.dll') stage $GameInstall $Output $OriginalAssembly

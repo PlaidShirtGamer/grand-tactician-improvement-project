@@ -9,6 +9,35 @@ namespace GTIP
         public static bool Active => !DLC_WL.dlc_scenarioactive && GamePrefs.commandhierarchyshift == -1;
         public static int ArmyType(int original) => Active ? HierarchyModel.Army : original;
 
+        public static bool UpgradeArmy(CampaignMainPanel panel, bool checkOnly)
+        {
+            if (!Active) return (bool)NativeAccess.Call(panel, "GTIP_Original_UpgradeArmy", checkOnly);
+            var ui = NativeAccess.Get<BattleUI>(panel, "bui");
+            if (ui.selectedunitreg == null) return false;
+            var top = BattleUnits.GetHighestParent(ui.selectedunitreg);
+            if (top == null || top.inbattle) return false;
+            // Preserve the older Division-to-Corps upgrade, then allow another tier.
+            if (top.unittyp == HierarchyModel.Division)
+                return (bool)NativeAccess.Call(panel, "GTIP_Original_UpgradeArmy", checkOnly);
+            if (top.unittyp != HierarchyModel.Corps || top.garrisonreference != null) return false;
+            if (checkOnly) return true;
+            var army = ArmyInsertion.Insert(NativeAccess.Get<BattleUnits>(panel, "bunits"), top);
+            if (army == null) return false;
+            NativeAccess.Call(panel, "UpdateOOBAfterUnitUpdates", army);
+            return true;
+        }
+
+        public static void AddArmyGroupUnit(ArmyGroup group, Regiment unit, bool fromLoad, bool rename)
+        {
+            if (Active && !fromLoad && unit != null && unit.unittyp == HierarchyModel.Corps &&
+                !unit.inbattle && BattleUnits.GetHighestParent(unit) == unit)
+            {
+                var engine = GameObject.Find("GameController").GetComponent<BattleUnits>();
+                unit = ArmyInsertion.Insert(engine, unit) ?? unit;
+            }
+            NativeAccess.Call(group, "GTIP_Original_AddArmyGroupUnit", unit, fromLoad, rename);
+        }
+
         public static GameObject CreatedUnit(GameObject created)
         {
             var unit = created == null ? null : created.GetComponent<Regiment>();
@@ -29,7 +58,7 @@ namespace GTIP
             return type;
         }
 
-        static void EnsureArmyData()
+        internal static void EnsureArmyData()
         {
             if (GameVars.meleeweaponstandardperunittype.Length < 19)
                 Array.Resize(ref GameVars.meleeweaponstandardperunittype, 19);

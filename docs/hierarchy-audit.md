@@ -1,6 +1,6 @@
 # Hierarchy audit of the supplied test install
 
-Status: **v0.2.0 experimental six-tier implementation; gameplay acceptance pending**.
+Status: **v0.2.1 experimental six-tier implementation; gameplay acceptance pending**.
 
 The target is Regiment → Brigade → Division → Corps → Army → Army Group
 in the main campaign, without activating Whiskey & Lemons career mechanics.
@@ -36,7 +36,7 @@ in the main campaign, without activating Whiskey & Lemons career mechanics.
 | Save/load | `ImportExportUnitData` stores hierarchy shift and unit records; army-group references are separate | Round-trip a complete six-tier tree, commander references, and fleet controls |
 | Initial campaign OOBs | Existing scenarios already have their own hierarchy and sizes | Add a deliberate scenario conversion strategy; smaller recruitment caps alone do not split existing units |
 
-## Implementation boundary in 0.2.0
+## Implementation boundary in 0.2.1
 
 The new runtime uses land HQ IDs 14 (Brigade), 15 (Division), 16 (Corps), and
 18 (Army), with combat units below Brigade and native ArmyGroup objects above
@@ -52,14 +52,14 @@ from its persisted override marker, including for empty Armies. Historical
 starting forces are not automatically split or restructured.
 
 The patcher checks the original assembly hash and exact hook signatures, expands
-short IL branches affected by insertions, then verifies all 13 preserved-method
+short IL branches affected by insertions, then verifies all 15 preserved-method
 wrappers after serialization. It also rejects native call sites bypassing those
 wrappers. Sixteen hierarchy checks and eight formation checks use stubs; they
 cover the real ID chain, fleet preservation, empty Army import mapping, movement
 to deepest branches, and restoration of detached units after a layout failure.
 They do not establish successful Unity execution or actual save-file round trips.
 
-Version 0.1.2's menu placement was confirmed by the user. Version 0.2.0 retains
+Version 0.1.2's menu placement was confirmed by the user. Version 0.2.1 retains
 that placement and updates the version text. The earlier successful campaign
 and battle smoke tests predate the new Army tier and do not validate this build.
 See [testing-six-level.md](testing-six-level.md) for the acceptance procedure.

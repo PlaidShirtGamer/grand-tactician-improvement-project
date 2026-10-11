@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>netstandard2.0</TargetFramework><AssemblyName>GTIP.Runtime</AssemblyName><GameManagedDir Condition="'$(GameManagedDir)' == ''">$(MSBuildThisFileDirectory)..\..\..\The Civil War (1861-1865)_Data\Managed</GameManagedDir></PropertyGroup>
-  <PropertyGroup><OriginalAssembly Condition="'$(OriginalAssembly)' == ''">$(GameManagedDir)\Assembly-CSharp.dll</OriginalAssembly><Version>0.2.0</Version><LangVersion>latest</LangVersion></PropertyGroup>
+  <PropertyGroup><OriginalAssembly Condition="'$(OriginalAssembly)' == ''">$(GameManagedDir)\Assembly-CSharp.dll</OriginalAssembly><Version>0.2.1</Version><LangVersion>latest</LangVersion></PropertyGroup>
   <ItemGroup>
     <Reference Include="UnityEngine.TerrainModule"><HintPath>$(GameManagedDir)\UnityEngine.TerrainModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Assembly-CSharp"><HintPath>$(OriginalAssembly)</HintPath><Private>false</Private></Reference>

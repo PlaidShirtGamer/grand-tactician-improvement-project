@@ -41,6 +41,8 @@ internal static class SixLevelPatches
         Wrap("Regiment", "GetUnitSymbolData", "Symbol");
         Wrap("CampaignMainPanel", "CheckArmyStateSelection", "CheckArmyStateSelection");
         Wrap("CampaignMainPanel", "RecruitGroup", "RecruitGroup");
+        Wrap("CampaignMainPanel", "UpgradeCorpsToArmy", "UpgradeArmy");
+        Wrap("ArmyGroup", "AddUnit", "AddArmyGroupUnit");
         Wrap("BattleUnits", "GetUnitVisibilityStateOnCampaignMap", "Visibility", first: "Regiment");
         Wrap("ArmyGroup", "CreateNewArmyGroup", "CreateArmyGroup");
         Wrap("AICampaign", "UnitIsFightingForce", "FightingForce");
@@ -100,7 +102,7 @@ internal static class SixLevelPatches
                 throw new InvalidOperationException("Serialized hook failed verification: " + original.FullName);
             originals++;
         }
-        if (originals != 13) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
+        if (originals != 15) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
         foreach (var type in Types(game.MainModule.Types)) foreach (var method in type.Methods.Where(m => m.HasBody))
             foreach (var instruction in method.Body.Instructions)
                 if (instruction.Operand is MethodReference r && r.Name.StartsWith("GTIP_Original_"))
