@@ -50,8 +50,10 @@ enable recruitment of new tiers and does not change scenario data.
 
 The staged DLL is structurally verified after writing. Stub tests exercise
 six levels, cycle protection, duplicate references, recipient filters, and
-fallback behavior. **No game launch, battle, or save/load validation has been
-performed.** Do not interpret these checks as a gameplay compatibility claim.
+fallback behavior. The user reported successful test-save loading and a battle
+with the initial prototype. This is a smoke test, not complete gameplay or
+save/load validation. Version 0.1.1 adds a main-menu runtime-loaded indicator;
+its hook is structurally verified but its appearance still needs in-game confirmation.
 
 ## Acceptance criteria for a playable release
 
