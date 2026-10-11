@@ -4,9 +4,9 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 const string SupportedHash = "AE15E3E479F4D79B70E40CED42EB93A953569B8185E075B3873C7410462AE8C4";
-if (args.Length != 3 || args[0] != "stage")
+if ((args.Length != 3 && args.Length != 4) || args[0] != "stage")
 {
-    Console.Error.WriteLine("Usage: Patcher stage <game install> <output directory>\nStages an experimental traversal patch; never modifies the game install.");
+    Console.Error.WriteLine("Usage: Patcher stage <game install> <output directory> [original assembly backup]\nStages an experimental traversal patch; never modifies the game install.");
     return 2;
 }
 try
@@ -14,7 +14,7 @@ try
     string install = Path.GetFullPath(args[1]);
     string output = Path.GetFullPath(args[2]);
     string managed = Path.Combine(install, "The Civil War (1861-1865)_Data", "Managed");
-    string input = Path.Combine(managed, "Assembly-CSharp.dll");
+    string input = args.Length == 4 ? Path.GetFullPath(args[3]) : Path.Combine(managed, "Assembly-CSharp.dll");
     string hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(input)));
     if (hash != SupportedHash) throw new InvalidOperationException("Unsupported game assembly SHA-256: " + hash);
     if (output.Equals(managed, StringComparison.OrdinalIgnoreCase) ||
@@ -58,6 +58,25 @@ try
             rerouted++;
         }
     if (rerouted == 0) throw new InvalidOperationException("No dispatch call sites found.");
+    var menuActivation = game.MainModule.Types.Single(t => t.Name == "MainMenuControls")
+        .Methods.Single(m => m.Name == "Activate");
+    if (!menuActivation.IsStatic || menuActivation.Parameters.Count != 1 ||
+        menuActivation.Parameters[0].ParameterType.MetadataType != MetadataType.Boolean ||
+        menuActivation.ReturnType.MetadataType != MetadataType.Void || !menuActivation.HasBody ||
+        menuActivation.Body.ExceptionHandlers.Count != 0)
+        throw new InvalidOperationException("Unexpected main-menu activation signature or body.");
+    var statusHook = helper.MainModule.Types.Single(t => t.Name == "MenuStatus")
+        .Methods.Single(m => m.Name == "SetVisible");
+    var menuIl = menuActivation.Body.GetILProcessor();
+    var returns = menuActivation.Body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToArray();
+    if (returns.Length != 1) throw new InvalidOperationException("Unexpected main-menu return count.");
+    // Keep the original return instruction as the branch target, so every return
+    // path passes through the hook, including any branches to the former ret.
+    var exit = returns[0];
+    exit.OpCode = OpCodes.Ldarg_0;
+    var callStatus = menuIl.Create(OpCodes.Call, game.MainModule.ImportReference(statusHook));
+    menuIl.InsertAfter(exit, callStatus);
+    menuIl.InsertAfter(callStatus, menuIl.Create(OpCodes.Ret));
     Directory.CreateDirectory(output);
     string destination = Path.Combine(output, "Assembly-CSharp.dll");
     if (File.Exists(destination)) throw new IOException("Output already exists; choose a new output directory.");
@@ -70,9 +89,15 @@ try
         !stagedType.Methods.Single(m => m.Name == methodName && m.Parameters[0].ParameterType.Name == "Regiment")
             .Body.Instructions.Any(i => i.Operand is MethodReference r && r.DeclaringType.FullName == "GTIP.HierarchyCommands"))
         throw new InvalidOperationException("Staged wrapper verification failed.");
+    var stagedMenu = staged.MainModule.Types.Single(t => t.Name == "MainMenuControls")
+        .Methods.Single(m => m.Name == "Activate");
+    if (stagedMenu.Body.Instructions.Count(i => i.OpCode == OpCodes.Call &&
+        i.Operand is MethodReference r && r.DeclaringType.FullName == "GTIP.MenuStatus" &&
+        r.Name == "SetVisible") != 1)
+        throw new InvalidOperationException("Staged menu indicator verification failed.");
     File.WriteAllText(Path.Combine(output, "manifest.json"), JsonSerializer.Serialize(new
     {
-        status = "experimental-traversal-only", originalSha256 = hash,
+        status = "experimental-traversal-only", modVersion = "0.1.2", menuIndicator = true, originalSha256 = hash,
         patchedSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(destination))),
         reroutedCallSites = rerouted, runtimeSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(runtime))),
         sixTierGameplayComplete = false

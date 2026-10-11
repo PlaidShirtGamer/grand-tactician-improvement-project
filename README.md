@@ -30,9 +30,24 @@ The original dispatcher is preserved inside the staged assembly. Ten internal
 call sites are rerouted through the wrapper in the inspected build. DLC
 scenarios and an unshifted command hierarchy call the original dispatcher.
 
-**Staged artifacts have not been tested in Unity. Do not treat this prototype
-as a ready-to-install mod.** Formation placement, recruitment, OOB layout,
-AI, and save/load still require implementation and validation.
+Version 0.1.2 displays **GTIP v0.1.2** at the bottom left, inset from the screen
+edge and above the version and DLC status lines. The runtime creates this indicator when the menu opens
+and hides it when leaving the menu; the original game version is preserved.
+The message confirms the runtime and menu hook loaded, not that six-tier
+gameplay is implemented or that traversal is enabled for the current scenario.
+The same message is written to Unity's log with the `[GTIP]` prefix.
+
+When rebuilding an already patched install, supply the original assembly backup:
+
+```powershell
+./build.ps1 -GameInstall 'C:\path\to\Grand Tactician' -Output './artifacts/traversal-0.1.2' -OriginalAssembly 'C:\path\to\backup\Assembly-CSharp.dll'
+```
+
+The backup must match the supported original hash. The build never patches an
+already patched assembly. The initial traversal prototype passed a user-reported
+campaign-load and battle smoke test. The new menu indicator still needs visual
+confirmation in-game. Formation placement, recruitment, OOB layout, AI, and
+save/load for six-tier gameplay still require implementation and validation.
 
 ## Source layout
 
