@@ -1,0 +1,96 @@
+using System.Security.Cryptography;
+using System.Text.Json;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
+
+const string SupportedHash = "AE15E3E479F4D79B70E40CED42EB93A953569B8185E075B3873C7410462AE8C4";
+if (args.Length != 3 || args[0] != "stage")
+{
+    Console.Error.WriteLine("Usage: Patcher stage <game install> <output directory>\nStages an experimental traversal patch; never modifies the game install.");
+    return 2;
+}
+try
+{
+    string install = Path.GetFullPath(args[1]);
+    string output = Path.GetFullPath(args[2]);
+    string managed = Path.Combine(install, "The Civil War (1861-1865)_Data", "Managed");
+    string input = Path.Combine(managed, "Assembly-CSharp.dll");
+    string hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(input)));
+    if (hash != SupportedHash) throw new InvalidOperationException("Unsupported game assembly SHA-256: " + hash);
+    if (output.Equals(managed, StringComparison.OrdinalIgnoreCase) ||
+        output.StartsWith(managed + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("Output must be outside the game's Managed directory.");
+    string runtime = Path.Combine(AppContext.BaseDirectory, "GTIP.Runtime.dll");
+    if (!File.Exists(runtime)) throw new FileNotFoundException("Build Runtime and copy GTIP.Runtime.dll beside Patcher first.", runtime);
+    var resolver = new DefaultAssemblyResolver();
+    resolver.AddSearchDirectory(managed);
+    resolver.AddSearchDirectory(AppContext.BaseDirectory);
+    using var game = AssemblyDefinition.ReadAssembly(input, new ReaderParameters { AssemblyResolver = resolver });
+    using var helper = AssemblyDefinition.ReadAssembly(runtime, new ReaderParameters { AssemblyResolver = resolver });
+    var type = game.MainModule.Types.Single(t => t.Name == "BattleUnits");
+    var original = type.Methods.Single(m => m.Name == "PerformActionForGroupForAllUnitsOnLevel" && m.Parameters[0].ParameterType.Name == "Regiment");
+    if (original.Parameters.Count != 7 || !original.HasBody || original.Body.ExceptionHandlers.Count != 0)
+        throw new InvalidOperationException("Unexpected dispatch signature or body.");
+    var helperMethod = helper.MainModule.Types.Single(t => t.Name == "HierarchyCommands").Methods.Single(m => m.Name == "Dispatch");
+    if (helperMethod.Parameters.Count != 8) throw new InvalidOperationException("Unexpected helper signature.");
+    string methodName = original.Name;
+    original.Name = "GTIP_Original_Dispatch";
+    var wrapper = new MethodDefinition(methodName, original.Attributes, original.ReturnType);
+    foreach (var parameter in original.Parameters)
+    {
+        var copy = new ParameterDefinition(parameter.Name, parameter.Attributes, parameter.ParameterType);
+        if (parameter.HasConstant) copy.Constant = parameter.Constant;
+        wrapper.Parameters.Add(copy);
+    }
+    type.Methods.Add(wrapper);
+    var il = wrapper.Body.GetILProcessor();
+    il.Append(il.Create(OpCodes.Ldarg_0));
+    foreach (var parameter in wrapper.Parameters) il.Append(il.Create(OpCodes.Ldarg, parameter));
+    il.Append(il.Create(OpCodes.Call, game.MainModule.ImportReference(helperMethod)));
+    il.Append(il.Create(OpCodes.Ret));
+    int rerouted = 0;
+    foreach (var t in AllTypes(game.MainModule.Types))
+    foreach (var m in t.Methods.Where(m => m.HasBody))
+    foreach (var instruction in m.Body.Instructions)
+        if (instruction.Operand is MethodReference reference && reference.Resolve() == original)
+        {
+            instruction.Operand = wrapper;
+            rerouted++;
+        }
+    if (rerouted == 0) throw new InvalidOperationException("No dispatch call sites found.");
+    Directory.CreateDirectory(output);
+    string destination = Path.Combine(output, "Assembly-CSharp.dll");
+    if (File.Exists(destination)) throw new IOException("Output already exists; choose a new output directory.");
+    game.Write(destination);
+    File.Copy(runtime, Path.Combine(output, "GTIP.Runtime.dll"), false);
+    // Re-read the artifact to verify serialization and hook wiring.
+    using var staged = AssemblyDefinition.ReadAssembly(destination, new ReaderParameters { AssemblyResolver = resolver });
+    var stagedType = staged.MainModule.Types.Single(t => t.Name == "BattleUnits");
+    if (stagedType.Methods.Count(m => m.Name == "GTIP_Original_Dispatch") != 1 ||
+        !stagedType.Methods.Single(m => m.Name == methodName && m.Parameters[0].ParameterType.Name == "Regiment")
+            .Body.Instructions.Any(i => i.Operand is MethodReference r && r.DeclaringType.FullName == "GTIP.HierarchyCommands"))
+        throw new InvalidOperationException("Staged wrapper verification failed.");
+    File.WriteAllText(Path.Combine(output, "manifest.json"), JsonSerializer.Serialize(new
+    {
+        status = "experimental-traversal-only", originalSha256 = hash,
+        patchedSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(destination))),
+        reroutedCallSites = rerouted, runtimeSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(runtime))),
+        sixTierGameplayComplete = false
+    }, new JsonSerializerOptions { WriteIndented = true }));
+    Console.WriteLine($"Staged and structurally verified traversal patch: {destination}\nRerouted {rerouted} call sites. Six-tier gameplay is not yet implemented.");
+    return 0;
+}
+catch (Exception error)
+{
+    Console.Error.WriteLine(error.Message);
+    return 1;
+}
+
+static IEnumerable<TypeDefinition> AllTypes(IEnumerable<TypeDefinition> types)
+{
+    foreach (var type in types)
+    {
+        yield return type;
+        foreach (var nested in AllTypes(type.NestedTypes)) yield return nested;
+    }
+}
