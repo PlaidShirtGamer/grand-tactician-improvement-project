@@ -1,0 +1,10 @@
+.tools/
+.analysis/
+types.txt
+**/bin/
+**/obj/
+artifacts/
+backups/
+*.dll
+*.exe
+*.pdb
