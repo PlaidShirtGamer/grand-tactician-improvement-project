@@ -1,0 +1,75 @@
+name: Package release
+
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Compile patcher and run regression checks
+        shell: pwsh
+        run: |
+          dotnet build src/Patcher/Patcher.csproj -c Release
+          if ($LASTEXITCODE -ne 0) { throw 'Patcher build failed' }
+          foreach ($suite in @('Traversal', 'Formation', 'ArmyInsertion')) {
+            dotnet run --project "tests/$suite/$suite.csproj" -c Release
+            if ($LASTEXITCODE -ne 0) { throw "$suite tests failed" }
+          }
+      - name: Package build kit and test-install preferences
+        shell: pwsh
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          $tag = if ($env:REF_TYPE -eq 'tag') { $env:REF_NAME } else { '' }
+          ./scripts/package-release.ps1 -Tag $tag
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GTIP-release-package
+          path: |
+            artifacts/releases/*.zip
+            artifacts/releases/*.sha256
+          if-no-files-found: error
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: GTIP-release-package
+          path: release-assets
+      - name: Create draft prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          cat > notes.md <<'EOF'
+          Experimental GTIP build kit with the tested campaignprefs.txt, unitprefs.txt, and battleprefs.txt.
+
+          Requires a supported Grand Tactician installation and .NET SDK 8. Build locally against your own game DLLs using build.ps1. See docs/releases.md inside the ZIP for installation steps. The ZIP does not contain a prepatched game assembly.
+          EOF
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo 'A release already exists for this tag; refusing to overwrite its assets.' >&2
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" release-assets/* --verify-tag --draft --prerelease --title "GTIP $RELEASE_TAG" --notes-file notes.md

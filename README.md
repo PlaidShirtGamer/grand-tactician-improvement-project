@@ -71,3 +71,8 @@ save made before the new Army HQs were created.
 
 Decompiled source, proprietary assemblies, tools, backups, and build artifacts
 are ignored. This repository distributes original mod source only.
+
+## Releases
+
+See [release packaging and installation](docs/releases.md). Version tags create a draft prerelease containing a build-kit ZIP and the three test-install preference files. The runtime is compiled locally against the player's game DLLs.
+

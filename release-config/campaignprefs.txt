@@ -1,0 +1,3394 @@
+############################################################# CAMPAIGN MAP PREFS ##############################
+Scrollspeed
+3
+Scrollspeed reduction factor (to smooth the movement)
+0.6
+Targetposition scrollspeed reduction factor (to smooth movement for auto cam perspectives)
+0.6
+Maximum Camera Height (=Paper Map Trigger and end of camera tilting)
+750
+Maximum Paper Map Height
+1100
+Minimum Camera Height
+45
+Terrain Size
+2048
+rotation speed
+2.5
+Max Scroll to Border 
+0.00
+Terrainoffset (=Base Height of Terrain)
+500
+Max Rotation angle (if Cam is at bottom; 90=horizon, 0=down)
+50
+Mouse Wheel Sensitivity (determines the relation between wheel speed on low and high camera height)
+2.5
+Mouse Wheel Speed (scroll speed overall)
+8
+Height factor of maximum Camera Height to switch to Paper Map [not active]
+0.85
+Height factor of maximum paper map height to switch to Paper Map 2 (Top View)
+1.25
+Paper map Border size left/right
+100
+Paper map Border size top/bottom
+200
+The height adjustment of the papermap border (added to the min terrain height)
+-2
+How far is the border moved into the main map to cover edges?
+1
+Paper map wear and tear effect alpha (center)
+0.9
+Calculation factor range to real distances in km (1 unit in game is x.xxx units in real), eg.: if terrain size is 2048 and this factor is 6.9 then the total battlefield size is 14150 meters
+942.87
+Height of Snow Mesh above terrain
+2.15
+Size of snow mesh
+200
+Distance to battlefield point on campaign map when zooming towards engagement actions
+70
+Height to battlefield point on campaign map above ground when zooming towards engagement actions
+50
+Frontlines filter alpha
+0.7
+Radius to town center to capture towns
+20
+Needed points (strength per time) to take the town (importance 0 to 10), the higher the value, the more troops are needed and/or the more time it takes
+125
+250
+Reduction of accumulated points per year if no unit is close
+35000
+Prevent camera rotation (true/false)
+false
+Frontline unit dominance factor (how much more do units have effect on frontlines)
+1.0
+Frontline forts dominance factor (how much more do forts have effect on frontlines)
+0.66
+Use historical battlefields only up to this range (if overlapping the closest is used) [deactivated, use battlemarkers in inspector directly]
+75
+Camera distance too zoom to unit
+30
+############################################################# Time & WEATHER ##############################
+Fog Storm Start
+5
+Fog Storm Distance
+325
+Fog regular Start
+25
+Fog regular Distance
+2000
+Average Temperatures per Month (starting with January) in Fahrenheit, day
+29
+30
+37
+46
+56
+65
+71
+69
+62
+52
+42
+34
+Random temperature (+/-)
+20
+Temperature difference from day to night
+-10
+Average temperature factor to show permanently green trees (used r channel from ClimateMap), equal or above
+100
+The update rhythm of campaigntree materials if season changes, in years
+0.0003
+Random wind direction (+/-)
+10
+Weighting of terrain differences on wind direction
+5
+Weighting of humidity differences on wind direction
+1
+Weighting of random values on wind direction
+0.15
+Weighting of neighbored fields on wind direction (avg)
+5.00
+Average precipitation (inch) per month
+3.03
+2.48
+3.23
+3.15
+4.13
+3.23
+4.13
+4.88
+3.82
+3.07
+2.83
+2.8
+Time in game hrs for standard cloud duration
+125
+Volatility (upside) in game hrs for longer cloud duration
+100
+Probability for cloud formation type, sum must be 1.0 (0=partly clouded, 1=mostly clouded, 2=rain/snow, 3=stormy)
+0.35
+0.30
+0.20
+0.15
+Standard wind speed per cloud formation type in map distance per game hour (0=partly clouded, 1=mostly clouded, 2=rain/snow, 3=stormy)
+2.5
+5
+6
+8
+Wind speed volatility in map distance per game hour [not lower than lowest standard wind speed value]
+10
+Wind speed acceleration per game hour (towards target speed)
+10
+Minimum/Maximum size of cloud formations (take into account the density in center, these values are used to calculated the power with density in center) [deactivated]
+0
+10000
+Density in center (the lower the higher is the density in the center, the range is determined by the power of this value using the min/max size of clouds) [deactivated]
+0.67
+Minimum/maximum cloud standard generation time in game hours (the shorter, the more dense the cloud formation is) [deactivated]
+0.0003
+0.0010
+Absolute height of clouds over ground [deactivated]
+630
+Cloud matrix field resolution factor to determine the x/y segments [deactivated]
+0.02
+Cloud shadow fading out time in game hours
+5.0
+Maximum cloud shadow intensity (higher value = darker shadows) [deactivated]
+2.2
+Cloud number for showing full shadows (above) [deactivated]
+5
+Temperature to switch rain to snow (below)  F
+33
+Radius for drawing snow beyond clouds (full numbers, min 1)
+6
+Temperature to freeze rivers  F (below)
+28
+Temperature to unfreeze rivers  F (above)
+37
+Maximum Gamespeed
+10
+Minimum Gamespeed
+0.1
+Day Length in Realtime Minutes (calculated out of a day of 6-18h)
+1.25
+Random weather switch in game hrs variation from/to (every random xxx hrs to yyy hrs the weather changes for campaign battles)
+2
+7
+Limit clouds to a max of
+100
+############################################################# Campaign Map Layout ##############################
+City banner overall size
+0.2
+Distance to fade out city banner completely, above
+225
+City banner, distance from what to show only layer 2,3,4 (without name and detailed information), above
+125
+IIP banner overall size
+0.12
+Distance to fade out iip banner completely, above
+200
+IIP banner, distance from what to show only layer 2,3,4 (without name and detailed information), above
+100
+############################################################# Campaign Units ##############################
+The shift in command hierarchy, used for showing regimental level for example (-1 instead 0 for brigades showing up as regiments)
+-1
+Sprite factor for infantry corps (1 men in real is represented by 0.xxx sprites on the field)
+0.0003
+Sprite factor for cavalry corps (1 men in real is represented by 0.xxx sprites on the field) -> deactivated
+0.0003
+Sprite factor for artillery corps (1 men in real is represented by 0.xxx sprites on the field) -> deactivated
+0.0003
+Exponential value for sprite numbers (the higher the more sprites smaller units have in relation to bigger units)
+0.3
+Base strength calculation for exponential sprite calculation, full sprites at
+30000
+Standard processing time for group commander to write the order (in game years)
+0.0001
+Standard processing time for group commander to route order through from higher group commanders (in game years)
+0.0001
+Standard order delay time per 1000 distance (in game years)
+0.02
+Additional processing time for feuds (factor)
+3.0
+Order delay factor if unit is within connected telegraph range
+0.33
+Unit speed factor campaign (is multiplied with unit speed known from unitprefs)
+30
+Unit animation speed leverage for campaign unit animations (factor)
+100.0
+The used model id for river transports (corresponds with ship model id in preloaded models object)
+18
+The used model id for sea transports (corresponds with ship model id in preloaded models object)
+26
+The used model id for railway transports (corresponds with engine model id in preloaded models object)
+0
+Ship y adjustment
+0
+Ship rotation adjustment
+90
+Used transport capacity per men strength (multiplicator): rail movement
+0.005
+Used transport capacity per men strength (multiplicator): sea movement
+0.005
+Used transport capacity per men strength (multiplicator): river movement
+0.005
+Influence of readiness on command range (positive/negative factors, factor of -0.5 means with readiness 0.00 the command range is reduced by 0.5)
+-0.33
+Influence of commander's initiative on command range (positive/negative factors, factor of 0.5 means with initiative 1.00 the command range is increased by 0.5)
+0.5
+Influence of readiness on combat range (positive/negative factors, factor of -0.5 means with readiness 0.00 the command range is reduced by 0.5)
+-0.25
+Influence of commander's initiative on combat range (positive/negative factors, factor of 0.5 means with initiative 1.00 the command range is increased by 0.5)
+0.33
+Minimum morale of units to participate in battles [0-1]
+0.40
+Minimum strength relation between two opponents to start a battle (otherwise unit with low strength is retreating)
+0.3
+Reinforcement delay in game hrs per distance (eg. 0.15 on a distance to battlefield of 80 means 12 hrs delay)
+0.35
+The time units are delayed as reinforcements when having guard or raid orders active in distance
+50
+Absolute adjustment in reinforcement times in hrs
+-6
+Distance to add backwash sprite (referenced to prior backwash sprite)
+2
+Rotation diff to add backwash sprite (referenced to last rotation)
+15
+Backwash size start
+1
+Backwash size end
+30
+Backwash time to show (game yrs)
+0.0005
+Commander may command this amount of subordinate units for each 0.2 exp step [deactivated]
+100
+100
+100
+100
+100
+Speed for unit transfers in destination per game year
+45
+[Additional] recruitment time in years if units are already under recruitment in same state (0=inf, 1=cav, 2=arty)
+0.02
+0.035
+0.03
+Minimum recruitment time in years per unit type (0=inf, 1=cav, 2=arty)
+0.025
+0.04
+0.035
+Standard recruitment factors (small/medium/standard size)
+0.5
+0.75
+1.0
+Additional order delay if unit is in winter quarters (factor >1.0)
+3.0
+Additional order delay if unit is entrenched for full entrenchment (factor >1.0), value is calculated linearily depending on the entrenchment level; if in winter quarters: delay is ADDED
+2.0
+Mortality rate of wounded per year if unit is not encamped (calculated from the standard unit size, 1.0 means in a brigade of 3000 standard size and 1500 of it are wounded, in 6 months all wounded cease)
+0.66
+Recovery rate of wounded per year if unit is not encamped (calculated from the standard unit size, 1.0 means in a brigade of 3000 standard size and 1500 of it are wounded, in 6 months all wounded return to duty)
+0.5
+Mortality rate of wounded per year if unit is encamped (calculated from the standard unit size, 1.0 means in a brigade of 3000 standard size and 1500 of it are wounded, in 6 months all wounded cease)
+0.33
+Recovery rate of wounded per year if unit is encamped (calculated from the standard unit size, 1.0 means in a brigade of 3000 standard size and 1500 of it are wounded, in 6 months all wounded return to duty)
+1.0
+Sickness target rate of full strength standard
+0.1
+Sickness adjustment for forced march (factor >1.0)
+1.66
+Sickness adjustment during cold weather (factor >1.0)
+1.8
+Cold weather is determined by (<=) this temperature  F
+50
+Sickness adjustment within bad weather (factor >1.0)
+1.4
+Sickness adjustment when encamped (factor <1.0)
+0.5
+Mortality rate of sick per year (calculated from the standard unit size, 1.0 means in a brigade of 3000 standard size and 1500 of it are sick, in 6 months all sick cease)
+2.5
+Recovery rate of sick per year (calculated from the standard unit size, 1.0 means in a brigade of 3000 standard size and 1500 of it are wounded, in 6 months all sick return to duty)
+5.0
+Sickness cap factor [0-1]
+0.4
+Deserters base rate for campaigns (factor)
+0.3
+Additional desertion factor if state support of recruited unit state is 0 (exponentialy interpolated)
+2.0
+Influence of guard efficiency (if guard order is active) on desertions (the higher, the less desertions)
+-0.01
+Drill increase per year in the field, target rate set to
+0.2
+Drill increase per year encamped, target rate set to
+0.6
+Drill increase per year during winter quarters, target rate set to
+0.3
+Drill increase per year entrenched, target rate set to
+0.4
+Readiness if entrenched (fully entrenched), capped with encamped readiness [deactivated]
+0.1
+Readiness if encamped [deactivated]
+0.4
+Readiness improvement factor based on intelligence value [deactivated]
+0.008
+Readiness multiplier if unit is on forced march [deactivated]
+0.4
+Modifier for faster readiness recovery on friendly terrain [>=1]
+1.20
+Speed to reach attrition targets (full target) in game yrs, basically only used for sickness
+0.1
+Random variation for attrition calculation (+/- to factor 1)
+0.15
+Effects of readiness on order delay, higher values lead to higher delay the more readiness is below 1
+10
+Standard readiness recovery per year
+9
+Readiness recovery speed factor unit size linear (the higher, the faster recovery happens for all units)
+3.00
+Readiness recovery speed factor unit size exp (the higher, the more difference in recovery speed between small and large units)
+0.43
+Influence of commander administration on readiness recovery, factor for administration 100%
+1.5
+Influence of low supply on readiness recovery, factor for supply 0%
+0.50
+Influence of non arrived units on readiness recovery, multiplier on readiness of the non-arrived brigade
+0.25
+Influence of low morale on readiness recovery, multipler if morale is 0%
+0.65
+Influence of winter quarters on readiness recovery, multiplier
+0.75
+Influence of training on readiness recovery, multiplier if training is 100%
+1.5
+Influence of intelligence on readiness recovery, multiplier per intelligence value
+0.007
+The consumption of readiness per annum if moving (armies), state support 1 and 0
+-6.5
+-15.0
+The consumption of readiness per annum if moving (fleets)
+-20
+The influence of commander initative on readiness consumption, multiplier if initiative is 100%
+0.35
+Multiplier to readiness consumption in winter (snow only)
+2.0
+Multiplier to readiness consumption if unit is embarked (train or sea transport)
+0.75
+The reduction of readiness after battles, calculated through casualties %, absolute cost per 100% casualties [0-1]
+-2.5
+The readiness reduction while skirmishing, per annum
+-9.5
+The influence of military experience on the readiness consumption, multiplier for mil exp 100%
+0.50
+Readiness consumption per annum if unit is envolved in sieges
+-5
+Reinforcements speed adjustment due to readiness, speed multiplier if readiness is 0%
+0.25
+The readiness reduction for fleets while in battle, per annum
+-200
+Movement speed multiplier if readiness is 0%/100%
+0.4
+1.0
+Absolute readiness reduction for all units whose commander had been changed recently
+-0.10
+Readiness reduction for fleets if envolved in bombardment actions
+-30
+Effect of entrenchment level on engineering points (factor) (eg. a value of 2 doubles the engineering points if unit is fully entrenched)
+3.0
+Adjustment of unit speed if all of strength are wounded (factor), calculated linear towards 1.0 (=no wounded)
+0.05
+Random attributes for dummy commanders range from/to [0-1]
+0.1
+0.7
+Random attributes for dummy commanders of European nations range from/to [0-1]
+0.5
+0.9
+Campaign sprite factor (is multiplied with regular unitprefs sizes)
+0.85
+Campaign movement arrow size factor (is multiplied with regular unitprefs size)
+0.8
+Grey out available means of transport if used capacity surpasses this relation to available capacity [>1]
+1.25
+Minimum time of ships travelling over land (eg. river fleets) to recognize movement as transfer to other river (fleet is hidden), in campaign yrs
+0.0007
+Random range fife and drum playing in days (every unit plays fife and drum at a random time, set at the initialization, this is the range: eg [random 0.12] +this value 0.10 -> clip is played if dayfract is 0.12 to 0.22; so probability = 0.10/1.00=10%)
+0.10
+Reenlistments if contract expires if recruiting state has support of 0
+0.20
+Reenlistments if contract expires if recruiting state has support of 1
+0.85
+Random variation of reenlistments [0-1]
+0.2
+Probability of WIA commanders returning to duty (per year)
+0.75
+Probability of POW commanders returning to duty (per year), first value = low ranks, last value = high ranks
+0.05
+0.40
+Commander attributes multiplier if returning from wia (from/to)
+0.70
+0.95
+Weighting factor of commander starting attributes due to lower exp (due to cap of mil exp in earlier scenarios) [0-1], the higher the higher is the reduction of attributes
+0.5
+Units are removed after participating in a battle if strength is below xx % [0-1]
+0.05
+Commander experience gain through service per annum (capped by military experience) [0-1]
+0.2
+Increased loss of readiness for minor & major defeats, multiplier [>1]
+1.2
+1.5
+Reduction of supplies for minor & major defeats, multiplier [<1]
+0.55
+0.15
+Operational movement speed in snow or on muddy roads on maximum precipitation, modifier[< 1]
+0.35
+Supply adjustment if unit moves on snow or muddy roads on max percipitation, modifier [<1]
+0.30
+Lower reinforcements multiplier during winter months if unit is not encamped [<1]
+0.25
+The reinforcment priority steps (low/med/high)
+0
+0.5
+1.0
+The time a unit takes to reform and gather recruits in campaign yrs
+0.15
+The multiplier for replenishments if unit is reforming
+10
+The probability (from/to) for wounded soldiers to become pow (loser) [<1]
+0.15
+0.30
+The probability (from/to) for wounded soldiers to become pow (winner) [<1]
+0
+0.07
+the maximum range to search for regrouping areas
+300
+the maximum shown regrouping areas
+5
+the size of the regrouping area
+10
+modifier for faster readiness recovery if unit is within regrouping range
+1.1
+Minimum condition for buildings to be used as regrouping zones
+0.8
+The time multiplier to calculate embarkment times from the distance to closest port, result is campaign yrs
+0.00007
+The additional embarkment time per unit size, exponential
+0.15
+############################################################# State & Nation prefs ##############################
+State support for a state to count as own state (>=) [0-1]
+0.65
+State support for a state to count as enemy state (<) [0-1], all between own and enemy state trigger is counted as neutral state
+0.35
+Minimum state support needed for recruitment
+0.35
+Standard recruit rate for volunteers if state support is 100%, calculated of total population [0-1]
+0.016
+Recruit rates for drafts if mobilization rate is 100%, calculated of total population [0-1]
+0.04
+Update of commander-in-chief per alliance in campaign yrs, refering to campaign ranking (also overwrites auto-assignment)
+0.25
+Filter map resolution for state support
+128
+Influence of casualties on state support, per death:
+-0.00004
+Influence of treated wounded on state support, per wounded per annum:
+0.00001
+Multiplier for influence of casualties on support, if battle takes place on enemy soil
+1.1
+Convergence of state support towards national morale per annum
+0.25
+Convergence of national morale towards state support per annum
+0.5
+Convergence of national morale towards private wealth per annum
+10.0
+Reduction of state support per annum if all cities in the state are lost (is weighted by the cities lost in relation to total cities in state)
+-1.00
+Reduction of volunteers pools for higher recruiting numbers, lin
+3
+Reduction of volunteers pools for higher recruiting numbers, exp
+0.1
+Influence of state support on fighting spirit cap (0-1, 0=no influence, 0.30 means cap is at 70% if state support is zero) vols/drafts
+0.20
+0.40
+############################################################# Buildings ##############################
+Standard range for telegraph buildings
+150
+Distance around corps/armies to check for forts
+30
+Max troop capacity in men per fort level (0-5)
+5000
+5000
+10000
+15000
+20000
+25000
+Hit points per for level (0-5)
+0
+500
+1000
+1300
+2500
+3000
+Setup time of siege per for level (0-5) in game yrs
+0.002
+0.004
+0.005
+0.006
+0.010
+0.015
+Basic unit size in men (artillery) per fort level (0-5)
+0
+50
+75
+100
+250
+350
+Max terrain slope in % to place buildings (0.1=10%)
+0.59
+The time in game yrs from last raid to wait for building repairs
+0.01
+Time in game yrs to remove (military) buildings if no own unit is close to continue construction
+0.08
+influence of available capital on private wealth, modifier for full available capital [>1]
+1.25
+the linear factor to determine cheaper funding through banks (the higher the cheaper funding gets)
+0.035
+the exp factor to determine cheaper funding through banks (the lower the lesser the effect of higher number of banks)
+0.5
+the linear factor to determine influence on fame through printing works (the higher the faster generals earn fame)
+0.07
+the exp factor to determine influence on fame through printing works (the lower the lesser the effect of higher number of printing works)
+0.5
+the linear factor to determine influence on intelligence through printing works (the higher the higher the base intelligence value)
+0.08
+the exp factor to determine influence on intelligence through printing works (the lower the lesser the effect of higher number of printing works)
+0.5
+the linear factor to determine lower support loss of drafting through printing works(the higher the lower the support loss)
+0.20
+the exp factor to determine lower support loss of drafting through printing works (the lower the lesser the effect of higher number of printing works)
+0.5
+the linear factor to increase mil exp through military schools (the higher the higher the growth of mil exp per annum)
+0.035
+the exp factor to increase mil exp through military schools (the lower the lesser the effect of higher number of military schools)
+0.5
+the linear factor to reduce loss of experience by promotions through military schools (the higher the less exp is lost)
+0.20
+the exp factor to reduce loss of experience by promotions through military schools (the lower the lesser the effect of higher number of military schools)
+0.45
+increase of attribute per annum through military schools, using exp loss promotionfactor as multiplier, from
+0.35
+increase of attribute per annum through military schools, using exp loss promotionfactor as multiplier, to
+0.75
+influence of hospitals on mortality rate of wounded [-1 to 0]
+-3
+influence of hospitals on recovery [>0]
+1.5
+influence of markets on local infrastructure capacity per level 1-3, increase of capacity in perc
+0.5
+0.7
+1
+influence of hospitals on medical treatment per level 1-3, used for reduced mortalities and increased state support when wounded are treated
+0.4
+0.65
+1
+the consumption of provision of prisoners in pow camps per annum, per soldier
+-0.01
+the pow capacity per level
+5000
+15000
+increase of support for each enemy state for each % the pow capacity is exceeded, per 
+0.000009
+which minimum rating is necessary for construction (0-1)
+0.45
+missing subsidy costs exp factor, higher values make it more expensive if more subsidies are missing if buildings are forced to be constructed (the skew)
+1.2
+the multiplier for federal building construction costs, multiplied by resource costs
+150
+the multiplier for company application subsidies if subsidies need to be filled up
+1.2
+The subsidy cost of railroad tracks per length
+20000
+the multiplier for railroad construction costs if subsidies need to be filled up
+1.2
+multiplier of fixed costs of companies that are close to banks (full available capital) (0-1)
+0.25
+The influence of ai bonus on subsidy generation
+1
+the range in which companies search for better iip's for pre-goods and produced goods
+50
+############################################################# FOG OF WAR ##############################
+Fog map resolution factor (in relation to the overall battlefield map size)
+0.08
+Smoke/dust map resolution factor (in relation to the overall battlefield map size) -> should be smaller than fog map resolution factor to have cover effect
+0.015
+Alpha of fog of war areas
+0.3
+The multiplicator for line of sight reduction, taking into account smoke and dust with remaining alpha and size (the higher the value, the shorter is line of sight if dust and smoke appears in front of view)
+1
+Line of sight reduction for terrain forest (per fow field)
+-15
+Line of sight reduction for high crop (per fow field)
+-8
+Standard Crop height for forest fields
+15
+Reduction of Concealment per field of distance to next enemy unit (eg. forest is 30 concealment and this value is -5, unit hidden in there would be spotted from (100-30)/5=distance 14)
+-0.5
+Line of sight reduction if unit is layn down (factor to be multiplied by original line of sight range)
+0.3
+Concealment increase in value if unit is layn down
+70
+Commander cunning influence on concealment (relation to cunning value: 0.5 means half of the commander's cunning is added to concealment value)
+0.5
+Concealment value increase for unit size 0.0 (smaller units are harder to spot)
+30
+Concealment value increase for unit size 1.0 (larger units are easy to spot)
+0
+Number of cycles Hide/Unhide confirmations needed for fow and concealment (to prevent no immediate hide/unhide but after a while), higher values prevent blinking of enemy units although they appear/disappear slower
+5
+Influence of rain or snow on fog of war visibility ranges (0-1, where 1 means view range 0 if strong rain)
+0.4
+Reduction of intelligence per distance (exponentialy), the higher the value the less intelligence is on far distances; >1
+1.01
+Intelligence map resolution factor (in relation to the overall battlefield map size) [not used]
+0.05
+Minimum map intelligence (0-1)
+0.05
+Fleet intelligence factor
+1.0
+Garrison intelligence factor (exponentially multiplied with regular unit intelligence)
+20
+Time factor for enemy spottings, based on intelligence, in game yrs; first value: time of average spotting with intelligence 0, second value: time with intelligence 1.0
+0.1
+0.003
+Spotting variation factor, the higher the value the more random variation there is in the spottings (0-1)
+0.5
+Maximum creation probability overall (0-1)
+0.9
+Minimum distance to trigger new spotting mark
+40
+Distance variation factor, depending on intelligence; first value: distance with intelligence 0, second value: distance with intelligence 1
+125
+20
+Time to blend out old spotting marks, game yrs
+0.15
+Needed intelligence to show unit type of spotted units (0-1)
+0.6
+Needed intelligence to show experience of spotted units
+0.8
+Max units to update per cycle
+5
+############################################################# TERRAIN SPECIFICS ##############################
+Terrain Specifics: Amount of Terrain-Meshes (location like in unity editor) - do not change rank!
+32
+Terrain Specifics: Amount of Texture Specs
+2
+Name Mesh #0 -------------------------------------------------------------
+Grasland
+Cost Mesh #0 (only influencing moving speed, not pathfinding)
+4
+forced movement distance to mid of the specificed terrain #0
+0
+influence on fatigue per hour (0-1) #0
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #1 -------------------------------------------------------------
+not used
+Cost Mesh #1 (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain #1
+0
+influence on fatigue per hour (0-1) #1
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #2 -------------------------------------------------------------
+not used
+Cost Mesh #2 (only influencing moving speed, not pathfinding)
+2
+forced movement distance to mid of the specificed terrain #2
+0
+influence on fatigue per hour (0-1) #2
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #3 -------------------------------------------------------------
+Creek
+Cost Mesh #3 (only influencing moving speed, not pathfinding)
+50
+forced movement distance to mid of the specificed terrain #3
+0
+influence on fatigue per hour (0-1) #3
+0.35
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+20
+Name Mesh #4 -------------------------------------------------------------
+Rivers
+Cost Mesh #4 (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain #4
+2
+influence on fatigue per hour (0-1) #4
+0.75
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #5 -------------------------------------------------------------
+River Crossings
+Cost Mesh #5 (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain #5
+3
+influence on fatigue per hour (0-1) #5
+0.05
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+10
+Name Mesh #6 -------------------------------------------------------------
+Bridges
+Cost Mesh #6 (only influencing moving speed, not pathfinding)
+2
+forced movement distance to mid of the specificed terrain #6
+0
+influence on fatigue per hour (0-1) #6
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #7 -------------------------------------------------------------
+Roads
+Cost Mesh #7 (only influencing moving speed, not pathfinding)
+2
+forced movement distance to mid of the specificed terrain #7
+0
+influence on fatigue per hour (0-1) #7
+0.05
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+10
+Name Mesh #8 -------------------------------------------------------------
+Sea
+Cost Mesh #8 (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain #8
+0
+influence on fatigue per hour (0-1) #8
+0.01
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+10
+Name Mesh #9 -------------------------------------------------------------
+Railroad static
+Cost Mesh #9 (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain #9
+1
+influence on fatigue per hour (0-1) #9
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #10 -------------------------------------------------------------
+Railroad
+Cost Mesh #10 (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain #10
+1
+influence on fatigue per hour (0-1) #10
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #11 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #12 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #13 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #14 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #15 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #16 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #17 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #18 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #19 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #20 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #21 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #22 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #23 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #24 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #25 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #26 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #27 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #28 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #29 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #30 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Mesh #31 -------------------------------------------------------------
+Railroad
+Cost Mesh (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain 
+1
+influence on fatigue per hour (0-1) 
+0.1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+Name Tex #0 -------------------------------------------------------------
+Forest
+Cost Tex #0 (no influence on pathfinding)
+5
+Texture ID Tex #14
+9
+forced movement distance to mid of the specificed terrain #0
+0
+influence on fatigue per hour (0-1) #0
+0.2
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+50
+Name Tex #1 -------------------------------------------------------------
+Swamp
+Cost Tex #1 (no influence on pathfinding)
+8
+Texture ID Tex #15
+10
+forced movement distance to mid of the specificed terrain #1
+0
+influence on fatigue per hour (0-1) #1
+0.5
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+20
+################################################ Messages & Stats & Newspapers #################################
+Time to last message to check for equal messages (prevent spamming of messages with same content), game yrs
+0.005
+The exactness of values to round to for text messages if enemy numbers are approximated (infantry)
+1000
+The exactness of values to round to for text messages if enemy numbers are approximated (cavalry)
+500
+The exactness of values to round to for text messages if enemy numbers are approximated (guns)
+5
+The time in secs a message is shown on screen as symbol before it disappears
+30
+Distance between symbols on screen in pixels (y) [is adjusted by standard symbol size]
+100
+Maximum move of messages in pixels per cycle
+6
+Message symbol size factor x
+1.75
+Message symbol size factor y
+1.2
+National morale influence for newspaper minor loss in morale, above
+-1.0
+National morale influence for newspaper mediocre loss in morale, above (all lower is major loss in morale)
+-2.0
+Increase of military experience for victor, based on the national morale
+-1.1
+Increase of military experience for loser, based on the national morale
+-0.7
+Newspaper report, number of weapons for small amount of captured weapons (below)
+1000
+Newspaper report, number of weapons for substantial amount of captured weapons (below)
+2500
+Newspaper report, number of weapons for large amount of captured weapons (below), above = great
+5000
+Minimum hierarchy level to show killed commanders in newspaper (according to unitprefs)
+13
+Number of kia commanders (top down) to state in newspaper (max)
+5
+Approximation of statistical figures for enemy values <1000
+50
+Approximation of statistical figures for enemy values <5000
+100
+Approximation of statistical figures for enemy values <10000
+500
+Approximation of statistical figures for enemy values <50000
+1000
+Approximation of statistical figures for enemy values >=50000
+2000
+Trigger for messages about insufficient supply, average supply state is lower than (0-1)
+0.25
+Influence on national morale when enemy towns are occupied (multiplier to town importance), taking of capitals is additionaly handled via objectives
+-0.125
+Minimum stock level to recognize a product as shortage in the monthly economic report
+0.20
+Maximum stock level to recognize a product as overproduced in the monthly economic report
+0.80
+Show newspaper messages for naval engagements only if more than xxx ships participated
+8
+The time to combine ship completion messages in campaign yrs
+0.0082
+################################################ Autocalcs & "to battle" movement issues #################################################
+The time in game yrs the autocalc battles are updated
+0.00004
+ROF for stance pair [firing/receiving] assault/assault (range short) 
+0.9
+ROF for stance pair [firing/receiving] assault/attack (range short)
+0.8
+ROF for stance pair [firing/receiving] assault/defend (range short)
+0.4
+ROF for stance pair [firing/receiving] assault/retreat (range medium)
+0.7
+ROF for stance pair [firing/receiving] attack/assault (range short)
+0.8
+ROF for stance pair [firing/receiving] attack/attack (range medium)
+0.5
+ROF for stance pair [firing/receiving] attack/defend (range medium)
+0.3
+ROF for stance pair [firing/receiving] attack/retreat (range long)
+0.2
+ROF for stance pair [firing/receiving] defend/assault (range short)
+0.4
+ROF for stance pair [firing/receiving] defend/attack (range medium)
+0.3
+ROF for stance pair [firing/receiving] defend/defend (range long)
+0.1
+ROF for stance pair [firing/receiving] defend/retreat (range long)
+0.1
+ROF for stance pair [firing/receiving] retreat/assault (range medium)
+0.02
+ROF for stance pair [firing/receiving] retreat/attack (range long)
+0.1
+ROF for stance pair [firing/receiving] retreat/defend (range long)
+0.1
+ROF for stance pair [firing/receiving] retreat/retreat (range long)
+0.02
+CB fire for stance pair [firing/receiving] assault/assault (range short) 
+0.1
+CB fire for stance pair [firing/receiving] assault/attack (range short)
+0.1
+CB fire for stance pair [firing/receiving] assault/defend (range short)
+0.2
+CB fire for stance pair [firing/receiving] assault/retreat (range medium)
+0.2
+CB fire for stance pair [firing/receiving] attack/assault (range short)
+0.1
+CB fire for stance pair [firing/receiving] attack/attack (range medium)
+0.3
+CB fire for stance pair [firing/receiving] attack/defend (range medium)
+0.3
+CB fire for stance pair [firing/receiving] attack/retreat (range long)
+0.2
+CB fire for stance pair [firing/receiving] defend/assault (range short)
+0.1
+CB fire for stance pair [firing/receiving] defend/attack (range medium)
+0.1
+CB fire for stance pair [firing/receiving] defend/defend (range long)
+0.5
+CB fire for stance pair [firing/receiving] defend/retreat (range long)
+0.1
+CB fire for stance pair [firing/receiving] retreat/assault (range medium)
+0.01
+CB fire for stance pair [firing/receiving] retreat/attack (range long)
+0.01
+CB fire for stance pair [firing/receiving] retreat/defend (range long)
+0.01
+CB fire for stance pair [firing/receiving] retreat/retreat (range long)
+0.01
+Weather ROF adjustment factor, foggy/cloudy
+0.9
+Weather ROF adjustment factor, light rain/light snow
+0.8
+Weather ROF adjustment factor, thunder storm/snow storm
+0.5
+Weather ROF adjustment factor, lightning bugs
+0.8
+Weather ROF adjustment factor, heavy rain
+0.5
+Perk influence on casualties (sharpshooters) per level for each stance (assault, attack, defend, retreat)
+0.1
+0.07
+0.03
+-0.03
+Experience influence factor on enemy casualties for full experience (better accuracy, faster reloading)
+1.5
+Cohesion influence factor on enemy casualties for no cohesion (less soldiers fire, taking longer to reload)
+0.8
+Fatigue influence factor on enemy casualties for full fatigue (slower reloading, less accuracy, slower movement)
+0.7
+Cavalry, commander's cunning influence on own casualties for full cunning (mobile fighting)
+0.8
+The autocalc casualties factor in general (the higher the more/faster casualties)
+0.75
+Random casualties variation factor, random reduction of casualties for fighting distance (long, medium short), up to [0-1]
+-0.35
+-0.20
+-0.15
+Basic morale increase per game hour, autocalc
+0.035
+Morale hit per casualty % (multiplicator to relative casualties suffered), autocalc
+-0.0007
+Basic fatigue increase per game hour when fighting, autocalc
+0.3
+Percentage of units of reserve used for flanking maneuvers, autocalc [0-1]
+0.7
+Reduction of inflicted casualties if unit is firing on units while being flanked, factor to multiply with regular calculated casualties [0-1]
+0.35
+Factor for additional morale hits if unit is flanked, autocalc [>1]
+1.25
+Probability of artillery unit being overrun by enemy, if enemy flanks and no reserves are left to encounter per game hr
+0.025
+Minimum casualty rate for artillery units being overrun by enemy in an assault
+0.35
+Maximum casualty rate for artillery units being overrun by enemy in an assault
+0.70
+Distance to cam to show autocalc balance bar (above it is hidden)
+150
+Distance radius for units to meet towards battlefield destination (moving stops when this distance to battlefield is reached)
+5
+Additional unit speed for autocalc units moving towards battlefield (if in start up formation), multiplicator
+4.0
+Probability of explosions per autocalc (!) cycle for autocalc units [0-1]
+0.25
+Y height range for explosions to show for autocalc units (min/max)
+2
+6
+Commander's cunning influence on siege effectiveness, factor
+0.5
+Fort damage per attacking force per year for units engaged (variation from - to)
+0.8
+1.7
+Battle intensity for regular land battles
+0.7
+Battle intensity factor in siege combats if offensive stance is chosen
+0.05
+Battle intensity factor in siege combats if defensive stance is chosen
+0.015
+Weighting factor of fort weapons in siege combats
+0.15
+Weighting factor of fort weapons in siege combats only for victory conditions
+150
+Minimum force balance to loose siege combat [0-1]
+0.15
+Fleet distance reduction factor (fire phase), the higher, the faster the fleet opponents move in close combat range
+1.5
+Map to calculation fighting distance factor (distance 50 x this factor = fighting distance in yrds)
+65
+Minimum ship condition to participate in fighting [0-1]
+0.25
+ROF factor max distance
+0.25
+ROF factor min distance (close combat)
+1.00
+ROF factor low ammo
+0.05
+ROF improvement factor if guns are in turrets (depending on distance)
+1.4
+General hit probability naval fights distance min / max
+0.006
+0.075
+General hit probability fort bombardments distance min/max
+0.2
+1.0
+Penetration probability factor (exponentialy), the higher the value, the lower the penetration probability for high armory
+1.25
+The factor to reduce penetration at higher distance, the lower, the less difference between close and far ranges
+0.1
+Hull strength factor, relative to ship size
+50
+Min condition for ships to try to escape naval battle [0-1]
+0.35
+Escape probability factor (exponentialy), the higher the value, the higher is the differential of escape probability between low and high speed ships
+0.3
+Extraordinary event per hit: boiler explosion, ammo store hit (probability 0-1)
+0.025
+Ammo stock, average salvos per vessel
+50
+Strength relation trigger for navy combat to trigger defeat, below (0-1)
+0.10
+National morale influence for naval battle defeats, per lost combat values
+-0.00035
+Commander becomes famous when winning naval battles with enemy combat value losses greater than
+150
+Commander becomes defamed when losing naval battles with own combat value losses greater than
+150
+Influence of commander experience on combat strength for each vessel (0=none)
+0.4
+Influence of commander leadership on victory balance navy combat (0=none)
+0.3
+Influence of commander initiative on naval combat start range (factor, 1=none)
+1.3
+Influence of commander cunning on naval combat start range (factor, 1=none)
+0.7
+Influence of commander initiative on naval ram probability (factor, 1=none)
+1.5
+Minimum ship condition to allow ramming
+0.6
+Ram probability per speed per day
+0.4
+Ram damage factor (calculated out of the tonnage relation), impact on ironclad ships (compared to wooden ships)
+0.3
+Ram damage own vessel (relation)
+0.15
+Weighting factor of fort weapons in naval engagements
+0.2
+Damage per firestrength & hit on forts in naval engagements, per day
+0.01
+Fort vs. navy victory relation, fort factor (the higher, the better weighted the fort strength is vs. navy)
+1.5
+Transport interception losses factor per firestrength per year
+10
+Morale loss per casualty transport interception
+0.05
+Time factor to allow new fire animations in naval battles
+0.5
+Points relation trigger for garrison units to slip away during siege > [0-1]
+0.5
+Commander cunning influence on points relation trigger; higher values increase probability of slipping away
+0.5
+Moving speed factor of fleets if fleet is under fire of fort or in naval battle (while trying to escape)
+0.30
+Morale reduction when retreating orderly [-1 to 0]
+-0.25
+Percentage of units suffering skirmish casualties when withdrawing readiness 0 [0-1], up to
+1.00
+Percentage of units suffering skirmish casualties when withdrawing readiness 1 [0-1], up to
+0.2
+Skirmishing casualties factor while withdrawing & retreating
+3.5
+Skirmishing casualties factor for withdrawing unit (not applicable for retreats)
+3.0
+Reduction of skirming casualties when commander cunning is 1 [multiplier 0-1]
+0.25
+Combat line width in ships for naval battles sea (max ships at one time)
+7
+Combat line width in ships for naval battles rivers (max ships at one time)
+3
+Minimum strength of each side to be able to engage in battles, otherwise unit is withdrawing
+3000
+Minimum retreating distance 
+35
+Maximum retreating distance 
+110
+Desertions min/max when unit is disintegrated, at national morale 0
+0.5
+0.8
+Desertions min/max when unit is disintegrated, at national morale 100
+0.3
+0.5
+Disintegration deplacement min/max
+350
+500
+Ammo consumption per year if within battle (is multiplied with ROF), the higher, the faster ammo is out
+100
+Adjustment of movement speed (factor) if state support is zero [<1]
+0.825
+Range factor of units skirmishing when having rear guard actions etc., multiplied with combat range [>1]
+1.5
+Movement speed adjustment info (rolling text) to show up if influence > x
+0.3
+Showing movement speed rolling text every xx seconds
+32
+Movement speed adjustment taking into account training, training 0 / training 100
+0.7
+1.2
+Reduction in condition men/horses/guns when using fastmarch, per year
+-20
+-16
+-12
+Regular improvement of condition men/horses/guns when not moving, per year
+13
+11
+9
+Reduction in condition men/horses when out of provisions/forage, per year
+-40
+-30
+Influence of training on condition (multiplier), when training is 100 (not for guns)
+0.6
+Fighting strength factor if unit is embarked
+0.25
+Fighting strength factor override if unit is embarked but has perk "river expedition" selected
+0.50
+a factor that determines the length of a naval battle
+0.6
+a factor that determines the length of a fort bombardment
+1.0
+a factor that determines the length of a siege combat or land battle
+1.0
+experience increase of navy commander per hit ship strength
+0.0005
+experience increase of navy commander per fort damage
+0.03
+perk exp increase for single brigades in autoresolve
+30
+############################################################# Campaign AI ##############################
+the weighting of the transport capacity for the calculation of ai importance values
+1.0
+the weighting of corporate profits for the calculation of ai importance values
+0.00001
+the weighting of population for the calculation of ai importance values
+0.0001
+the additional weighting for capital (absolute)
+5
+the value for each soldier for the ai importance value calculation, own units
+-0.01
+the value for each soldier for the ai importance value calculation, enemy units
+0.01
+the value for each soldier for the ai importance value calculation, neutral units
+0.0005
+the maximum distance from ai area to ai area to search for areas to move units to 
+200
+the distance up to which enemy units prevent friendly unit repositioning
+75
+minimum group strength for movement in soldiers
+5000
+minimum group morale for movement [0-1]
+0.5
+the lower weighting for iips, towns and buildings that are occupied by own faction or non war participants
+0.35
+the factor to outgun the enemy for launching ai offensive operations (taking into account strength & morale)
+0.8
+additional factor needed for offensive operations if commander initiative is 0
+0.05
+the ai morale level (<aiminimummoraleformovement) to cancel offensive operations
+0.4
+the range factor to primarily search for offensive targets (calculated out of >the maximum distance from ai area to ai area to search for areas to move units to<)
+0.4
+the minimum supply level to continue offensive operations
+0.45
+The minimum morale necessary for defensive movements
+0.5
+The morale level to cancel defensive operations (should be lower than prior variable)
+0.4
+AI aggressiveness per chapter (probability of offensive operations #1-5)
+0.00
+0.75
+1.0
+1.0
+1.0
+AI agressiveness leverage for campaign games (min/max)
+0.5
+1.75
+The minimum condition of fleets for ai blockade actions
+0.75
+The minimum days at sea for blockade actions
+20
+which surpluss is necessary to allow recruiting
+0
+which minimum rating is necessary for recruitment (0-1)
+0.40
+the relative composition of new armies to be recruited (totals need to be 1), inf/cav/art
+0.65
+0.10
+0.25
+The target recruitment ratio AI to player if AI aggressiveness is 1
+1.1
+The minimum recruitment ratio AI to player on each area (should be lower than targetrecruitingratio)
+0.75
+Recruitment target multiplier of AI aggressiveness (higher values lead to exponentially higher targets in recruitment)
+0.01
+Reduction in volunteers growth with longer contracts (3M, 12M, 24M, 36M), multiplier [<1]
+1.0
+0.9
+0.6
+0.3
+the ratio from which new campaign units are created (eg. 1.8 means that new corps/armies are recruited if the enemy is superior in numbers of 1.8, just counting the number of groups) [deactivated]
+2.5
+the maximum number of corps below an army for ai recruiting in 61
+3
+the maximum number of corps below an army for ai recruiting in 70
+4
+the maximum number of divisions below a corps for ai recruiting
+3
+the maximum number of brigades below a division for ai recruiting
+4
+trigger used to switch from defending own port strategy to offensive blocking of enemy ports; based on the blockade ratio of own ports
+0.1
+the target of fleet expenses in relation to total expenses, used for probability calculations by ai [0-1]
+0.15
+influence of current fleet expenses on newly created vessels by ai, exponential, low values leading more to ignorance of current expenses
+2
+influence of current fleet expenses on newly created vessels by ai, linear, low values lead to lower ship recruiting in general
+0.15
+the maximum amount of vessels in parallel construction by ai (full values >0)
+40
+duration in campaign years for the fleet program to be finished by ai, lower values lead to faster fullfillment of fleet upgrade plans
+0.002
+the trigger for slow to fast ai fleets
+10
+the minimum amount of ships in an ai fleet before creating new fleets (is also weighted with size of opponent fleets)
+3
+AI sea ship production in favor to river ships, factor [0-x], the higher the more sea ships are created
+5
+no creation of fleets above this blocked ratio of the port [0-1]
+0.33
+influence of commander initiative on offensive/defensive stances
+0.6
+needed zone strength relation for offensive stance (is adjusted by commander initiative)
+1.1
+minimum morale for offensive stance
+0.65
+Probability of creation of single units on army level [0-1]
+0.04
+Min start bonus to adjust in campaign start menu
+0
+Max start bonus to adjust in campaign start menu
+0.5
+Minimum distance to next enemy fort (from harbor) in order to raise new fleets
+50
+Probability of railroad construction per year, basic
+0.50
+Probability of railroad construction per year, addon for each chosen industrialization policy
+0.10
+Max distance for AI to execute defensive operations
+275
+Max distance for AI to execute defensive operations in no-enemy AI zones
+650
+Minimum combat strength relation to allow defensive operations (morale & strength)
+0.75
+Defensive operations are cancelled if combat strength falls below this ratio (compared to strength at start)
+0.45
+Probability of defensive operations per year Union (eg. 100 means approx every 3rd day)
+150
+Probability of defensive operations per year CSA (eg. 100 means approx every 3rd day)
+15
+The AI probability for Union and CSA for evaluating offensive operations
+1.0
+0.5
+Zone importance factor if no enemy units are close [should be <1]
+0.10
+Lower weighting for troops that are far away from ai zone [<1]
+0.20
+The influence of AI bonus on casualties, multiplier (1+x)
+0.50
+Bonus influence modifier on number of volunteers (50 bonus and value of 0.5 here means 25% more volunteers)
+1
+Supply state to evaluate construction of supply depots if not connected [0-1], below
+0.35
+Weighting factor of forts (weapon strength) in guarding capital operations
+1.0
+The influence of AI bonus on restoring morale in battles (multiplier 1+x)
+0.3
+The influence of AI bonus on exp gain of units in battles (multiplier 1+x)
+0.3
+The influence of AI bonus on military exp (multiplier to AI bonus 1+x)
+0.3
+The influence of AI bonus on support hits from losses (divisor to AI bonus 1+x)
+0.3
+The influence of AI bonus on rebuilding readiness (multiplier to AI bonus 1+x)
+0.3
+The influence of AI bonus on weapon production
+0.3
+The influences of AI bonus on all spending of AI
+0.3
+Range to search for fort construction sites
+50
+Max distance to frontline a fort construction site needs to be in order to allow fort construction
+100
+Max distance to other fort in order to allow fort construction
+50
+Max strength of units that are ordered to construct forts (in % of total army strength 0-1)
+0.125
+Probability modifier for offensive operations in winter (modifier <1)
+0.05
+Probability modifier for defensive operations in winter (modifier <1)
+0.2
+The influence of weapon strength on offensive decisions, the higher the value, the less troops will be used if weapons are good, the more troops will be used if weapons are bad (0-1)
+0.3
+The influence of national morale on offensive decisions, the higher the value, the more troops will be used for offensives (0-1)
+1.0
+General sea invasion probability per chapter #0-4, [0-1]
+0
+0.2
+0.7
+0.8
+0.9
+The general sea invasion probability for USA/CSA/GB [0-x], if a value of 2 is used, there may be around 2 invasions per year
+2.0
+0.0
+3.0
+The maximum amount of parallel sea invasions per faction 
+2
+The range for unit checks for sea invasion spots
+100
+The minimum group strength for sea invasions 
+10000
+The minimum number of active ships in the escort fleet
+8
+A random variation to picking invasion spots, the higher the less distance plays a role in searching for suitable invasion spots
+5000
+The size of operations theater for AI campaign units x/z
+400
+750
+Minimum size from which an old hierarchy style army shall be attached to an army (size should be higher than group strength for sea invasions+x)
+17500
+The maximum strength of units that shall be transferred in parallel, in % of the total army strength of the faction [0-1]
+0.3
+Minimum enemy troop presence to be valid for transferring troops to these regions
+7500
+Maximum ratio of troop surplus that shall be transferred
+0.5
+The number of brigades to be left back in old group unit when transfering units out
+2
+Reduction of weight for recruitment heatmap of troops that guard capital, the lower the more troops are rallied around the capital [<1]
+0.5
+Maximum ratio of AI groups vs enemy (a value of 2 means the ai raises as many as 2x the groups as the enemy, if this limit is exceeded it starts recruitment for farther away units)
+2.0
+The general probability of burning down depots
+0.3
+The influence of readiness on burning down depots (full readiness)
+0.2
+The influence of having depots on enemy soil on burning down depots
+0.5
+The influence of commander cunning on burning down depots
+0.4
+Max distance for an AI unit to evaluate recapturing lost towns (summer/winter)
+300
+125
+minimum strength for raid forces
+5000
+start distance of raid targets
+250
+raid unit waits until this condition is met
+0.3
+the maximum number of raid forces per faction
+5
+the probability per year to create one raid group per faction; Union/CSA
+0.7
+1.5
+how many of the fielded brigades shall be prepared for weapon upgrades, AI purchases
+0.15
+below this strength from max the AI combines units [<=0.5]
+0.35
+unit size multiple for AI weapon orders, guns
+12
+unit size multiple for AI weapon orders, rifles
+10
+The influence of weapon complexity on weapon import speed
+0.5
+the needed experience difference to promote AI commanders vertically (replacement of old commander)
+0.1
+up to this strength relation units are searched for defensive operations
+1.5
+exponential moral weighting of evaluating defensive operations, the lower, the lesser a (low) morale is weighted
+0.3
+how important are towns for selecting them as micro offensive targets
+5
+how important are capitals for selecting them as micro offensive targets
+5
+how important are towns for selecting them as micro offensive targets
+5
+how important are depots for selecting them as micro offensive targets
+5
+how important are companies for selecting them as micro offensive targets
+1
+the loss adjustment of AI national morale on higher difficulties, the higher this value, the lower the national morale loss of AI when losing battles
+1
+the absolute value to weight towns that are primary campaign objectives
+300
+the factor to increase enemy units for recruiting in campaign objective zones
+1.2
+all enemy units within that range will be weighted higher for AI recruiting
+150
+weighting of duration in command for ai commander promotions
+0.3
+weighting of exp for ai commander promotions
+0.6
+weighting of fame for ai commander promotions
+0.525
+the maximum snow levels for ai movements [0-1]
+0.3
+the maximum rain levels for ai movements [0-1]
+0.1
+############################################################# Campaign Morale Issues ##############################
+Morale improvement per year if unit is inside commander's range
+5.0
+Morale improvement per year if unit has telegraph connection
+2.0
+Morale loss per year if unit is low on provisions
+-10.0
+Low on provisions trigger [0-1]
+0.25
+Morale loss per year if unit is low on ammo
+-5.0
+Low on ammo trigger [0-1]
+0.25
+Low condition alert level (men+horses+guns)
+0.25
+Morale loss for low condition men per year
+-8.0
+Morale loss for low condition horses per year
+-3.0
+Morale loss for low condition guns per year
+-2.0
+Morale loss per year when unit suffers high attrition
+-9.0
+Level of "high attrition" (0-1) starting at
+0.4
+Morale loss per year when unit has lost his commander
+-10.0
+Morale loss per year if unit is within bad weather (rain, snow, storms)
+-2.5
+Morale loss per year if unit is unhappy with his commander
+-2.0
+Leverage for unit experience to compare with leadership and fame of commander (lshp+fame<unit exp*this value)
+1.5
+increase/decrease of trigger for unit being unhappy due to famed or defamed senior officers
+0.25
+Morale effect on units within hospital range per year
+1.00
+Trigger to show group average morale effects (-/+)
+0.255
+Morale loss per year if fleet is low on provisions
+-12
+Morale loss per year if fleet is in bad weather
+-10
+Morale improvement per year if own fleet is within range (is multiplied with sum of combat strength of the other fleet = condition * flagshipvalues)
+0.1
+Distance to next own fleet to count as morale improvement
+100
+Low on ammo trigger fleets [0-1]
+0.20
+Morale loss per year if fleet is low on ammo
+-6.0
+Morale improvement per year if fleet contains at least one iron clad
+5.0
+Morale increase if unit is encamped (factor) >1
+1.25
+Morale increase if unit is fully entrenched (factor), linear depending on the entrenchment progress but is floored by the encampment factor >1
+2.00
+Base rally value increase per day campaign
+0.02
+Multiplier for morale increase if unit is on enemy soil
+1.0
+############################################################# Commander attributes ##############################
+Experience gain when commander is above max rank needed for his command (for each rank), if surpassing 1.0 the exp is transformed into bonus and reduced over time
+0.10
+Experience loss when commander is below min rank needed for his command (for each rank), if falling below 0.0 the exp is transformed into malus and reduced over time 
+-0.15
+Fame gain when commander is appointed to a command above his current rank (for each rank)
+0.05
+Fame loss when commander is appointed to a command below his current rank (for each rank)
+-0.05
+Commander gets defamed if appointed to a command x levels below the minimum level for his current rank
+4
+Base state support gain by appointing political commanders
+0.005
+Support gain multiplier at fame 0 and 100
+1.0
+3.5
+Support gain multiplier for higher hierarchy levels (brigade, division, corps, army, fleet)
+1.0
+1.5
+2.0
+3.0
+2.0
+Chance of feuds for political commanders, multiplier 
+2
+Chance of feuds for volunteer commanders, multiplier
+0.5
+Modifier to experience loss of professional commanders when appointed to a higher command
+0.5
+############################################################# CAMPAIGN UI ##############################
+Distance to show/hide unit icons on campaign map
+475
+Low alpha value for deactivated ammo, forage & provisions icons in unit panel [0-1]
+0.25
+Time to add service history entries to permanent history (to prevent multiple entries if player tries similar actions in short time), in game yrs
+0.0027
+Monuments to disappear if battle is smaller than (total troops envolved < AND casualties <)
+30000
+2000
+Time in campaign years such monuments take to disappear
+0.02
+Average group morale to show broken morale symbol in battle panel [0-1, below]
+0.35
+the maximum number of funding of all actions (determines how long the shown coins are for the subsidy funding)
+7500000
+the average blockade ratio from which the alert image changes to alert visuals
+0.35
+if a company below this level posts a profit/loss, then an alarm icon pops up
+-25000
+economy alarm if transport bottlenecks are higher as this absolute value
+0.5
+economy alarm if production to demand is below this level
+1
+############################################################# Economy ##############################
+Building duration in game years per resource, (set 0=default, 1=fleets, 2=construction by units, 3=buildings, 4=blank, 5=blank, 6=blank)
+0.0002
+0.0001
+0.00025
+0.01
+0.01
+0.01
+0.01
+Initial stock calculation factor, calculated from min price goods amount (the higher, the more goods are stored in stock at game start)
+0.3
+Initial supply depot stock factor [0-1]
+0.5
+Random variation for initial goods stock (+/-)
+0.35
+Goods transmission speed (the higher, the more goods are traded between the IIPs)
+75000
+S-Curve price steepening calculation C1
+3.5
+S-Curve price steepening calculation C2
+7.0
+Goods pickup/trade attractivity factor per good (exponential), the higher the more goods are delivered if prices are high
+3.0
+Trade ineffeciency, random variation for pickup attractivity (the higher, the less efficient the trade flow works)
+0.1
+Trade flow factor for trades between enemy IIP's
+0.1
+Random trade node production factors (multiplier)
+0.25
+Random trade node consumption factors (multiplier)
+0.40
+Random consumption factors towns (multiplier)
+0.40
+Maximum goods to buy for supply depots (per level), factor of the <Minimum price reached> variable in unit excel
+2.0
+4.0
+6.0
+Supply speed per supply depot level, modifier [<1!]
+0.5
+0.75
+1.00
+Speed of increasing supply depot stocks if goods are short, the higher the slower stock is increased when goods are short
+0.5
+Transfer supply goods into supply chain (reduce stock) if price is above % of maximum price [deactivated]
+1.00
+S-Curve adjustment1 for accumulation of supply depots, the higher the longer it takes to reduce stock since last supply action
+1
+S-Curve adjustment2 for accumulation of supply depots, should be left untouched!
+20
+Minimum supply depot stock when stocks are reduced because no units were close for a longer time [0-1]
+0.1
+Maximum time in campaign years to build up supply depot stock (if prices are comfortable)
+0.075
+Corporate production multiplier (based on <Minimum price reached> variable in unit excel), the higher the more is produced p.a.
+30.0
+Time within corporate production is completely shifted towards a new product in campaign yrs
+0.25
+Production efficiency increase if production is focused (exponential), the higher the value, the more of one specific product needs to be produced in order to get more efficient production
+0.4
+Production efficiency leverage (linear), the higher the value, the higher the output is, the more efficient the company works
+1.0
+Wage cost per worker per year
+1
+Wage cost per slave per year
+0.33
+Workforce map resolution (x * z)
+32
+Minimum workforce available on each map position (0-1)
+0.15
+Workforce factor for town population (the higher, the more workforce is available near towns)
+0.002
+Small towns fixed population count (increases workforce in area)
+50000
+Workforce fluctuation speed factor (the higher, the faster population fluctuates towards regions with low jobless rates)
+0.06
+Workforce leverage for corporates on the derived workforce map value
+2.0
+Cool down phase in campaign yrs until new companies are constructed at same IIP (to allow production and price adjustments)
+0.25
+Needed minimum relative price for company foundations [0-1], above
+0.725
+Minimum available capital on map [0-1]
+0.15
+Influence of banks on local availability of capital, per level [1-2]
+0.50
+1.00
+Influence of subsidies (full value 100%) on company foundation probability (multiplicator)
+1.25
+Influence of capital (full value 100%) on company foundation probability (multiplicator)
+1.50
+Influence of corporate tax (full value 100%) on company foundation probability (multiplicator)
+1.35
+General company founding probability factor
+0.18
+Company building site search radius steps
+3
+Company building site maximum radius
+40
+Filter map resolution for available capital
+64
+Trade data for visualization kept for this duration (campaign yrs)
+0.0833
+Amount of iip's to show up for the supply line visualization (minimum 1)
+3
+Amount of iip's to show up for the trade line visualization (minimum 1)
+5
+Minimum private wealth level if prices are on top
+0.25
+Influence factor on private wealth if available workforce level is 0
+1.6
+Influence factor on private wealth if available workforce level is 1
+0.9
+Income tax factor from wealth * population to effective tax
+1.5
+Filter map resolution for trade 
+64
+Filter map resolution for supply
+32
+Absolute value of land sales revenues per company foundation (probability and tax weighted) and upgrade
+2500000
+Base private income, absolute if full private wealth is reached, for full population (not only working)
+250
+Influence of workforce on private wealth (private wealth reduction to this factor if workforce level is 100%)
+0.70
+Smoothing of financial estimates time in campaign yrs (within that time period the figures are adjusted to the new value)
+0.005
+Maximum jobless rate (statistics only) [0-1]
+0.25
+Rating category names & debt level (adjusted by 2x surplus lower than), 20 notches
+AAA
+15
+AA+
+30
+AA
+75
+AA-
+120
+A+
+180
+A
+240
+A-
+400
+BBB+
+575
+BBB
+750
+BBB-
+950
+BB+
+1200
+BB-
+1400
+B+
+1600
+B
+1800
+B-
+2000
+CCC+
+2250
+CCC
+2500
+CCC-
+2750
+CC
+3000
+C
+3500
+D
+4500
+D
+6000
+D
+7500
+D
+9000
+D
+12000
+D
+15000
+Rating modifier per year (1860, 1861, 1862, 1863,1864,1865,1870), in earlier years for example the debt load is lower to reach a bad rating
+0.4
+0.60
+1.25
+1.70
+2.25
+2.50
+4.75
+Interest rate leverage * economy factor
+1
+Interest rate base at economy factor 1.0
+0.04
+Interest rate leverage * rating (linear)
+1
+Interest rate leverage * rating (exponential)
+2
+Increase of administration costs in % for each tax type charged
+0.05
+Increase of administration costs in % for each subsidy type charged
+0.05
+Basic administration costs per capita per year if support is 0% (absolute)
+3
+Basic administration costs per capita per year if support is 100% (absolute)
+1.5
+Maximum chartpoints in finances charts
+100
+Maximum time difference between each chartpoints in finances charts (in campaign yrs)
+0.01
+Maximum relative price of bonus resource to use it for production [0-1]
+0.35
+Maximum chartpoints in goods charts
+52
+Maximum time difference between each chartpoints in goods charts (in campaign yrs)
+0.0192
+Transport capacity upkeep per mean of transport (rail/sea/river) per pcs per year, absolute
+5000
+15000
+10000
+Sell value of transport capacity when reducing capacity (in factor of buy value)
+0.5
+Adjustment amount of transport capacity (rail/sea/river)
+10
+10
+10
+Railroad construction speed per track length (in game distances) per year, track length is square-rooted
+0.078
+Railroad transport capacity leverage factor
+10.0
+Sum to issue bonds if treasury runs negative or repay if treasury is above trigger
+75000000
+Balance trigger of treasury to redeem bonds (should be higher than sum of bond issuance/buy backs)
+100000000
+Weapon cost adjustment multiplier (to use for weapon add on cost, beside resources)
+1.0
+Tax & subsidy steps per cycle when changing tax via AI (0-1)
+0.05
+AI Balance trigger to increase taxes [below]
+0
+AI Balance trigger to reduce taxes [above]
+1000000
+AI Average tax rate (out of potential) to allow increase of subsidies [below 0-1]
+0.999
+AI Balance trigger to allow increase of subsidies [above]
+0
+Modifier that is used to increase/reduce the revenues out of taxes to balance earnings vs. costs, per tax type: tarifs, sales, income, corporate, landsales
+8
+5
+1
+2.5
+0.7
+Army upkeep cost factor
+0.5
+Transport capacity multiplier for port levels (exp)
+1.87
+Weapon standardization steepness 1 (the lower the value, the longer it takes for a weapon to achieve full productivity) -> deactivated
+5.0
+Weapon standardization steepness 2 (higher values mean higher availability of weapons at start shortly after invention) -> deactivated
+8.0
+Weapon standardization 100 reached if this # of rifles are used for equipment
+100000
+Weapon standardization 100 reached if this # of guns are used for equipment
+250
+Price weighting on weapon availability [0-1], the higher, the more sensitive the available weapons are on available stock
+1.0
+Increase of standardization if weapon imports are available, absolute value [0-1]
+0.3
+The cost factor for imported weapons (based on complexity and equipment modifier
+0.05
+Influence of weapon complexity on standardization (the higher, the more reducing effects complex weapons have on standardization) [>0]
+0.75
+Production of weapons per time exp factor [not meant to be changed]
+1
+Consumption of locomotives for rail movement per year per soldier
+0.000002
+Consumption of transport ships for river/sea movement per year per soldier
+0.000005
+Reduction of production if produced good is not profitable (multiplier <1)
+0.1
+Transport capacity modifier if available transport ships are 0 [<=1], used for ports and ferries
+0.8
+Transport capacity modifier if available locomotives are 0 [<=1], used for land iips
+0.9
+Consumption of transport ships per transport capacity per annum
+0.1
+Consumption of locomotives per transport capacity per annum
+0.05
+Influence of supply and reinforcement speed if factor of transport ships and locomotives are 0, modifier [<=1] [deactivated]
+0.9
+the value below which a shortage is detected in filter
+0.1
+the value above which an exuberance is detected in filter
+0.9
+max number of icons for product shortages in filter
+150
+max number of icons for production and demand in filter
+200
+the factor to which weapon imports cease if full blockades
+0.1
+the exponential factor for ordering higher quantities; lower values reduce the delivery time between large and low quantity orders
+0.5
+the speed of weapons delivery arty
+200
+the speed of weapons delivery rifles
+2000
+weapon cost factor for european imports if relations are zero/full 
+1.5
+0.7
+the cost adjustment if standardization is zero/full (>1)
+1.5
+1.0
+which minimum rating is needed for ordering weapons
+0.45
+the price adjustment for artillery if ordering and consuming weapons
+8
+the price adjustment for rifles if ordering and consuming weapons
+0.3
+the leverage of population that shall be reduced through volunteers and drafts (here we need a leverage >1 as soldiers represent the working part of the population)
+3
+multiplier used to reduce available workforce by the workers of a company by x
+5
+for stats purposes: the multiplier to unemployment
+0.3
+Import traffic adjustment (values <1 can be used to lower the number of imported goods)
+0.7
+supply to goods ratio rifle ammo (relation supply consumption vs goods consumption)
+10
+supply to goods ratio artillery ammo (relation supply consumption vs goods consumption)
+300
+dummy value: how many guns are used to equip one artillery unit (just used for weapon purchases and import of weapon stock)
+15
+############################################################# Fleets ##############################
+Condition trigger to determine "disabled" ships [0-1] lower than
+0.25
+Speed reduction when ship has condition 0, linear interpolated to condition 1 and standard speed, factor of standard speed [0-1]
+0.3
+Movement multiplicator for ships moving between fleets and fleet/pool, will be adjusted by speed and condition in game also
+0.01
+Alpha value in hierarchy [0-1] if ship is moving away/to fleet/pool or under construction
+0.5
+Port ship construction capacity (tonnage), level 0-3, absolute value, not accumulating lower levels
+1500
+2000
+3000
+5000
+Probability of ship type appearing on European markets if imports are active (weighted with tonnage afterwards, the higher the tonnage, the lesser the probability), appears every xth year
+0.25
+Minimum relations to European nations to allow imports [0-1] [deactivated]
+0.25
+Min blocade efficiency to prevent raising fleets in the blocked port [0-1]
+0.5
+Adjustment of transport means with LMB in logistics panel (transport ships, river steamers, trains)
+5
+5
+5
+Adjustment of transport means with RMB in logistics panel (transport ships, river steamers, trains)
+20
+20
+20
+Commander admin influence on movement speed, rotating of ships (repair, resupply etc.)
+0.35
+Link distance to other fleets or troop transports
+20
+Fleet upkeep cost factor (calculated from the needed construction resources)
+10.00
+Fleet upkeep cost statistics smoothing in yrs
+0.25
+The maximum ships to command per rank if admin is zero: "Volunteer", "Lieutenant", "Commander", "Captain", "Flag Officer", "none", "none", "none", "none", "none"
+0
+1
+5
+10
+25
+0
+0
+0
+0
+0
+The maximum ships to command per rank if admin is full: "Volunteer", "Lieutenant", "Commander", "Captain", "Flag Officer", "none", "none", "none", "none", "none"
+0
+2
+10
+20
+50
+0
+0
+0
+0
+0
+############################################################# Supply & transports ##############################
+Calculation time frage for average transport capacity utilization in game yrs (also relevant for adjusting AI transport capacity)
+0.025
+Time unit needs to be stationary to open summer camp (offensive stance activated, game yrs)
+0.00025
+Month of the year (spring) until winter quarters are automatically set up <=
+3
+Month of the year (autumn) from which winter quarters are automatically set up >=
+11
+Duration to wait if unit is stationary and offensive stance is activated to set up winter quarters (game yrs)
+0.018
+Time to entrench fully (100%) in game yrs, level of entrenchment capped by the national military experience
+0.075
+Show Level 1 entrenchment models starting from entrenchment level (0-1)
+0.2
+Show Level 2 entrenchment models starting from entrenchment level (0-1)
+0.5
+Show Level 3 entrenchment models starting from entrenchment level (0-1)
+0.8
+Supply to goods ratio (=how many goods are consumed for supplying one soldier/horse per year)
+0.005
+Equipment to goods ratio (=how many goods are consumed to equip one soldier per year)
+0.20
+Equipment cost adjustment (for easier balancing the cost of equipment is increased by this factor)
+5
+Supply cost adjustment (for easier balancing the cost of supply goods is increased by this factor)
+8
+Supply speed in campaign yrs, within this time the whole unit is resupplied at distance to next iip of 0
+0.02
+Supply speed in campaign yrs, within this time the whole unit is resupplied at distance to next iip of 2000
+0.30
+Supply speed for supply depots, within this time the whole unit is resupplied if depot is within commander's range and has enough stock (level dependent)
+0.0050
+Refill speed in campaign yrs for strength & equipment for whole unit if distance to home state is 0
+1.0
+Refill speed in campaign yrs for strength & equipment for whole unit if distance to home state is 2000
+2.0
+Time in campaign yrs until provision and forage are completely consumed
+0.03
+Reduced consumption of forts multiplier
+0.20
+Supply animation speed
+0.2
+Rail transport capacity factor for troops, the higher, the more troops can be transported
+0.03
+Sea port transport capacity factor for troops, the higher, the more troops can be transported
+0.5
+River port transport capacity factor for troops, the higher, the more troops can be transported
+0.5
+Max supply ratio of units retreating or on forced march [0-1]
+0.25
+Improvement of IIP condition, duration in campaign years for full condition
+0.15
+Price level of supply goods to reduce supply ratio [above]
+0.7
+Supply ratio if price of supply good is on top
+0.25
+General supply efficiency modifier (the higher, the better units are supplied)
+2.25
+Average of supply stats in yrs 
+0.02
+Supply speed modifier for ammo
+0.3
+Supply consumption modifier if troops are transported
+0.25
+The erosion of horses, weapons, uniforms per annum for each unit (0.1 means 10% of the complete equipment and ammo is replaced)
+0.25
+The storage level targets for supply depot, red/yellow/green [0-1]
+0
+0.5
+1.0
+############################################################# Raiding, foraging, patroling, occupation ##############################
+Unit type infantry raiding efficiency factor
+1.0
+Unit type cavalry raiding efficiency factor
+2.0
+Unit type infantry guarding efficiency factor
+0.7
+Unit type cavalry guarding efficiency factor
+1.7
+Commander's cunning influence multiplier on raiding efficiency
+0.5
+Commander's cunning influence on guarding efficiency
+0.4
+Captured provisions per man when raiding
+0.002
+Captured forage per man and year when raiding
+0.001
+Captured rifle ammo per man and year when raiding
+0.0005
+Captured artillery ammo per man and year  when raiding
+0.0001
+Captured horses per man and year when raiding [not active]
+0.001
+Captured weapons per man and year when raiding [not active]
+0.0005
+Damage of buildings per raiding efficiency per year
+0.075
+State support influence for raiding alliance per raiding efficiency per year (taking into account troop strength)
+-0.00025
+State support influence for opposite than raiding alliance per raiding efficiency per year (taking into account troop strength)
+0.0001
+Blockade efficiency factor (depending on raiding & guarding efficiency, exponentialy), the higher the value the less troops are necessary to block an IIP completely
+0.004
+Blockade efficiency factor if within combat range
+2.5
+Fleet blockade factor (the higher, the more efficient the blockade is), speed & flagshipvalue are taken into account
+10.0
+Intelligence gathering basic per man
+0.0001
+Additional intelligence gathering cavalry per man
+0.0005
+Additional intelligence gathering if cavalry order is "scout" per cavalry man
+0.001
+Commander's cunning influence on intelligence gathering, factor for full cunning (>1)
+2.0
+Unit's experience influence on intelligence gathering, factor for full exp (>1)
+1.35
+Combat range factor if unit is on patrol mode
+2.0
+Speed factor if unit is on patrol mode
+0.5
+Commander range factor if fleet is on raid mode
+0.9
+Minimum fleet condition (average) to be able to raid
+0.70
+Radius to calculate frontlines and change ownership of buildings and iip's; towns
+155
+Radius to calculate frontlines and change ownership of buildings and iip's; units
+125
+Minimum morale for raiding operations
+0.45
+Minimum morale for guarding operations
+0.40
+Casualties factor on raiding units during raiding operations (depending on raiding efficiency), per year
+50
+Casualties factor on guarding units during raiding operations (depending on raiding efficiency), per year
+0.3
+Casualties random variation factor for raiding/guarding operations (+/-)
+0.5
+Morale loss per relative casualty on guarding/raiding units (per 1%)
+0.02
+Loss of supply factor per casualty (ammo, provisions, forage), random from/to
+0.0
+3.0
+Blockade ratio needed for a port to burn [0-1]
+0.5
+Summed up resources raided needed to show up rolling text info
+1.0
+Summed up influence on support needed to show up rolling text info
+0.5
+Command range factor if unit is raiding
+0.8
+Blockade ratio in order to show flames icon symbol [>]
+0.05
+Guarding against raids for units that have guard not enabled (modifier, <1)
+0.35
+############################################################# Campaign Perks ##############################
+Perk experience increase for parent group when increasing perk exp of subordinate (factor), also used for perk effect on subordinates
+0.25
+Perk increase per year for siege combats (for total time being envolved in sieges) - no level
+5
+Perk increase factor per year for siege combats (for total time being envolved in sieges) - level 1+, multiplier to no-level value
+1.0
+Effect of siege trains on weapon strength during siege combats, level I (factor)
+1.25
+Effect of siege trains on weapon strength during siege combats, level II (factor)
+1.50
+Effect of siege trains on weapon strength during siege combats, level III (factor)
+2.00
+Perk experience increase for each movement order execution on campaign map
+0.025
+Order delays on campaign map for field telegraph perk, level I (factor)
+0.9
+Order delays on campaign map for field telegraph perk, level II (factor)
+0.8
+Order delays on campaign map for field telegraph perk, level III (factor)
+0.7
+Information delay for field telegraph perk, level I (factor)
+1.0
+Information delay for field telegraph perk, level II (factor)
+0.75
+Information delay for field telegraph perk, level III (factor)
+0.5
+Order delays on campaign map for balloon corps perk, level I (factor)
+1.25
+Order delays on campaign map for balloon corps perk, level II (factor)
+1.10
+Order delays on campaign map for balloon corps perk, level III (factor)
+1.10
+Intelligence gathering balloon corps perk when stationary, level I (factor)
+1.25
+Intelligence gathering balloon corps perk when stationary, level II (factor)
+1.25
+Intelligence gathering balloon corps perk when stationary, level III (factor)
+1.50
+Siege effectiveness balloon corps perk, level I (factor)
+1.05
+Siege effectiveness balloon corps perk, level II (factor)
+1.10
+Siege effectiveness balloon corps perk, level III (factor)
+1.15
+Perk experience increase for using scouting per year
+1.0
+Intelligence gathering for bureau of military information perk, level I (factor)
+1.1
+Intelligence gathering for bureau of military information perk, level II (factor)
+1.25
+Intelligence gathering for bureau of military information perk, level III (factor)
+1.50
+Information delay for bureau for enemy units close for military information perk, level I (factor) >0
+1.0
+Information delay for bureau for enemy units close for military information perk, level II (factor) >0
+0.75
+Information delay for bureau for enemy units close for military information perk, level III (factor) >0
+0.50
+Intelligence gathering for skilled cartographers, level I (factor)
+1.05
+Intelligence gathering for skilled cartographers, level II (factor)
+1.10
+Intelligence gathering for skilled cartographers, level III (factor)
+1.20
+Movement speed of unit for perk skilled cartographers, level I (factor)
+1.05
+Movement speed of unit for perk skilled cartographers, level II (factor)
+1.10
+Movement speed of unit for perk skilled cartographers, level III (factor)
+1.20
+Perk exp increase flying column by movement per year
+1.0
+Movement speed of unit per perk flying column, level I (factor)
+1.1
+Movement speed of unit per perk flying column, level II (factor)
+1.1
+Movement speed of unit per perk flying column, level III (factor)
+1.25
+Supplies carried for perk flying column, level I (factor)
+1.5
+Supplies carried for perk flying column, level II (factor)
+2.0
+Supplies carried for perk flying column, level III (factor)
+2.5
+Perk exp increase foot cavalry by movement (forced march) per year
+3.0
+Forced march speed for perk foot cavalry, level I (factor)
+1.1
+Forced march speed for perk foot cavalry, level II (factor)
+1.2
+Forced march speed for perk foot cavalry, level III (factor)
+1.3
+Attrition due to forced march foot cavalry, level I (factor)
+0.9
+Attrition due to forced march foot cavalry, level II (factor)
+0.8
+Attrition due to forced march foot cavalry, level III (factor)
+0.7
+Perk exp increase for building forts (absolute)
+0.25
+Perk exp increase for building supply depots (absolute)
+0.15
+Perk exp increase for building telegraph stations (absolute)
+0.075
+Construction speed increase for perk engineers & mechanics, level I (factor)
+1.25
+Construction speed increase for perk engineers & mechanics, level II (factor)
+1.50
+Construction speed increase for perk engineers & mechanics, level III (factor)
+2.00
+Perk exp increase for wounded ratio per year (1.5 means if 10% of all men are wounded the whole year, perk exp rises by 0.15)
+3.5
+Adjustment of speed reduction due to disabled soldiers, perk ambulance corps, level I (factor)
+0.75
+Adjustment of speed reduction due to disabled soldiers, perk ambulance corps, level II (factor)
+0.50
+Adjustment of speed reduction due to disabled soldiers, perk ambulance corps, level III (factor)
+0.25
+Reduction of wounded to killed perk ambulance corps, level I (factor)
+0.9
+Reduction of wounded to killed perk ambulance corps, level II (factor)
+0.75
+Reduction of wounded to killed perk ambulance corps, level III (factor)
+0.50
+Perk exp increase during sieges when assaulting per year
+40
+Siege assault efficiency perk sappers and miners, level I (factor)
+1.25
+Siege assault efficiency perk sappers and miners, level II (factor)
+1.50
+Siege assault efficiency perk sappers and miners, level III (factor)
+2.00
+Perk exp increase land torpedoes (enemy units in commander's range), per year
+25
+Skirmish efficiency perk land torpedoes, level I (factor)
+1.05
+Skirmish efficiency perk land torpedoes, level II (factor)
+1.10
+Skirmish efficiency perk land torpedoes, level III (factor)
+1.20
+Enemy movement speed when within commander's range perk land torpedoes, level I (factor)
+0.9
+Enemy movement speed when within commander's range perk land torpedoes, level I (factor)
+0.8
+Enemy movement speed when within commander's range perk land torpedoes, level I (factor)
+0.7
+Perk exp increase through raiding per year
+2.5
+Skirmishing efficiency partisan brigades, level I (factor)
+1.25
+Skirmishing efficiency partisan brigades, level II (factor)
+1.50
+Skirmishing efficiency partisan brigades, level III (factor)
+2.00
+Raiding morale hit on enemy partisan brigades, level I (factor)
+1.10
+Raiding morale hit on enemy partisan brigades, level II (factor)
+1.25
+Raiding morale hit on enemy partisan brigades, level III (factor)
+1.50
+Skirmishing efficiency bushwhackers, level I (factor)
+1.25
+Skirmishing efficiency bushwhackers, level II (factor)
+1.20
+Skirmishing efficiency bushwhackers, level III (factor)
+1.10
+Support drop in state due to raiding (bushwhackers), level I (factor)
+1.1
+Support drop in state due to raiding (bushwhackers), level II (factor)
+1.25
+Support drop in state due to raiding (bushwhackers), level III (factor)
+1.50
+Perk exp increase for fighting battles multiplied by participating units
+0.000002
+Changes in group commander fame within this army perk embedded reporters, level I (factor)
+1.25
+Changes in group commander fame within this army perk embedded reporters, level II (factor)
+1.50
+Changes in group commander fame within this army perk embedded reporters, level III (factor)
+2.00
+Combat efficiency during nighttime (sieges & skirmishing only) perk limelights, level I (factor)
+1.25
+Combat efficiency during nighttime (sieges & skirmishing only) perk limelights, level II (factor)
+1.50
+Combat efficiency during nighttime (sieges & skirmishing only) perk limelights, level III (factor)
+2.00
+Intelligence gathering perk expert scouts, Level I (factor)
+1.25
+Intelligence gathering perk expert scouts, Level II (factor)
+1.50
+Intelligence gathering perk expert scouts, Level III (factor)
+2.00
+Perk exp increase when moving on rivers per year
+40
+Siege assault efficiency river expedition, level I (factor)
+1.1
+Siege assault efficiency river expedition, level II (factor)
+1.25
+Siege assault efficiency river expedition, level III (factor)
+1.5
+River movement speed river expedition, level I (factor)
+1.25
+River movement speed river expedition, level II (factor)
+1.50
+River movement speed river expedition, level III (factor)
+2.00
+Perk exp increase ramming fleets in naval battles (per incident)
+0.025
+Ramming efficiency perk torpedoes, level I (factor)
+1.25
+Ramming efficiency perk torpedoes, level II (factor)
+1.50
+Ramming efficiency perk torpedoes, level III (factor)
+2.00
+Perk exp increase fleets besieging per year
+10
+Siege bombardment efficiency perk mortar boats, level I (factor)
+1.05
+Siege bombardment efficiency perk mortar boats, level II (factor)
+1.10
+Siege bombardment efficiency perk mortar boats, level III (factor)
+1.25
+Perk exp increase when crossing small rivers (creeks), per year
+50.0
+Movement cost crossing creeks, perk pontoon train, level I (factor)
+0.75
+Movement cost crossing creeks, perk pontoon train, level II (factor)
+0.5
+Movement cost crossing creeks, perk pontoon train, level III (factor)
+0.25
+Supply speed perk pontoon train, level I (factor)
+1.1
+Supply speed perk pontoon train, level II (factor)
+1.2
+Supply speed perk pontoon train, level III (factor)
+1.3
+Perk exp increase through blocking enemy iips per year
+2.0
+Speed adjustment supply colliers, level I (factor)
+0.7
+Speed adjustment supply colliers, level II (factor)
+0.8
+Speed adjustment supply colliers, level III (factor)
+0.9
+Supply consumption supply colliers, level I (factor)
+0.85
+Supply consumption supply colliers, level II (factor)
+0.70
+Supply consumption supply colliers, level III (factor)
+0.50
+Intelligence gathering perk balloon barge, level I (factor)
+1.25
+Intelligence gathering perk balloon barge, level II (factor)
+1.35
+Intelligence gathering perk balloon barge, level III (factor)
+1.50
+Siege effectiveness perk balloon barge, Level I (factor)
+1.00
+Siege effectiveness perk balloon barge, Level I (factor)
+1.00
+Siege effectiveness perk balloon barge, Level I (factor)
+1.05
+Combat efficiency during night time perk, level I (factor)
+1.25
+Combat efficiency during night time perk, level II (factor)
+1.50
+Combat efficiency during night time perk, level III (factor)
+2.00
+Blockade efficency perk blockading squadron, level I (factor)
+1.1
+Blockade efficency perk blockading squadron, level II (factor)
+1.25
+Blockade efficency perk blockading squadron, level III (factor)
+1.50
+Perk exp increase sea riders when blocking trade nodes (per annum)
+0.50
+Price increases due to perk sea riders, level I (factor)
+1.1
+Price increases due to perk sea riders, level II (factor)
+1.25
+Price increases due to perk sea riders, level III (factor)
+1.5
+Fort occupation probability perk amphibious attack (depending on strength relation), level I exponential
+10.0
+Fort occupation probability perk amphibious attack leverage, level I (factor)
+1.00
+Fort occupation probability perk amphibious attack leverage, level II (factor)
+1.10
+Fort occupation probability perk amphibious attack leverage, level III (factor)
+1.50
+Perk exp increase fighting blockading fleets per year
+5.0
+Fighting efficiency against blockading fleets perk blockade busters, level I (factor)
+1.1
+Fighting efficiency against blockading fleets perk blockade busters, level II (factor)
+1.2
+Fighting efficiency against blockading fleets perk blockade busters, level III (factor)
+1.3
+effect of blockade in ports within this fleets radius, level I (factor)
+0.9
+effect of blockade in ports within this fleets radius, level II (factor)
+0.8
+effect of blockade in ports within this fleets radius, level III (factor)
+0.7
+Perk exp increase ironclad moving per year
+1.5
+Perk exp increase ironclad firing per year
+10.0
+Fighting efficiency vs. forts, perk battery runner, level I (factor)
+1.25
+Fighting efficiency vs. forts, perk battery runner, level II (factor)
+1.50
+Fighting efficiency vs. forts, perk battery runner, level III (factor)
+2.00
+Perk exp increase naval battles per year
+5.0
+Fighting efficiency within port radius, perk port defender, level I (factor)
+1.25
+Fighting efficiency within port radius, perk port defender, level II (factor)
+1.50
+Fighting efficiency within port radius, perk port defender, level III (factor)
+2.00
+Perk experience multiplier lvl 0 armies/fleets
+1.00
+2.00
+############################################################# Policies & Subsidies ##############################
+Basic subsidies cost if used at 100% per type (politics, economy, agriculture, industry, military, diplomacy, n/a, n/a)
+10000000
+50000000
+50000000
+50000000
+50000000
+50000000
+0
+0
+Minimum useable policies
+13
+Maximum usable policies (when politics subsidies are set to full)
+18
+Improved prices factor for full diplomacy subsidies at full level (1=no change)
+1.50
+Improvement of intervention level per year of full diplomacy subsidies (0 = no improvement)
+0.5
+Improved productivity of industries for full diplomacy subsidies at full level (1=no change)
+1.5
+Improved productivity of farms for full diplomacy subsidies at full level (1=no change)
+1.5
+Upkeep cost factor of transports for transportation subsidies at full level (1=no change)
+0.5
+Increased IIP transport capacity for transportation subsidies at full level (1=no change)
+1.5
+Increased railroad construction speed for transportation subsidies at full level (1=no change)
+2.0
+Increased blockading/blockade running efficiency for trade war subsidies at full level (1=no change)
+2.0
+Decrease factor of support events for full civil order war subsidies (1=no change)
+0.5
+Increased intelligence gathering when civil order subsidies are full (1=no change)
+1.5
+Additional recruits (volunteers) available for full recruitment subsidies (1=no change)
+2
+Time in campaign yrs the additional target recruit rate is reached
+1
+Rating modifiers for funding policy 1-3 (Union), in notches (negative value makes rating better), incremental values, cumulative
+-2
+-2
+-2
+Agricultural policy 1-4, max subsidies factor adjustment [>1], absolute values per policy (not cumulative), first line: no policy researched
+0.1
+0.25
+0.5
+1
+2
+Agricultural policy 1-4, influence on intervention levels [0-1], incremental values (cumulative) 
+0
+0.05
+0.05
+0.05
+Agricultural policy 1-4, support in loyal states, absolute change, cumulative to prior levels
+0
+0
+0
+0.05
+Economy policy 1-3, max subsidies factor adjustment [0-1], absolute values per policy, first line: no policy researched, last one not used
+0.1
+0.25
+0.5
+1.0
+2.00
+Industrial policy 1-4, max industrial subsidies factor adjustment [>1], absolute values per policy (not cumulative), first line: no policy researched
+0.1
+0.25
+0.5
+1
+2
+Industrial policy 1-4, max transportation subsidies factor adjustment [>1], absolute values per policy (not cumulative)
+0.25
+0.5
+1
+2
+Industrial policy 1-4, effect on national morale, absolute change, cumulative to prior levels
+0
+0
+0
+0.05
+Military policy 1-4, max recruitment subsidies factor adjustment [>1], absolute values per policy (not cumulative)
+0.1
+0.25
+1
+2
+Military policy 1-4, max civil order subsidies factor adjustment [>1], absolute values per policy (not cumulative)
+0.25
+0.5
+1
+2
+Military policy 1-4, max trade war subsidies factor adjustment [>1], absolute values per policy (not cumulative)
+0.25
+0.5
+1
+2
+Military policy 1-4, railroad movement speed of armies factor adjustment [>1], incremental values per policy (cumulative)
+0.8
+1.0
+1.33
+1.0
+Military policy 1-4, transport upkeep cost adjustment, incremental values per policy (cumulative)
+1.2
+1.0
+0.5
+1.0
+Military policy 1-4, effect on military experience, absolute change, cumulative to prior levels
+0
+0
+0
+0.05
+Military policy, subsidy cap per level, 0=no policy
+0.1
+0.25
+0.5
+1.0
+2.0
+Diplomacy policy 1-5, max diplomacy subsidies factor adjustment [>1], absolute values per policy (not cumulative), first line: no policy researched
+0.1
+0.25
+0.5
+1
+2
+3
+PrintNotes policy 1-2 increase of treasury per year, incremental values per policy (cumulative)
+50000000
+50000000
+PrintNotes policy 1-2 public wealth factor, incremental values per policy (cumulative)
+0.9
+0.9
+WarBonds policy, credit rating improvement (in notches, negative values result in better credit)
+-2
+WarBonds policy, public wealth factor adjustment
+0.9
+BankAct policy 1-2, credit rating improvement (in notches, negative values result in better credit), incremental values per policy (cumulative)
+-2
+-2
+BankAct policy 1-2, increase of treasury per year, incremental values per policy (cumulative)
+120000000
+150000000
+BankAct policy 1-2, influence on support of states, incremental values per policy (cumulative)
+-0.03
+-0.03
+TariffAct, tariff new tax cap, absolute value
+0.5
+TariffAct, effect on european relations (once) [-0 to -1]
+-0.1
+Confiscation, supply flow improvement if unit is on enemy soil, factor [>1]
+1.15
+Confiscation, CSA support adjustment per year in slave states
+0.03
+RevenueAct 1-3, support friendly states immediately, incremental values per policy (cumulative)
+-0.01
+-0.02
+-0.03
+RevenueAct 1-3, new income tax cap, absolute value per policy (not cumulative), higher acts need to have at least the caps of the lower acts (=resetting of cap)
+0.05
+0.15
+0.15
+RevenueAct 1-3, new corporate tax cap, absolute value per policy (not cumulative), higher acts need to have at least the caps of the lower acts (=resetting of cap)
+0.00
+0.00
+0.10
+NorthernRoutes, increased production/demand for crops, factor
+1.25
+NorthernRoutes, transport capacity factor for northern IIPs
+1.5
+NorthernRoutes, multiplier to available volunteers in MidWest states
+0.9
+FeedEurope 1-2, demand factor multiplier for european trade nodes [>1], incremental values per policy (multiplied)
+1.25
+1.25
+FeedEurope 1-2, influence on intervention levels [0-1], absolute values per policy (not cumulative)
+0.1
+0.2
+FeedEurope 1-2, influence on land sales tax, absolute values per policy (not cumulative)
+0.5
+0.5
+FeedEurope 1-2, change in credit rating Union, notches; negative is improvement
+0
+1
+USCT, increase in mobilization rate, increase by
+0.05
+USCT, increase in available volunteers per annum
+0.10
+USCT, increase in national morale CSA, increase by
+0.05
+USCT, number of brigades to be added
+3
+US Regulars, training value above nation's military experience
+0.5
+US Regulars, experience value above nation's military experience
+0.2
+US Regulars, initial perk value [0-1]
+1
+US Regulars, influence on military experience
+-0.05
+Emancipation, increase national morale CSA, absolute increase
+0.05
+Emancipation, increase of union support in all union states, absolute increase
+0.05
+Emancipation, influence on intervention levels, absolute increase
+0.20
+CivilianShips, resource cost all resources for ship types 0-3, multiplier
+0.25
+CivilianShips, adjustment of transport capacity ports, multiplier
+0.93
+MilitiaAct 1-4, new contract length in months
+3
+12
+24
+36
+MilitiaAct 1-4, volunteers factor Union (total available potential), accumulative (also accumultive to pre militia act volunteers factor)
+0.08
+0.15
+0.12
+0.10
+MilitiaAct 1-3, volunteers factor CSA (total available potential), accumulative (also accumultive to pre militia act volunteers factor)
+0.25
+0.2
+0.1
+MilitiaAct 1-4, volunteers factor Union increase per annum, accumulative
+0.50
+0.15
+0.15
+0.15
+MilitiaAct 1-3, volunteers factor CSA increase per annum, accumulative
+0.5
+0.15
+0.15
+Pre militia act volunteers factor (chapter 1 / pre-war phase)
+0.15
+Pre-war unit size factor (militia) [0-1]
+0.25
+CSA triggers policy militia 1 before Union, Union support in non-slave states, adjustment per year
+0.75
+CSA triggers policy militia 1 after Union, CSA gains national morale per year
+0.40
+Union triggers policy militia 1 before CSA, CSA support in all slave states, adjustment per year
+2.00
+Union triggers policy militia 1 after CSA, CSA support in all slave states, adjustment per year
+0.75
+Union triggers policy militia 1 after CSA, Union gains national morale per year
+0.40
+Union triggers militia act 1 before fort sumter event, absolute change of support in slave states for CSA
+0.10
+Draft 1-2, mobilization rate, incremental values per policy (additive)
+0.5
+0.3
+Draft 1-2, influence on national morale, absolute, non cumulative
+-0.02
+-0.02
+Draft 1-2, resetting of contract length (Union)
+36
+36
+Draft 1-2, resetting of contract length (CSA)
+36
+99
+Draft 1-2, increase of volunteers, additive 
+0.05
+0.025
+Draft 1-2, multiple to replacement speed [>1]
+1.5
+2
+Draft 1-2, increase of men per annum, accumulative
+0.15
+0.15
+General influence on state support per strength if unit is drafted 
+-0.000016
+LegalBlockade, influence on intervention levels, absolute increase
+0.2
+LegalBlockade, add on to max trade war subsidies (cumulative to diplomacy settings)
+1.2
+LegalBlockade, influence on european trade, multiplier, cumulative to other policies
+0.75
+LtGen, commanding general fame, absolute change
+1
+LtGen, losing battles, additional loss of national morale factor
+1.2
+LettersMarque, add on to max trade war subsidies (cumulative to diplomacy settings)
+1.2
+LettersMarque, influence on intervention levels, absolute increase
+-0.1
+LettersMarque, floor to blockade ratios of enemy ports
+0.015
+Abolition, influence on intervention levels, absolute increase
+0.1
+Abolition, Union national morale change
+0.05
+Abolition, CSA national morale change
+0.10
+Bounties 1-2, number of volunteers factor (total available potential), accumulative to militia values, cumulative for each level
+0.12
+0.12
+Bounties 1-2, increase of volunteers factor per annum, cumulative
+0.10
+0.10
+Bounties 1-2, recruitment cost per volunteer in usd, absolute, not accumulative
+300
+600
+Bounties 1-2, absolute reduction of fighting spirit cap of volunteer units, absolute, not accumulative
+-0.05
+-0.10
+Underground Railroad, initial reduction of slavery factor per industry
+-0.1
+Underground Railroad, reduction of slavery factor per industry and year
+-0.05
+Underground Railroad, adjustment in volunteers factor (total available potential), accumulative to other policies
+-0.05
+KansasFreeState, Union support in Kansas, absolute increase
+0.25
+KansasFreeState, Union support in all free states, absolute increase
+0.05
+GoWest, Union support in California, Orgegon, absolute increase
+0.25
+GoWest, population increase in California, Oregon, modifier
+1.20
+GoWest, increase of transport capacity of Oregon and Santa Fe, multiplier
+2.0
+Support Abolitionism, CSA support in all states within Union, absolute increase
+-0.10
+Enforce Neutrality Act, intervention levels, absolute increase
+0.10
+Bread Basket, support in free states, absolute increase
+0
+Bread Basket, intervention levels, absolute increase
+0.10
+Northern Industrialization, population multiplier for Union states
+1.2
+Northern Industrialization, amount of railroads that are constructed (first line) and navmesh id's (further lines -> these must sum up to the amount in first line)
+9
+11
+12
+13
+14
+15
+17
+18
+19
+20
+Nothern Industrialization, effect of religious unrest on national morale
+-0.05
+Security Measures, ratio of ships in Southern pool removed [0-1]
+0.5
+Security Measures, ratio of weapons in Southern pool removed [0-1]
+0.5
+Security Measures, effect on CSA national morale
+-0.05
+IndianWars, military experience in Union
+0.05
+IndianWars, military experience in CSA
+0.05
+IndianWars, national morale in Union
+0.05
+IndianWars, national morale in CSA
+0.0
+Union Pacific Railroad, amount of railroad elements constructed (first line) and navmesh id's (further lines -> these must sum up to the amount in first line)
+1
+10
+Union Pacific Railroad, rating modifier Union, notches; minus = improvement
+-2
+Union Pacific Railroad, influence on railroad transport capacity Union
+1.25
+Union Pacific Railroad, railroad construction speed
+1.25
+Impressment, number of available recruits (drafts + volunteers), based on the total recruitment capacity, cumulative increase
+0.1
+Impressment, cost of military supplies, factor
+0.8
+Impressment, support in allied states, absolute change
+-0.03
+NationalizeTrade, European demand of cotton, multiplier (additive to other policies)
+1.35
+NationalizeTrade, support for CSA in slave states, absolute change
+-0.03
+BurnCotton, cotton stock multiplier, stocks are set to xx% [0-1]
+0.5
+BurnCotton, intervention levels, absolute increase
+0.15
+CottonTrade, European demand of cotton, multiplier (additive to other policies)
+0.1
+CottonTrade, intervention levels, absolute increase
+0.1
+CottonTrade, influence on public wealth, cumulative to other policies, multiplier
+0.95
+SlaveryRestriction, initial reduction of slavery factor in all industries, absolute change
+-0.25
+SlaveryRestriction, intervention levels, absolute increase
+0.2
+SlaveryRestriction, support in slave states, absolute change
+-0.05
+CSCT, support in slave states, absolute change
+-0.02
+CSCT, number of brigades to be added
+3
+EmancipationCSA, change in available drafts (based on total recruitment capacity), additive to other policies
+0.35
+EmancipationCSA, change in national morale for Union, absolute change
+-0.1
+EmancipationCSA, change in support for all CSA states, absolute change
+-0.1
+EmancipationCSA, intervention levels, absolute increase
+0.25
+FreeTrade, tariffs max subsidies factor adjustment, absolute values per policy (not cumulative)
+0.15
+FreeTrade, intervention levels
+0.1
+OrgRunning, Union national morale, absolute change
+0.02
+OrgRunning, multiplier to blockade ratios if policy was chosen
+0.75
+Mexico, intervention levels, absolute increase
+0.15
+Mexico, Union national morale
+0.03
+Mexico, available recruits in texas (drafts + volunteers), based on the total recruitment capacity, cumulative increase
+-0.5
+TheOldDominion, support for CSA in Virginia, absolute change
+0.1
+TheOldDominion, Union national morale absolute change
+-0.05
+KansasASlaveState, support for CSA in Kansas, absolute change
+0.25
+KansasASlaveState, support for CSA in all slave states, absolute change
+0.05
+SlaveryToTheWest, support for CSA in New Mexico and Arizona, absolute change
+0.25
+SlaveryToTheWest, initial population modifier for New Mexico and Arizona
+1.25
+SlaveryToTheWest, transport capacity from Texas to western IIPs, multiplier
+2.0
+ApostlesOfDisunion, support for CSA in all slave states, absolute change
+0.20
+ApostlesOfDisunion, support for Union in all free states, absolute change
+0.10
+Filibustering, support for CSA in Cuba & Nicaragua, absolute change
+0.25
+Filibustering, military experience CSA, absolute change
+0.05
+King Cotton, support for CSA in all loyal states, absolute change
+0.05
+King Cotton, intervention levels, absolute increase
+0.20
+SouthernIndustrialization, population for CSA allied states adjustment (immigration), multiplier
+1.2
+SouthernIndustrialization, amount of railroads that are constructed (first line) and navmesh id's (further lines -> these must sum up to the amount in first line)
+7
+23
+24
+25
+26
+27
+29
+20
+SouthernIndustrialization, effect on national morale
+-0.05
+ArmsAgents, increase of artillery and rifle stock, multiplier
+1.5
+ArmsAgents, effect on Union national morale
+-0.05
+AllianceWithTheNatives (CSA), CSA support in Indian Territory
+0.25
+AllianceWithTheNatives (CSA), recruitment modifier to drafts and volunteers
+3.0
+SouthernPacificRailroad, amount of railroads that are constructed (first line) and navmesh id's (further lines -> these must sum up to the amount in first line)
+1
+22
+SouthernPacificRailroad, rating modifier CSA notches; minus = improvement
+-2
+SouthernPacificRailroad, influence on railroad transport capacity CSA
+1.25
+SouthernPacificRailroad, railroad construction speed
+1.25
+Max chooseable "grand" policies from main menu
+3
+Speed decrease factor for multiple policy research, exponentially (1 means speed is halved, 1.1 means speed for policy #2 is at 47%, 0.9 means speed for policy #2 is at 54% etc)
+1.1
+Emergency AI policy chain id for low recruiting
+100
+Emergency AI policy chain id for low credit
+101
+Trigger for launching low recruiting emergency AI, number of small brigades, below
+4
+Rating trigger necessary to launch emergency AI policy for low credit (0-1, below)
+0.4
+Weapon production increase per annum at full industry subsidies
+0.25
+the exponential increase for subsidy costs for higher levels, the lower, the flatter the curve for higher levels, 1=linear increase
+0.5
+############################################################# Objectives & interventions ##############################
+Break morale trigger level [<]
+0.25
+Capture capital, influence on national morale, absolute
+-0.05
+Initiate Militia Act, not triggering, Union national morale drop per day (absolute)
+-0.01
+Invade Confederacy, CSA support in all slave states, adjustment per week (absolute)
+0.001
+Invade Confederacy, Union national morale drop per week (absolute)
+-0.001
+Minimum size of each army to count as major battle
+25000
+Minimum casualties in total to count as major battle
+7500
+Win first major battle (Union), influence on Union national morale, absolute
+0.025
+Win first major battle (CSA), influence on Union national morale, absolute
+-0.05
+Win first major battle (winning side), army commander change in fame, absolute
+0.50
+Republican Majority, maintain support above
+0.51
+Republican Majority, Union national morale adjustment per week
+-0.01
+Capture xxx amount of forts
+10
+National morale increase if forts captured, absolute
+0.05
+Capture xxx amount of cities
+10
+National morale increase if cities captured, absolute
+0.05
+Invade the North, influence on Union national morale, absolute
+-0.025
+Invade the North, winning army general adjustment in fame, absolute
+0.50
+West Virginia, influence on CSA national morale, absolute
+-0.025
+Kentucky or Missouri secede, influence on Union national morale, absolute
+-0.05
+Kentucky or Missouri secede, new CSA support, target level
+0.75
+Cut Confederacy in Half, influence on Union national morale, absolute
+0.05
+Winning xxx consecutive land battles
+5
+Winning consecutive land battles, influence on national morale winner, absolute
+0.05
+Winning xxx consecutive naval battles
+5
+Winning consecutive navy battles, influence on national morale winner, absolute
+0.025
+Defeat European nation in one land battle, influence on Union morale, absolute
+0.025
+Win a major land battle (#24, Union), influence on intervention levels, absolute
+-0.1
+Win a major land battle (#25, CSA), influence on intervention levels, absolute
+0.25
+Lincoln's Second Term, maintain morale above xxx (Union)
+0.50
+Lincoln's Second Term, influence on union national morale, absolute
+-0.20
+Demoralize Union voters, Union morale level
+0.50
+Demoralize Union voters, influence on Union national morale, absolute
+-0.20
+Bleed them out, amount of casualties [>=]
+100000
+Bleed them out, influence on Union national morale, absolute
+-0.10
+Needed relation for interventions per chapter [0-1], 100 for not possible
+100
+0.75
+1.00
+1.5
+Higher intervention levels factor [>1], used eg to set higher trigger for certain interventions (eg GB)
+1.35
+Time of arrival of expeditionary forces in yrs
+0.04
+Time of arrival of late expeditionary forces in yrs
+0.08
+Time of arrival of European fleets
+0.04
+Pullback of intervention armies when strength falls below [0-1]
+0.5
+Pullback of intervention fleets when condition falls below [0-1]
+0.25
+############################################################# Projects ##############################
+influence on state support of own states for project propaganda, per level
+0.01
+influence on state support for enemy states for project counter propaganda, per level
+-0.01
+influence on state support for own nation of occupied states for project occupation administration, per level
+0.01
+influence on state support for enemy nation of occupied states for project suppress population, per level
+-0.01
+project administration reform, policy speed increase per level [0.05 means 5% faster for each level]
+0.05
+project subsidize banks, bank effects per level [0.05 means 5% increased influences]
+0.05
+project improve credit rating, influence on rating notches, negative values are improvements in rating, per level
+-1
+the influence of project market reform on market buildings effects, per level
+0.05
+the influence on nation's IIP's transport capacity, per level
+0.05
+the influence on supply and transport upkeep through logistics reform, per level
+-0.05
+project military railroad: upkeep cost for transports, <0
+-0.5
+project military railroad: adjustment in transport speed, 0.5 means 50% faster
+0.5
+project: increase in weapons production, per level
+0.05
+project send envoys: increase in tradevolume per level
+0.05
+project send envoys: increase in intervention probability per level
+0.05
+project subsidize industry: increase of industrial productivity per level
+0.05
+project subsidize agriculture: increase of farm and plantation productivity per level
+0.05
+project trade warfare: increase in blockade efficiency per level
+0.05
+project trade warfare: blockade runner efficiency per level
+0.05
+project civil order: reduction in support effect of casualties per level
+-0.05
+project civil order: reduction in support effect of raiding per level
+-0.05
+project recruit agents: intelligence gathering per level
+0.05
+project recruitment offices: increase of available volunteers per level
+0.05
+farm mechanization: effect on crops production
+0.1
+farm mechanization effect on volunteers, 0.05 means +5%
+0.1
+cotton machinery: increase of cotton productivity, 0.25 means +25%
+0.10
+project cotton is king, influence on european relations per level
+0.025
+project corn is king, influence on european relations per level
+0.025
+training manuals, increase in training speed per level
+0.05
+project railroad construction, construction speed per level
+0.05
+the max size factor of a brigade of cavalry reform was not unlocked
+0.5
+the max size factor of a brigade of artillery reform was not unlocked
+0.5
+consumption factor (all supply goods) if organisation reform is unlocked
+0.9
+machine guns, adding number of guns to stock for: gatling, coffee mill, williams gun [if project #10 and #11 are completed]
+32
+32
+48
+############################################################# Performance ##############################
+How many temperature updates are made in one cycle in campaign (is also multiplied by game speed)
+30
+How many wind direction calculation updates are made in one cycle in campaign (is also multiplied by game speed)
+30
+Cloud sprites update cycle (every xth frame)
+3
+Cloud start fade distance
+500
+Cloud end fade distance (=hidden)
+700
+Distance of sprites to old position for sprite facing updates (to cam)
+2
+Rotation distance of sprites to camera for sprite facing updates (to cam)
+4.0
+The number of rivers to be checked for freezing each cycle
+5
+Camera clipping distance 3D map
+500
+Camera clipping distance paper map
+3000
+Sprite orientation update when cam has moved probability (0-1), 1=permanent update (slower but smoother)
+0.2
+Permanent updates of non main moving functions (unit icons) -> every xth frame
+25
+Permanent updates of non main moving but slow functions ()-> every xth frame
+65
+Fog of War visibility checks per unit and frame -> the higher, the faster fow is updated, but the slower performance
+2
+Size of path blocker in campaign, used to block nav calculation and move around non passable territory, the higher the value, the faster the pathfinding but the more inaccurate the movement around
+5
+Alliance data update rhythm in game time (days)
+0.50
+The number of screen updates for messages per cycle 
+25
+The number of message updates per cycle of total messages (to determine read/unread)
+50
+Maximum updates of backwash sprites per cycle and per unit
+10
+Raycast exactness for updating unit ranges in campaign (overrides exactness of unitprefs)
+2
+Fleet update rhythm in game years
+0.002
+Time in game yrs to update the availability of ship types (imports)
+0.002
+Amount if IIP's in range to be updated per cycle
+10
+Amount of buildings in range to be updated per cycle
+4
+Amount of towns in range to be updated per cycle
+2
+Reduced IIP, town and buildings update per cycle if unit is not moving (factor)
+0.15
+Raycast cycles on campaign map (overwrites this variable in unitprefs), used to check for enemies in range; usually in campaign the search range is wider, therefore raycast needs to be done more often per cycle (higher value increases speed of interaction checks, but performance suffers)
+3
+Update cycle of IIP Data (units in range, blockades, raiding, new owners)
+40
+Update cycle of IIP Data (economy, construction)
+400
+UI elements update when cam has moved probability (0-1), 1=permanent update (slower but smoother)
+1
+Max cam movement to force updates of ui elements (eg iip's)
+1
+Max rotation difference to force updates of ui elements (eg iip's)
+1
+Update cycle for town data calculations
+200
+Update cycle for building data calculations
+150
+Update cycle for economic building data
+175
+Workforce map updates per cycle
+10
+Update time for campaign data (eg population, workforce) in campaign yrs
+0.00002
+Amount of construction site searches per cycle
+15
+Number of updates of economic alliance calculations for each cycle [inactive]
+50
+Update time of resource tax data in campaign yrs
+0.005
+Update for top toolbar information + tooltip text transport capacity in campaign yrs
+0.0002
+Filter map updates for support map texture
+100
+Frontline updates in campaign yrs [deactivated]
+0.0001
+Cycles to finish frontline calculations
+75
+Max distance to update closest harbors for fleets
+5
+Update of importance values for AI per cycle
+10
+Unit updates for calculating transport capacity
+10
+Time to stop smoke animation for buildings (time in which condition did not fall any more), in campaign yrs
+0.003
+Reduction of update unit range searches if closest enemy unit is above interruption distance (high values means faster searches, although lower accuracy), every xth frame
+3
+Camera rotation change to update triangle sorting (0-360)
+5
+Sprite position change, distance to update triangle sorting
+0.75
+Retreat heatmap size
+50
+Retreat heatmap updates per cycle 
+2

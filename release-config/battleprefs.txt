@@ -1,0 +1,1096 @@
+############################################################# BATTLEFIELD PREFS ##############################
+Battlefield Scrollspeed
+3
+Battlefield Scrollspeed reduction factor (to smooth the movement)
+0.8
+Battlefield Targetposition scrollspeed reduction factor (to smooth movement for auto cam perspectives)
+0.6
+Battlefield Maximum Camera Height (=Paper Map Trigger and end of camera tilting)
+750
+Battlefield Maximum Paper Map Height
+1100
+Battlefield Minimum Camera Height
+20
+Battlefield Terrain Size
+2048
+Battlefield rotation speed
+2.5
+Battlefield Max Scroll to Border 
+0.03
+Terrainoffset (=Base Height of Terrain) [deactivated]
+500
+Max Rotation angle (if Cam is at bottom; 90=horizon, 0=down)
+80
+Battlefield Mouse Wheel Sensitivity (determines the relation between wheel speed on low and high camera height)
+2.5
+Battlefield Mouse Wheel Speed (scroll speed overall)
+8
+Height factor of Maximum Camera Height to switch to Paper Map
+0.85
+The radius of each entry point where the troop target destination shall be searched
+250
+The distance in hours of reinforcements entering through entry points between the following units
+0.015
+Factor to determine the readjustment in arrival time (in hrs) if reinforcements are routed to other entry points, relative to distance (1 distance unit) (200 distance x 0.01 = 2 hours)
+0.01
+Paper map Border size left/right
+100
+Paper map Border size top/bottom
+200
+The height adjustment of the papermap border (added to the min terrain height)
+-2
+How far is the border moved into the main map to cover edges?
+1
+Paper map wear and tear effect alpha (center)
+0.9
+Paper map scale size x
+800
+Zoom factor for objective symbol and text: true to adjust size with map y zoom
+true
+Overall size of objective symbol and text
+0.5
+Distance to hide text information of objectives
+300
+Distance to hide complete objective symbol (3D map only)
+300
+Blinking time in seconds of objectives if player selects it via objective list
+5
+Objectives blinking intensity [0-1, 0=no blinking, 1=blinking between black and set color]
+0.15
+Objectives blinking speed
+6
+Calculation factor range to real distances in km (1 unit in game is x.xxx units in real), eg.: if terrain size is 2048 and this factor is 6.9 then the total battlefield size is 14150 meters
+6.3
+The distance on ground for zoom in actions towards a unit
+40
+The height over ground for zoom in actions towards a unit
+30
+Distance an objective to recognize approaching units as "reached" before moving to next AI strategy chain objective
+100
+Minimum objectives to appear on map (distance and angles to search for are permanently increased until this amount is reached)
+5
+Time to take objectives in hrs for 1000 men (in range) if active
+1.0
+Time to relief objectives if occupator leaves objective before taken, if active
+0.20
+Time in hrs to update objective points if active
+0.10
+Point ratio for objective point updates counting for victory conditions
+0.125
+Objective radius for recognizing units
+50
+Objectives to be activated for campaign battles if within at max of range of the defender
+600
+Victory points acceleration per day linear
+0.75
+Victory points acceleration per day exp
+1.2
+The maximum range another objective is shown next to the main objective (to keep objectives together)	
+2500
+############################################################# Time & WEATHER ##############################
+Fog Storm Start
+5
+Fog Storm Distance
+325
+Fog regular Start
+25
+Fog regular Distance
+1000
+Maximum degrees for Snow (Winter only)
+46
+Average Temperatures per Month (starting with January) in Fahrenheit
+27
+36
+46
+70
+80
+85
+86
+85
+72
+59
+48
+34
+Temperature Volatility In Fahrenheit (up/dn)
+10
+Skip Terrain Texture Update (season change, memory intensive): true/false
+false
+Day Start Hour per Month (starting with January)
+8
+8
+7
+7
+6
+5
+5
+6
+7
+7
+7
+8
+End Hour per Month (starting with January)
+17
+17
+18
+18
+19
+20
+21
+21
+20
+19
+18
+17
+Day Length in Realtime Minutes (calculated out of a day of 6-18h)
+120
+Maximum Gamespeed
+10
+Minimum Gamespeed
+0.1
+Retreat Timer in game hrs (if no contact with enemy)
+0.08
+Retreat Timer in game hrs (if all units have contact with enemy)
+1
+############################################################# FOG OF WAR ##############################
+Fog map resolution factor (in relation to the overall battlefield map size)
+0.1
+Smoke/dust map resolution factor (in relation to the overall battlefield map size) -> should be smaller than fog map resolution factor to have cover effect
+0.02
+Alpha of fog of war areas
+0.5
+The multiplicator for line of sight reduction, taking into account smoke and dust with remaining alpha and size (the higher the value, the shorter is line of sight if dust and smoke appears in front of view)
+0.8
+Line of sight reduction for terrain forest (per fow field)
+-12
+Line of sight reduction for high crop (per fow field)
+-7
+Standard Crop height for forest fields
+15
+Reduction of Concealment per field of distance to next enemy unit (eg. forest is 30 concealment and this value is -5, unit hidden in there would be spotted from (100-30)/5=distance 14)
+-0.5
+Line of sight reduction if unit is layn down (factor to be multiplied by original line of sight range)
+0.3
+Concealment increase in value if unit is layn down
+60
+Commander cunning influence on concealment (relation to cunning value: 0.5 means half of the commander's cunning is added to concealment value)
+0.4
+Concealment value increase for unit size 0.0 (smaller units are harder to spot)
+30
+Concealment value increase for unit size 1.0 (larger units are easy to spot)
+0
+Number of cycles Hide/Unhide confirmations needed for fow and concealment (to prevent no immediate hide/unhide but after a while), higher values prevent blinking of enemy units although they appear/disappear slower
+3
+Max units to update per cycle
+50
+Range to which units are always discovered
+60
+Max smoke on one position
+0.6
+Smoke drift speed after creation
+65
+############################################################# TERRAIN SPECIFICS ##############################
+Terrain Specifics: Amount of Terrain-Meshes (location like in untiy editor) - do not change rank!
+14
+Terrain Specifics: Amount of Texture Specs
+3
+Name Mesh #0 -------------------------------------------------------------
+Grasland
+Cost Mesh #0 (only influencing moving speed, not pathfinding)
+2
+forced movement distance to mid of the specificed terrain #0
+0
+influence on cohesion #0
+0
+influence on fatigue per hour (0-1) #0
+0.25
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.3
+Name Mesh #1 -------------------------------------------------------------
+not used
+Cost Mesh #1 (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain #1
+0
+influence on cohesion #1
+0
+influence on fatigue per hour (0-1) #1
+0.25
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+Name Mesh #2 -------------------------------------------------------------
+not used
+Cost Mesh #2 (only influencing moving speed, not pathfinding)
+2
+forced movement distance to mid of the specificed terrain #2
+0
+influence on cohesion #2
+0
+influence on fatigue per hour (0-1) #2
+0.25
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+Name Mesh #3 -------------------------------------------------------------
+Creek
+Cost Mesh #3 (only influencing moving speed, not pathfinding)
+5
+forced movement distance to mid of the specificed terrain #3
+0
+influence on cohesion #3
+0.45
+influence on fatigue per hour (0-1) #3
+1
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+Name Mesh #4 -------------------------------------------------------------
+River
+Cost Mesh #4 (only influencing moving speed, not pathfinding)
+5
+forced movement distance to mid of the specificed terrain #4
+0
+influence on cohesion #4
+1
+influence on fatigue per hour (0-1) #4
+1.5
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+Name Mesh #5 -------------------------------------------------------------
+River Crossing
+Cost Mesh #5 (only influencing moving speed, not pathfinding)
+2
+forced movement distance to mid of the specificed terrain #5
+4
+influence on cohesion #5
+0.6
+influence on fatigue per hour (0-1) #5
+0.4
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+Name Mesh #6 -------------------------------------------------------------
+Bridge
+Cost Mesh #6 (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain #6
+4
+influence on cohesion #6
+0.1
+influence on fatigue per hour (0-1) #6
+0.3
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.3
+Name Mesh #7 -------------------------------------------------------------
+Road
+Cost Mesh #7 (only influencing moving speed, not pathfinding)
+1
+forced movement distance to mid of the specificed terrain #7
+3
+influence on cohesion #7
+0
+influence on fatigue per hour (0-1) #7
+0.2
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.3
+Name Mesh #8 -------------------------------------------------------------
+Fences Walls
+Cost Mesh #8 (only influencing moving speed, not pathfinding)
+4
+forced movement distance to mid of the specificed terrain #8
+0
+influence on cohesion #8
+0.4
+influence on fatigue per hour (0-1) #8
+0.2
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+Name Mesh #9 -------------------------------------------------------------
+Pontoon_0
+Cost Mesh #9 (only influencing moving speed, not pathfinding)
+2
+forced movement distance to mid of the specificed terrain #9
+0
+influence on cohesion #9
+0.1
+influence on fatigue per hour (0-1) #9
+0.3
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+Name Mesh #10 -------------------------------------------------------------
+Pontoon_1
+Cost Mesh #10 (only influencing moving speed, not pathfinding)
+2
+forced movement distance to mid of the specificed terrain #10
+0
+influence on cohesion #10
+0.1
+influence on fatigue per hour (0-1) #10
+0.3
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+Name Mesh #11 -------------------------------------------------------------
+Pontoon_2
+Cost Mesh #11 (only influencing moving speed, not pathfinding)
+2
+forced movement distance to mid of the specificed terrain #11
+0
+influence on cohesion #11
+0.1
+influence on fatigue per hour (0-1) #11
+0.3
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+Name Mesh #12 -------------------------------------------------------------
+Pontoon_3
+Cost Mesh #12 (only influencing moving speed, not pathfinding)
+2
+forced movement distance to mid of the specificed terrain #12
+0
+influence on cohesion #12
+0.1
+influence on fatigue per hour (0-1) #12
+0.3
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+Name Mesh #13 -------------------------------------------------------------
+Pontoon_4
+Cost Mesh #13 (only influencing moving speed, not pathfinding)
+2
+forced movement distance to mid of the specificed terrain #13
+0
+influence on cohesion #13
+0.1
+influence on fatigue per hour (0-1) #13
+0.3
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+0
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+Name Tex #0 -------------------------------------------------------------
+Forest
+Cost Tex #0 (no influence on pathfinding)
+4
+Texture ID Tex #14
+9
+forced movement distance to mid of the specificed terrain #0
+0
+influence on cohesion #0
+0.35
+influence on fatigue per hour (0-1) #0
+0.4
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+10
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+Name Tex #1 -------------------------------------------------------------
+Swamp
+Cost Tex #1 (no influence on pathfinding)
+6
+Texture ID Tex #15
+10
+forced movement distance to mid of the specificed terrain #1
+0
+influence on cohesion #1
+0.7
+influence on fatigue per hour (0-1) #1
+0.5
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)]
+5
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0
+Name Tex #2 -------------------------------------------------------------
+Field
+Cost Tex #2 (no influence on pathfinding)
+3
+Texture ID Tex #16
+6
+forced movement distance to mid of the specificed terrain #2
+0
+influence on cohesion #2
+0.15
+influence on fatigue per hour (0-1) #2
+0.35
+concealment cost (the higher the value, the higher the probability that the unit is not discovered) [values between 0(no concealment)-100(high concealment)], only if crop height is surpassing a certain height!
+15
+dust creation factor when units move across (0-1, 0 means no dust; beeing multiplied with unit dust creation values)
+0.1
+############################################## COVER VALUES & Z Shifts #############################################
+17
+None
+0
+z-shift for unit positioning
+0
+Concealment (absolute value if unit is in cover behind)
+0
+Fence
+0.1
+z-shift for unit positioning
+0
+Concealment (absolute value if unit is in cover behind)
+25
+Stone Wall
+0.35
+z-shift for unit positioning
+0
+Concealment (absolute value if unit is in cover behind)
+35
+Forest
+0.1
+z-shift for unit positioning
+0
+Concealment (absolute value if unit is in cover behind)
+45
+Embankment
+0.20
+z-shift for unit positioning
+0
+Concealment (absolute value if unit is in cover behind)
+25
+Creek
+0.08
+z-shift for unit positioning
+0
+Concealment (absolute value if unit is in cover behind)
+20
+Road
+0.02
+z-shift for unit positioning
+-5
+Concealment (absolute value if unit is in cover behind)
+3
+Earth parapet
+0.40
+z-shift for unit positioning
+-5
+Concealment (absolute value if unit is in cover behind)
+45
+Reinforced parapet
+0.45
+z-shift for unit positioning
+-5
+Concealment (absolute value if unit is in cover behind)
+60
+Parapet & Abatis
+0.50
+z-shift for unit positioning
+-5
+Concealment (absolute value if unit is in cover behind)
+60
+Parapet & Obstacles
+0.55
+z-shift for unit positioning
+-5
+Concealment (absolute value if unit is in cover behind)
+65
+Breastworks
+0.15
+z-shift for unit positioning
+0
+Concealment (absolute value if unit is in cover behind)
+35
+Building
+0.7
+z-shift for unit positioning
+0
+Concealment (absolute value if unit is in cover behind)
+60
+Destroyed building
+0.6
+z-shift for unit positioning
+0
+Concealment (absolute value if unit is in cover behind)
+55
+Wrecked building
+0.25
+z-shift for unit positioning
+0
+Concealment (absolute value if unit is in cover behind)
+50
+Sunken Road
+0.3
+z-shift for unit positioning
+-5
+Concealment (absolute value if unit is in cover behind)
+35
+Unfinished Railroad
+0.27
+z-shift for unit positioning
+-5
+Concealment (absolute value if unit is in cover behind)
+15
+############################################## Pontoons, Barricades, Trenches #############################################
+Pontoon y (height) adjustment
+-0.3
+Pontoon distance boat segments
+3
+Pontoon distance plank segments
+5.72
+Pontoon, barricade, trench alpha if not built
+0.65
+Pontoon building duration per width in hours
+0.07
+Distance to river edge where unit needs to be placed in order to construct pontoons
+5
+Maximum trench and barricade pieces per successive line segment (is preloaded)
+100
+Minimum distance for brigades to be positioned near obstacles to proceed with construction
+15
+Trench construction duration per element in hours
+0.375
+Barricade construction duration per element in hours
+0.25
+Trench cover construction duration per element in hours
+0.25
+Trench abatis construction duration per element in hours
+0.25
+Trench spikes construction duration per element in hours
+0.25
+Available construction time in hrs per engineer unit
+0.5
+Assumed readiness for each side on day #2 (determines the available engineering points for next days)
+0.25
+Slowdown if units approach abatis (factor to normal)
+0.4
+Slowdown if units approach spikes (factor to normal)
+0.25
+AI entrenchment levels for barricades [<=]
+0.15
+AI entrenchment levels for trenches (level 0-3) [>]
+0.15
+0.30
+0.60
+0.80
+################################################ Buildings ##################################################################
+Maximum fire angle out of windows of buildings (magnitute)
+100
+Damage texture of building starting at damage level
+75
+Destroying animation triggered at
+40
+Complete wreckdown of the building at damage
+0
+Shift to ground factor when wrecking (in relation to total model height)
+0.4
+Time to wreck in hrs
+0.005
+Shaking distance when wrecking down
+0.05
+Unit starts to scatter its companies over the grouped buildings, starting from following direction to target building:
+6
+Distance to which units suffer casualties if the building cracks down (only relevant for the occupying unit)
+3
+################################################ Deployment and Frontlines #################################
+Minimum units for accepting hierarchy levels for frontlines (if the amount of units of one side is below this value, the frontlines are built out of the next lower hierarchy levels)
+1
+Border Width
+20
+The buffer zone between two overlapping enemy armies [1.0 means the fronts are equal, lower 1.0 increases buffer zone]
+0.5
+Basic unit range
+300
+Basic entry point range
+650
+Basic objective range
+500
+Minimum distance to others (units & objectives) 
+500
+Influence of readiness on engineering points (exponential)
+0.8
+Influence of entrenchment level on engineering points (based on unit strength)
+0.00125
+Distance factor to multiply with readiness value to look for objectives/entry points in range 
+1000
+Minimum readiness factor for occupying objectives and entry points [0-1]
+0.1
+Max angle difference for checking entry angle of units to occupy entry points (+/-)
+25
+Minimum distance for AI to be placed in pre-determined positions, to closest enemy, max
+300
+################################################ AI Preferences & Feud ####################################
+Maximum AI level for separate unit assignment to AI unit pool (related to unit type, state groups only)
+15
+Minimum group morale level for screening maneuvers [0-1]
+0.3
+Minimum group morale level for defending [0-1]
+0.4
+Minimum group morale level for attacking maneuvers [0-1]
+0.5
+Minimum group morale level for assaulting maneuvers [0-1]
+0.6
+Distance to check for anchored flanks (rivers)
+80
+Distance (from flank position to terrain peak) to check if flank is on high ground
+50
+Weighting of reinforcements arriving late, exponential: strength * 1/(delay in hrs ^ this value)
+0.7
+Force balance to trigger defend macro ai stance, lower than
+0.80
+Force balance to trigger attack macro ai stance, higher or equal than
+0.80
+Force balance to trigger assault macro ai stance if no flanking is possible, higher or equal than
+3.0
+Force balance to trigger assault macro ai stance if flanking is possible, higher or equal than
+4.0
+Influence of commander initiative on attack/defend/assault trigger [new trigger = trigger / (1+initiative*this value)]
+0.7
+Trigger for assigning reserve to flank, (below) strength relation to enemy in that area, stance: assault
+1.7
+Trigger for assigning reserve to flank, (below) strength relation to enemy in that area, stance: attack
+1.4
+Trigger for assigning reserve to flank, (below) strength relation to enemy in that area, stance: defend
+0.9
+Trigger for assigning reserve to flank, (below) strength relation to enemy in that area, stance: retreat (not used)
+99999
+Standard time to change macro ai stance in game hrs
+0.1
+Influence of commander initiative on shorter macro ai stance changes [0=no influence, 1=full influence]
+0.7
+Trigger for ordering unit to flank, (above) strength relation to enemy in that area, inner unit needs to be in (greater) contact with enemy, stance: assault
+1
+Trigger for ordering unit to flank, (above) strength relation to enemy in that area, inner unit needs to be in (greater) contact with enemy, stance: attack
+1.3
+Trigger for ordering unit to flank, (above) strength relation to enemy in that area, inner unit needs to be in (greater) contact with enemy, stance: defend
+2.2
+Trigger for ordering unit to flank, (above) strength relation to enemy in that area, inner unit needs to be in (greater) contact with enemy, stance: retreat (not used)
+99999
+Factor, maximum units that may move to order flanking maneuvers (shall not occur during regular movement, until positions are found) [0-1]
+0.25
+Range of flanking move in relation to the group width (1 means the turn is 1x the group width to left before turning right etc.)
+0.4
+Trigger for cancelling flanking move, (below) strength relation to enemy in that area, inner unit needs to be in (greater) contact with enemy, stance: assault
+0.6
+Trigger for cancelling flanking move, (below) strength relation to enemy in that area, inner unit needs to be in (greater) contact with enemy, stance: attack
+0.9
+Trigger for cancelling flanking move, (below) strength relation to enemy in that area, inner unit needs to be in (greater) contact with enemy, stance: defend
+1.5
+Trigger for cancelling flanking move, (below) strength relation to enemy in that area, inner unit needs to be in (greater) contact with enemy, stance: retreat (not used)
+99999
+Height difference to recognize flank as anchored when trying to flank, measured from the source unit position before turning towards enemy
+5
+Factor for influence of enemy flanking on AI decisions (strength calculations) [>=1], the higher, the less own actions (eg decision for own flanking) is influenced by enemy flanking
+10
+Morale weighting for standard macro AI decisions (strength calculations)[0-1], the lower the less weighting
+0.25
+Experience weighting for standard macro AI decisions (strength calculations)[0-1], the lower the less weighting
+0.25
+Strength relation to enemies nearby, trigger to switch to assault mode for single groups (micro behavior), exp, morale is taken into account; only executed if macro ai stance is attack or assault; 0=assault, 1=attack, 2=defend(not used), 3=retreat(not used)
+1.1
+1.5
+3
+0
+Strength relation to enemies nearby, trigger to switch to defend mode for single groups (micro behavior), exp, morale is taken into account; should be below value of switch to assault mode above; value for each macro ai: 0=assault, 1=attack, 2=defend, 3=retreat(not used)
+0.5
+0.8
+1.5
+0
+Strength to switch to screening if macro ai is assault or attack but own strength is below, exp, morale is taken into account; value for each macro ai: 0=assault, 1=attack, 2=defend (not used), 3=retreat(not used)
+0.6
+0.8
+2
+0
+Trigger for ordering retreat of the whole army [0.01-1], also applicable for auto-retreat for player
+0.10
+Trigger for ordering retreat of the whole army when night comes [0.01-1], AI only
+0.275
+Commander's initiative influence on retreat trigger [0-1], high values reduce trigger (trigger = trigger -initiative*this value)
+0.25
+Max deviation distance of path updates when single units are ordered to move towards enemy unit in micro AI
+5
+Trigger distance to nearest enemy to activate micro ai single unit movement towards this enemy 
+275
+Trigger distance to nearest enemy to activate micro ai single unit movement towards this enemy if path was not interrupted (should be shorter than with interrupted ones)
+75
+Factor of max non ari units moving to launch micro forward movement (otherwise group will wait until more units have reached position)
+0.15
+If group established contact to enemy, move group further towards unit by this distance if stance is attack or assault (other operations are handled in micro ai)
+80
+% distance to enemy unit of max weapon distance for micro ai placement (single units), for each group stance: 0=none (not active), 1=screen, 2=defend (not active), 3=attack, 4=assault
+1
+0.9
+0.9
+0.55
+0.25
+AI Bombardment duration when assaulting in game hrs
+0.25
+Distance to enemy unit to check if stopping unit and face enemy, micro ai, normal movement (no charge)
+45
+Minimum distance between old and new target to switch to new target (to prevent jumping around)
+40
+Max angle difference to turn towards enemy unit, micro ai, normal movement
+30
+Distance to enemy for cavalry units to dismount
+75
+Min distance for cavalry movement to mount
+90
+Morale for triggering fallback (below 0-1) if enemy is close for each group stance: 0=none (not active), 1=screen (not active), 2=defend, 3=attack, 4=assault
+0
+0.6
+0.55
+0.6
+0.4
+Fallback distance if fallback due to low morale was triggered and enemy is close
+14
+Trigger for initiating charge on enemy unit, based on strength, exp and morale relation from own to enemy (values > 1 means own unit is stronger), only executed in assault modes
+1.5
+Weighting of unit strength relation for micro ai charge decisions
+0.7
+Weighting of experience relation for micro ai charge decisions
+0.7
+Weighting of morale relation for micro ai charge decisions
+1.0
+Weighting of fatigue relation for micro ai charge decisions
+0.6
+No micro ai charge if unit is outflanked or receiving flanking fire (true/false)
+true
+Micro movement single units straigth forward towards enemy unit before turning towards enemy (factor of distance to enemy), higher factors may help flanking enemy unit as the own unit moves further before turning
+1
+Factor to increase opponent flank strength if enemy units on this flank are closer (to trigger reinforcement behavior for the flank with closer enemies)
+1.1
+Distance for micro ai movement (inf, cav, scouts) to move towards near entry point to occupy
+150
+Feud update cycle in game hrs (every xx hr a probability check on feud is made)
+1
+Feud trigger level (higher values reduce probability of feuds)
+0.2
+Feud probability (higher values reduce probability of feuds; if random value of 0 to this value < initiative difference - trigger [fame], feud is triggered), calculated within feud update cycle
+0.7
+Time in game hrs to indicate actions under feuds (blinking)
+0.15
+Duration of feuds (game hrs), factor multiplied with initiative difference - trigger; eg if initiative difference is 0.50, trigger is 0.30 then 0.20*this value (10) = 2 hrs disagreement
+5
+Probability factor of group movements of commanders under feud, the higher the value the higher the probability the group commander moves towards nearest enemy (initiative dependent)
+1.2
+Needed minimum distance of enemy groups to trigger feud-group movements
+200
+Minimum morale to detach skirmishers (ai micro) [0-1]
+0.5
+Morale trigger for skirmishers to be reattached (ai micro) [0-1], should be below minimum morale to detach; below
+0.3
+Minimum distance to enemy for skirmishers to be reattached (ai micro) [below]
+40
+Time to last combat interaction to redeploy skirmishers in hrs
+1
+Max distance to check for construction of pontoons (intraday, not deployment phase)
+100
+Minimum morale for rallying order (below this value the commanders are trying to rally this unit)
+0.5
+Max distance from AI unit to left gun to grab guns
+50
+Time (game hrs) to renew check of charge if attack stance was given (units under ai control only), within this time, a renewed charge order is not given if it was broken up before due to bad conditions
+0.5
+Time (game hrs) to wait for resetting of new ai stances once set (for enemy ai only)
+1
+Distance to other AI groups to use similar AI strategies if AI strategy is dynamic (-1), non dynamic will always be combined, changed 04.06.21 to -1 (deactivated), before:400
+300
+Max reinforcement time lag in game hrs to be recognized for ai retreat decisions
+24
+Victory bar trigger level for AI to take cease fire into account [0-1], below
+0.40
+Casualties rate of AI to trigger surrender, only triggered if no reinforcements are arriving any more and morale is below enemy [0-1], above
+0.65 
+Maximum morale for AI to surrender, needs to match above criteria too [0-1]
+0.40
+The factor to multiply the fame influence for each unit level (starting with brigade, division, corps, army)
+0.005
+0.0065
+0.009
+0.013
+Trigger for getting famous, referenced to battle outcome [minor victory, major victory, minor defeat, major defeat]
+0.025
+0.02
+0.03
+0.04
+Trigger for getting defamed, referenced to battle outcome [minor victory, major victory, minor defeat, major defeat]
+-0.0018
+-0.0027
+-0.0016
+-0.0015
+The multiplier for fame if commander gets wounded [>1]
+1.2
+Minimum time of rehabilitation in campaign years
+0.4
+Maximum time of rehabilitation in campaign years
+1.5
+Min start bonus to adjust in battle start menu
+0
+Max start bonus to adjust in battle start menu
+0.5
+Minimum fighting ratio of a group to be able to follow an objective chain (used as OR argument with absolute minimum units)
+0.55
+Minimum absolute intact units of a group to be able to follow an objective chain (used as OR argument with minimum fighting ratio)
+3
+Maximum distance to objective for AI group movements to skip road movements (in order to have a faster direct path)
+250
+Repositioning of groups in defensive stance, allow repositioning although max ratio of subordinate units are moving
+0.15
+Repositioning of groups in defensive stance, allow repositioning although max ratio of subordinate units are fighting
+0.15
+Max angle difference for repositioning group in defensive stance
+25
+The min distance where groups try defensive facing towards enemy
+250
+Check artillery fallback if no active own unit is below this range (1) and enemy unit is below this range (2)
+40
+40
+Time in hrs to start retreat timer after AI decided to retreat
+1
+Maximum cover ratio of subordinate units for groups to perform defensive rotation towards enemy or formation changes [0-1]
+0.05
+Additional angle to trigger defensive rotation towards enemy if units are behind cover
+65
+Minimum national morale for units to evaluate surrender if routed (0-1)
+0.4
+Minimum average army morale for units to evaluate surrender if routed (0-1) / AND condition to minimum national morale
+0.5
+Probability of surrender if national morale and army morale fall below triggers, linear factor -> the higher, the higher is the probability
+0.01
+Probability of surrender if national morale and army morale fall below triggers, exp factor -> the higher, the higher is the probability if morale is low
+1.5
+The number of angle checks to evaluate ai defensive facing
+25
+The range to take enemies into account for evaluating facing
+250
+Additional angle towards enemy if single brigade is behind cover before rotation starts
+30
+The min distance where groups try defensive facing towards enemy
+150
+The maximum distance a cavalry attack shall be carried out on weak enemies
+40
+Minimum morale of non-arty units to be selected as cavalry targets
+0.30
+################################################ Stats & Victory conditions #################################
+Leverage of morale for calculating victory conditions
+45
+Leverage of strength for calculating victory conditions
+40
+Power balance info about minor victory, vp relation above/equal
+0.7
+Power balance info about major victory, vp relation above/equal
+0.8
+Power balance info about minor defeat, vp relation below/equal
+0.3
+Power balance info about major defeat, vp relation below/equal
+0.2
+Power balance bar info about critical losses, loss ratio above
+0.3
+Influence on national morale exponential factor for loss rate (national morale change = losses ^ this value * absolute losses factor)
+0.3
+Influence on national morale factor to be multiplied with absolute losses (national morale change = losses ^ loss rate factor * this value )
+0.0004
+Influence on national morale multiplicator if battle is lost (forced to retreat)
+1.5
+Influence on national morale multiplicator if army retreats (voluntary retreat)
+1.15
+Influence on national morale multiplicator if army surrenders
+3.0
+Factor range of weapons to be captured by victor after battle (from, to), calculated from casualties
+0.2
+0.8
+The leverage for victory conditions multiplied with routed unit ratio
+20
+The maximum loss ratio to achieve a major victory, mil exp 0 and mil exp 1
+0.17
+0.30
+The minimum loss ratio of enemy to achieve a major victory, mil exp 0 and mil exp 1
+0.22
+0.35
+Minimum objective points ratio held by enemy in order to force the enemy to defend (above)
+0.51
+################################################ Sound Preferences ############################################
+Maximum sound purposes in battles
+750
+Maximum single rifle/artillery sounds per unit (capped with sprite numbers)
+25
+Background firing sound ceases if no firing for longer than this duration (game hrs)
+0.04
+Time distance in seconds since last played clip of one sound array (eg. minimum firing volley time distance)
+0.05
+Random range fife and drum playing in hours (every unit plays fife and drum at a random time, set at the initialization, this is the range: eg [random 0.12] +this value 0.05 -> clip is played if minutes are 0.12 to 0.17; so probability = 0.05/0.60=12%)
+0.04
+################################################ Messages & Stats #################################
+Time to last message to check for equal messages (prevent spamming of messages with same content), game hrs
+1.5
+Standard time delay until finishing of enemy pontoons are reported, game hrs (only if not hidden by fow)
+1
+The max unit level (based on unitprefs numbering) of the sender of messages of subordinate groups
+15
+Standard time delay until message of enemy leaving battlefield is submitted (only if not hidden by fow)
+1
+Message trigger: low ammo [below]
+0.3
+Message trigger: critical ammo [below]
+0.15
+Message trigger: low ari ammo [below]
+0.25
+Message trigger: high casualties [above]
+0.4
+Message trigger: very high casualties [above]
+0.6
+Message trigger: low morale [below]
+0.4
+The exactness of values to round to for text messages if enemy numbers are approximated (infantry)
+1000
+The exactness of values to round to for text messages if enemy numbers are approximated (cavalry)
+500
+The exactness of values to round to for text messages if enemy numbers are approximated (guns)
+5
+The time in secs a message is shown on screen as symbol before it disappears
+30
+Distance between symbols on screen in pixels (y) [is adjusted by standard symbol size]
+100
+Maximum move of messages in pixels per cycle
+6
+Message symbol size factor x
+2
+Message symbol size factor y
+1.25
+Max (override) level of unit shown in report stats (top line, hierarchy chain), use number stated in unitprefs
+15
+Line difference in statistics sheets in px
+22.5
+The default folder to open when reports are opened (resetted every battle), 0=overview, 1=condition, 2=strength, 3=combat, 4=commanders
+1
+Total lines in report folders (excluding average/sum)
+13
+Weighting of fame within ranking calculation of commanders (in addition to exp)
+0.5
+Trigger for stating "poor condition" in remarks (below)
+0.5
+Trigger for stating "poor supply" in remarks (below, forage + provisions)
+0.5
+Trigger for stating "poor ammo" in remarks (below)
+0.5
+Minimum time of last firing to count as new engagement, in game hrs
+0.5
+Minimum variation accuracy for statistic values if all enemy units are spotted
+0.10
+Maximum variation of accuracy for statistic values if no enemy unit is spotted
+0.90
+Factor for variation of accuracy when having full initiative (eg 0.2 means that we use 0.2 x variation if initiative=1)
+0.2
+Factor for variation of accuracy when having no initiative
+1.0
+Factor for variation of accuracy when having full intelligence (no intelligence = variation stays as it is; 0.3 here means that variation is multiplied with factor 0.3 if we have full intelligence)
+0.3
+Factor for overestimating enemy figures when having no cunning (full cunning = variation 0.5:0.5; no cunning = eg 1:2 when using value 2)
+0.5
+Approximation of statistical figures for enemy values <1000
+200
+Approximation of statistical figures for enemy values <5000
+1000
+Approximation of statistical figures for enemy values <10000
+2500
+Approximation of statistical figures for enemy values <50000
+10000
+Approximation of statistical figures for enemy values >=50000
+15000
+################################################ Performance Optimization #################################
+Check for weather updates in hours
+0.05
+Smoke update cycles (every xth frame) 
+3
+Duration of smoke on the battlefield (only visual)
+100
+Smoke is visible in paper map? (true/false) [deactivated]
+false
+Smoke start fade distance [deactivated]
+150
+Smoke end fade distance (=hidden) [deactivated]
+250
+Amount of units to calculate per cycle for frontline illustration (the less the faster)
+2
+Frontline search step (angle) -> between 1 and 360 -> the lower, the more search steps are made
+5
+Sound clip update cycle -> number of sound updates per cycle
+200
+Fog of War visibility checks per unit and frame -> the higher, the faster fow is updated, but the slower performance
+1
+The amount of gaussian blur for fog of war
+2
+Update of side statistics and AI behavior in game hrs
+0.015
+Minimum update cycle of group calculations (eg for victory conditions) in game hrs
+0.015
+The number of screen updates for messages per cycle 
+50
+The number of message updates per cycle of total messages (to determine read/unread)
+100
+Update of commander rankings in game hrs
+0.022
+Update of unit rankings in game hrs
+0.025
+Update of left guns list, used for ai checks, in game hrs
+0.01
+Min cam moving distance for objective update
+2
+Min cam rotation difference for objective update
+3
+Camera clipping distance 3D map
+1000
+Camera clipping distance paper map
+3000
+Sprite orientation update when cam has moved probability (0-1), 1=permanent update (slower but smoother)
+0.75
+Objective update when cam has moved probability (0-1), 1=permanent update (slower but smoother)
+1
+Max distance to cam to force updates of objectives
+10
+Max rotation difference to force updates of objectives
+10
+Update of cease fire checks in game hrs
+0.01
+Camera rotation change to update triangle sorting (0-360)
+5
+Sprite position change, distance to update triangle sorting
+0.75
+Smoke udpate cycles
+1
+2
+3
+5
+Smoke update cycle distances (deactivated)
+400
+600
+1000
+9999
+Retreat heatmap size
+50
+Retreat heatmap updates per cycle 
+10
+The probability a musket smoke is created [0-1]
+0.5
+Unit sprite factor if total men on the field surpasses 50k
+1.0
+Unit sprite factor if total men on the field surpasses 100k
+0.8
+Unit sprite factor if total men on the field surpasses 200k
+0.6
+Unit sprite factor if total men on the field surpasses 300k
+0.50
+Unit sprite factor if total men on the field surpasses 400k
+0.40
+Unit sprite factor if total men on the field surpasses 500k
+0.25
