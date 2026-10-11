@@ -1,0 +1,2066 @@
+#################################################################### Unit Data ##############################################################
+Number of unit Types
+19
+Unit Type 0# Name ---------------------------------------------------------
+Infantry
+Maximum Unit Size
+1000
+Basic Unit Speed Factor dismounted 0#
+1
+Basic Unit Speed Factor mounted 0#
+1
+Unit Sprite Size #0
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #0
+0.05
+Minimum Unit Symbol Size #0
+2
+Obligatory minimum strength of remaining unit after detaching #0
+300
+Double quick (attack) speed factor
+1.7
+Running speed factor
+2
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-8
+Commander's Standard Range
+50
+Maximum Line of Sight
+200
+Standard rounds ammo 0
+60
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, the lower, the more visible)
+-50
+Standard dust amount when moving per hour
+400
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+25
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 1# Name ---------------------------------------------------------
+Cavalry
+Maximum Unit Size
+600
+Basic Unit Speed Factor dismounted 1#
+1
+Basic Unit Speed Factor mounted 1#
+2
+Unit Sprite Size #1
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #1
+0.03
+Minimum Unit Symbol Size #1
+2
+Obligatory minimum strength of remaining unit after detaching #1
+175
+Double quick (attack) speed factor
+1.7
+Running speed factor
+2
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-8
+Commander's Standard Range
+50
+Maximum Line of Sight
+250
+Standard rounds ammo 0
+60
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+-60
+Standard dust amount when moving per hour
+500
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+35
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 2# Name ---------------------------------------------------------
+Artillery
+Maximum Unit Size
+90
+Basic Unit Speed Factor dismounted 2#
+0.5
+Basic Unit Speed Factor mounted 2#
+1
+Unit Sprite Size #2
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #2
+0.20
+Minimum Unit Symbol Size #2
+2
+Obligatory minimum strength of remaining unit after detaching #2
+99999
+Double quick (attack) speed factor
+1.7
+Running speed factor
+2
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-11
+Commander's Standard Range
+50
+Maximum Line of Sight
+225
+Standard rounds ammo 0
+48
+Standard rounds ammo 1
+64
+Standard rounds ammo 2
+16
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+-70
+Standard dust amount when moving per hour
+500
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+50
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 3# Name ---------------------------------------------------------
+Skirmishers
+Maximum Unit Size
+120
+Basic Unit Speed Factor dismounted 3#
+1.4
+Basic Unit Speed Factor mounted 3#
+2
+Unit Sprite Size #3
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #3
+0.03
+Minimum Unit Symbol Size #3
+2
+Obligatory minimum strength of remaining unit after detaching #3
+99999
+Double quick (attack) speed factor
+1.9
+Running speed factor
+2.2
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-8
+Commander's Standard Range
+50
+Maximum Line of Sight
+250
+Standard rounds ammo 0
+40
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+-30
+Standard dust amount when moving per hour
+0
+Unit is able to run (true/false)
+true
+Fire angle radius shift to sides (degrees)
+35
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 4# Name ---------------------------------------------------------
+Scouts
+Maximum Unit Size
+100
+Basic Unit Speed Factor dismounted 3#
+1.4
+Basic Unit Speed Factor mounted 4#
+2.25
+Unit Sprite Size #4
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #4
+0.03
+Minimum Unit Symbol Size #4
+2
+Obligatory minimum strength of remaining unit after detaching #4
+99999
+Double quick (attack) speed factor
+1.9
+Running speed factor
+2.2
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-8
+Commander's Standard Range
+50
+Maximum Line of Sight
+450
+Standard rounds ammo 0
+40
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+-20
+Standard dust amount when moving per hour
+100
+Unit is able to run (true/false)
+true
+Fire angle radius shift to sides (degrees)
+35
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 5# Name ---------------------------------------------------------
+Courier
+Maximum Unit Size
+1
+Basic Unit Speed Factor dismounted 4#
+1.5
+Basic Unit Speed Factor mounted 4#
+2.33
+Unit Sprite Size #5
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #5
+1
+Minimum Unit Symbol Size #5
+2
+Obligatory minimum strength of remaining unit after detaching #6
+99999
+Double quick (attack) speed factor
+1.9
+Running speed factor
+2.2
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-8
+Commander's Standard Range
+0
+Maximum Line of Sight
+20
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+0
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 6# Name ---------------------------------------------------------
+Not used
+Maximum Unit Size
+200
+Basic Unit Speed Factor dismounted 6#
+1
+Basic Unit Speed Factor mounted 6#
+2
+Unit Sprite Size #6
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #6
+0.25
+Minimum Unit Symbol Size #6
+2
+Obligatory minimum strength of remaining unit after detaching #6
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-8
+Commander's Standard Range
+50
+Maximum Line of Sight
+150
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+50
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 7# Name ---------------------------------------------------------
+Not used
+Maximum Unit Size
+200
+Basic Unit Speed Factor dismounted 7#
+1
+Basic Unit Speed Factor mounted 7#
+2
+Unit Sprite Size #7
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #7
+0.25
+Minimum Unit Symbol Size #7
+2
+Obligatory minimum strength of remaining unit after detaching #7
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-8
+Commander's Standard Range
+50
+Maximum Line of Sight
+150
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+50
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 8# Name ---------------------------------------------------------
+Not used
+Maximum Unit Size
+200
+Basic Unit Speed Factor dismounted 8#
+1
+Basic Unit Speed Factor mounted 8#
+2
+Unit Sprite Size #8
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #8
+0.25
+Minimum Unit Symbol Size #8
+2
+Obligatory minimum strength of remaining unit after detaching #8
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-8
+Commander's Standard Range
+50
+Maximum Line of Sight
+150
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+50
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 9# Name ---------------------------------------------------------
+Not used
+Maximum Unit Size
+200
+Basic Unit Speed Factor dismounted 9#
+1
+Basic Unit Speed Factor mounted 9#
+2
+Unit Sprite Size #9
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #9
+0.25
+Minimum Unit Symbol Size #9
+2
+Obligatory minimum strength of remaining unit after detaching #9
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-8
+Commander's Standard Range
+50
+Maximum Line of Sight
+150
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+50
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 10# Name ---------------------------------------------------------
+Battery
+Maximum Unit Size
+10
+Basic Unit Speed Factor dismounted 10#
+1
+Basic Unit Speed Factor mounted 10#
+2
+Unit Sprite Size #10
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #10
+0.1
+Minimum Unit Symbol Size #10
+5
+Obligatory minimum strength of remaining unit after detaching #10
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-15
+Commander's Standard Range
+50
+Maximum Line of Sight
+50
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+50
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 11# Name ---------------------------------------------------------
+Battery
+Maximum Unit Size
+10
+Basic Unit Speed Factor dismounted 11#
+1
+Basic Unit Speed Factor mounted 11#
+2
+Unit Sprite Size #11
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #11
+0.1
+Minimum Unit Symbol Size #11
+5
+Obligatory minimum strength of remaining unit after detaching #11
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-15
+Commander's Standard Range
+50
+Maximum Line of Sight
+50
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+50
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 12# Name ---------------------------------------------------------
+Battalion
+Maximum Unit Size
+10
+Basic Unit Speed Factor dismounted 12#
+1
+Basic Unit Speed Factor mounted 12#
+2
+Unit Sprite Size #12 
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #12
+0.4
+Minimum Unit Symbol Size #12
+5
+Obligatory minimum strength of remaining unit after detaching #12
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-15
+Commander's Standard Range
+50
+Maximum Line of Sight
+50
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+0
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 13# Name ---------------------------------------------------------
+Regiment
+Maximum Unit Size
+10
+Basic Unit Speed Factor dismounted 13#
+1
+Basic Unit Speed Factor mounted 13#
+2
+Unit Sprite Size #13 
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #13
+0.4
+Minimum Unit Symbol Size #13
+5
+Obligatory minimum strength of remaining unit after detaching #13
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-15
+Commander's Standard Range
+50
+Maximum Line of Sight
+50
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+0
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+0
+Combat range campaign
+0
+Unit Type 14# Name ---------------------------------------------------------
+Brigade
+Maximum Unit Size
+25
+Basic Unit Speed Factor dismounted 14#
+1
+Basic Unit Speed Factor mounted 14#
+2
+Unit Sprite Size #14 
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #14
+0.4
+Minimum Unit Symbol Size #14
+30
+Obligatory minimum strength of remaining unit after detaching #14
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-15
+Commander's Standard Range
+150
+Maximum Line of Sight
+50
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+0
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+25
+Combat range campaign
+10
+Unit Type 15# Name ---------------------------------------------------------
+Division
+Maximum Unit Size
+25
+Basic Unit Speed Factor dismounted 15#
+1
+Basic Unit Speed Factor mounted 15#
+2
+Unit Sprite Size #15 
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #15
+0.4
+Minimum Unit Symbol Size #15
+32
+Obligatory minimum strength of remaining unit after detaching #15
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-15
+Commander's Standard Range
+250
+Maximum Line of Sight
+50
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+0
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+40
+Combat range campaign
+13
+Unit Type 16# Name ---------------------------------------------------------
+Corps
+Maximum Unit Size [do not change]
+10
+Basic Unit Speed Factor dismounted 16#
+1
+Basic Unit Speed Factor mounted 16#
+2
+Unit Sprite Size #16 
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #16
+0.4
+Minimum Unit Symbol Size #16
+34
+Obligatory minimum strength of remaining unit after detaching #16
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-15
+Commander's Standard Range
+400
+Maximum Line of Sight
+50
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+0
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+75
+Combat range campaign
+15
+Unit Type 17# Name ---------------------------------------------------------
+Fleet
+Maximum Unit Size
+9999
+Basic Unit Speed Factor dismounted 17#
+2.5
+Basic Unit Speed Factor mounted 17#
+2.5
+Unit Sprite Size #16 
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #17
+0.4
+Minimum Unit Symbol Size #17
+34
+Obligatory minimum strength of remaining unit after detaching #17
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-15
+Commander's Standard Range
+400
+Maximum Line of Sight
+50
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute)
+0
+Standard dust amount when moving per hour
+0
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+100
+Combat range campaign
+15
+Unit Type 18# Name ---------------------------------------------------------
+Army
+Maximum Unit Size [do not change]
+10
+Basic Unit Speed Factor dismounted 16#
+1
+Basic Unit Speed Factor mounted 16#
+2
+Unit Sprite Size #16
+5
+How many men represent a unit, factor 0.1: 100 men = 10 sprites #16
+0.4
+Minimum Unit Symbol Size #16
+34
+Obligatory minimum strength of remaining unit after detaching #16
+99999
+Double quick (attack) speed factor
+2
+Running speed factor
+2.5
+Unit name text z-position adjustment (used to shift the text away from the unit symbol, minus is farer away)
+-15
+Commander's Standard Range 
+400
+Maximum Line of Sight
+50
+Standard rounds ammo 0
+0
+Standard rounds ammo 1
+0
+Standard rounds ammo 2
+0
+Spotting Factor (used for concealment, reduction of concealment value, absolute) [not applicable]
+0
+Standard dust amount when moving per hour
+0
+Unit is able to run (true/false)
+false
+Fire angle radius shift to sides (degrees)
+0
+Command range campaign
+150
+Combat range campaign
+15
+############################################################ Moving Data and Unit Structure ##############################################################
+Number of sprites on one regiment block on side x - only for Infantry & Cavalry
+4
+Number of sprites on one regiment block on side z - only for Infantry & Cavalry
+2
+Size of one regiment block
+0.25
+Placement height of the regiment platform over ground
+0.5
+Maximum number of waypoints of regiments in battles
+75
+Maximum number of corners within one waypoint of regiments in battles
+130
+Basic unit speed (all)
+1000
+Basic sprite movement speed (all)
+500
+The factor to increase/reduce speed when moving down/up terrain slopes, speedadjustment=(new height - old height)/this factor; the higher the factor, the less terrain slopes influence movement speed
+0.25
+If middle coy block comes below this distance to next waypoint, all other blocks are adjusting their speed when in line formation
+3
+maximal spread of noise between the sprites on their final position
+0.001
+Skirmisher distance from main regiment body
+20
+Minimum distance to enemy unit to allow deployment of skirmishers and scouts
+40
+Variation in placement of skirmishers
+1
+Skirmisher factor: value 0-1.0 determines the relative amount of skirmisher sprites in relation to total sprites, the higher the value, the more skirmishers and the narrower the remaining line formation
+0.15
+Distance between two artillery guns when limbered
+2.8
+Distance between two artillery guns when unlimbered
+0.5
+Rotation Speed of Unit Sprites
+200
+Maximum rotation difference to target when units are turning
+6
+Necessary range to last formation change to provide immediate change and rechange of formation
+5
+Distance of secondary sprites behind the main line (e.g. horses when dismounted)
+10
+maximal spread of noise between secondary sprites (horses behind)
+0.8
+Distance to search in front for cover objects
+15
+Distance to search to back for cover objects
+10
+Maximum angle difference to reposition behind cover objects
+35
+Distance to search in front for cover objects for single coys if main regiment found a cover object
+20
+Distance to search from back for cover objects for single coys if main regiment found a cover object
+12
+Distance to search for left cannons if unit is ordered to grab left cannon (based on the distance to cannon to grab)
+25
+Continue movement before bridges if this factor of sprites have found their position in formation
+0.5
+Reform original formation if this factor of coy blocks have left the bridge
+1
+Sprite table size Table 0# Infantry (used for troop type specific sprite size)
+0.9
+Sprite y offset Table 0# Infantry (how high is the sprite drawn over ground)
+-1.3
+Sprite table size Table 1# Cavalry (used for troop type specific sprite size)
+0.9
+Sprite y offset Table 1# Cavalry (how high is the sprite drawn over ground)
+-1.2
+Sprite table size Table 2# Artillery+Rest (used for troop type specific sprite size)
+0.9
+Sprite y offset Table 2# Artillery+Rest (how high is the sprite drawn over ground)
+-1.3
+Coy depth in attack column formation
+4
+Distance to leave formation if ordered to take guns
+10
+Difference between min/max heights to recognize terrain shapes for placements
+3
+Maximum steepness of terrain to be valid as terrain shape (difference to start or end height)
+3
+Terrain shape search distance front
+80
+Terrain shape search distance back
+40
+Minimum distance to final waypoint to automatically switch to march column formation
+60
+Minimum distance to final waypoint to switch back to original formation
+15
+Unit to target max distance -> if target unit is determined, update pathpoints if target is farther away than this value
+2.5
+Standard movement distance for advance orders [inactive]
+15
+Standard movement distance for fallback orders [inactive]
+20
+Speed factor for fallback movement
+0.5
+Speed factor for retreats due to rout
+2
+Random factor for different speed for sprites when routed [should be between 0 and <1]
+0.8
+Random factor for different speed for sprites when charging [should be between 0 and <1]
+0.8
+Sprite spreading time in game hrs (units are spreaded for this time from the beginning of the rout)
+0.10
+Standard retreat distance due to rout
+150
+Retreat distance of unprotected artillery units if enemy comes close
+100
+The percentage loss from which units leave through entry points instead trying to rally [0-1]
+0.65
+Minimum distance to next enemy unit to renew retreat position
+50
+Minimum distance to next enemy unit to fallback (commanders, detachments)
+25
+Maximum distance to parent units in order for detachments to reattach automatically (should be below minimum distance to next enemy unit to fallback (line above))
+15
+Trigger (distance to next enemy) to renew fallback destination (this can be understood as distance of each fallback step until minimum distance to enemy is surpassed again when falling back)
+5
+Maximum search radius for charge targets (calculated from next group commander)
+50
+Distance factor for firing last volley before charging (calculated out from the used fire range/stance)
+0.35
+Fatigue factor effect on speed (exponential of fatigue variable: speedadjustment = Max(1-fatigue,0.01) ^ thisfactor -> the higher, the more linear is the curve, the lower, the more speedadjustment is affected in higher fatigue levels
+0.2
+Basic fatigue leverage factor
+2.5
+Fatigue leverage factor doublequick
+5
+Fatigue leverage factor running
+7
+Fatigue leverage factor melee
+12
+Fatigue improvement if no movement and melee per hour
+0.6
+Fatigue increase reduction factor per hour maximum at experience 100 (below is linear) 0-1, 1 means fatigue is reduced by 100% at experience 100
+0.4
+Influence of campaign condition of men on fatigue: increase factor=1+(1-condition)*this value*reductionbydrill*reductionbycommanderadmin
+0.5
+Reduction condition fatigue by drill, factor
+0.35
+Reduction condition fatigue by commander admin, factor
+0.25
+Influence of bad gun condition on accuracy, factor
+0.6
+Influence of bad gun condition on reloading speed, factor
+0.4
+Guns per sprite to show up (used for stats)
+0.5
+Distance to closest enemy to recognize path as interrupted
+100
+Distance to closest enemy to cancel interrupted state
+150
+Factor of fire range to interrupt movement (value below 1 means the unit is moving closer to the enemy before stopping to be definitely in fire range)
+0.9
+Factor of fire range to stop movement when interrupted (value below 1 means the unit is moving closer to the enemy before stopping to be definitely in fire range)
+0.8
+Distance to check for final waypoint adjustment -> if destination is blocked by non moving own unit -> stop shortly before
+10
+If adjusted retreat wp is farther away than last wp, update retreat waypoints if distance to last wp is greater than
+10
+Distance for commanders to recognize path as interrupted (and stop to reform behind troops), attention: if too far the attached units may stop outside their fire range
+35
+Distance for commanders to simply stop and wait for main unit body [not active!]
+60
+Standard detachment size for taking artillery guns
+60
+The time a commander may take to rally his subordinates before group withdraws from battle (only applicable if all subordinates are routed), game hrs
+0.75
+Time to wait from last shot for ari units before moving towards enemy (to recognize if targets are in range), in game hrs
+0.1
+Step distance for ari units to move towards enemy if interrupted and no fire has been made within time
+10
+Distance for moving targets (parent <> scouts) to update scout moving targets when parent is moving
+5
+Exponential value for sprite numbers (the lower, the more sprites smaller units have in relation to bigger units)
+0.45
+Base strength calculation for exponential sprite calculation, full sprites at
+3000
+Speed adjustment for horse artillery (factor to regular artillery, limbered)
+2.5
+Size adjustment for horse artillery (factor to regular artillery)
+0.75
+The size factor for coy platforms for cavalry
+1.25
+The distance adjustment for cavalry sprites
+3.25
+Shift from center to determine flank ranges
+150
+############################################################ Group Formations ##################################################################
+X Distance between brigades in same group (division), e.g. brigades -> line formation
+1.5
+X Distance between brigades in same group (division), e.g. brigades -> skirmish formation
+1.5
+X Distance between brigades in same group (division), e.g. brigades -> attack column
+4
+X Distance between brigades in same group (division), e.g. brigades -> march column
+10
+X Distance between brigades in same group (division), e.g. brigades -> square
+8
+Distance between first line and second line in double line formations 
+6
+Distance between lines in successive lines formation
+5
+How far are group commanders or other groups placed to back
+6
+Z range for unit comfort zone -> if no commanded unit (brigades + groups) are within this range -> search the nearest unit and put commander to the back of this unit 
+50
+Additional X Distance between groups in formation line
+1
+Additional X Distance between groups in formation double line
+1
+Additional X Distance between groups in formation successive lines
+1
+Additional X Distance between groups in formation attack column
+4
+Additional X Distance between groups in formation march column
+6
+Additional Z Distance between groups in formation line
+0
+Additional Z Distance between groups in formation double line
+0
+Additional Z Distance between groups in formation successive lines
+5
+Additional Z Distance between groups in formation attack column
+0
+Additional Z Distance between groups in formation march column
+0
+Unit distance from the unit linked to (for skirmishers, the skirmisher distance is used if linked to front)
+10
+Refuse flank z depth in relation to x width, determines the depth of the skewed line when refusing flanks
+0.5
+Refuse flank skew, determines the steepness of the curve (1=linear, the higher, the more skewed)
+4
+############################################################ Order Delay ##############################################################
+Standard processing time for group commander to write the order (in game hrs)
+0.02
+Standard processing time for group commander to route order through from higher group commanders (in game hrs)
+0.02
+Bugle standard recognition time (in game hrs)
+0.02
+Order delay standard time in game hrs for bugles (how long is sound played?)
+0.1
+Factor to slow down couriers that are outside the commander's radius
+0.7
+Additional processing time for feuds (factor)
+3
+############################################################ Cohesion Preferences ##############################################################
+Cohesion increase by enemy infantry fire
+0.001
+Cohesion increase by enemy artillery fire
+0.01
+Cohesion increase by enemy cavalry shock
+0.15
+Cohesion due to fire: decrease per hour
+-3
+Maximum cohesion spreading of sprites
+2
+Base cohesion when moving
+0.15
+Cohesion loss if other units are passing through regiment (absolute)
+0.25
+if unit is passing by which leads to cohesion, reduce the negative cohesion effect per game hr by this value
+5
+Factor to adjust speed of unit if other unit wants to pass (0-1)
+0.1
+Time to wait in game hrs before doing another collision reset (the higher, the longer the distances between the overlapping units)
+0.01
+Influence of drill on reducing cohesion (0-1, 1 means 100% drill would lead to no cohesion any more)
+0.4
+Cohesion recovery per game hour (values > 1 mean recovery takes less than 1 hour)
+2
+############################################################ Unit Symbols & Objects ##########################################################################
+Size adjustment for battalion symbols (width)
+1
+Size adjustment for battalion symbols (height)
+3
+Gun Model Size x (has also to be updated in editor)
+0.03
+Gun Model Size y (has also to be updated in editor)
+0.03
+Gun Model Size z (has also to be updated in editor)
+0.03
+Show path arrows for all selected units (if a group is selected) -> if false: only the top hierarchy is shown
+true
+Path arrow width selected unit 
+24
+Path arrow alpha selected unit
+1
+Path arrow width selected unit: hierarchy level below -1
+16
+Path arrow alpha selected unit: hierarchy level below -1
+0.8
+Path arrow width selected unit: hierarchy level below -2
+12
+Path arrow alpha selected unit: hierarchy level below -2
+0.7
+Path arrow width selected unit: hierarchy level below -3
+8
+Path arrow alpha selected unit: hierarchy level below -3
+0.6
+Arrow end blur size z in segments
+7
+Arrow head size z in segments
+7
+Distance of rotation mark from main body to rotate
+10
+Rotationmarksize X
+14
+Rotationmarksize Z
+10
+Alpha of bugle radius
+0.7
+Alpha of commander's radius
+0.5
+Alpha of bombardment radius marks [inactive]
+0.6
+Alpha of filled radius
+0.5
+Alpha of bugle radius parent unit
+0.5
+Alpha of commander's radius parent unit
+0.3
+Alpha of bombardment radius parent unit [standard for bombardment radius]
+0.6
+Alpha of filled radius parent unit
+0.5
+Brightness of bugle radius marks
+0.7
+Brightness of commander's radius marks
+1
+Brightness of bombardment radius marks
+1
+Brightness of filled radius marks
+1
+Standard bugle range (equal for all units)
+75
+Connection Line Thickness
+2
+Connection Line Flow Animation speed
+0.03
+Connection Line Alpha
+0.5
+Connection low Line Alpha (for eg out of commander radius connections)
+0.3
+Standard range for bombardment
+75
+Minimum range for bombardment
+30
+Maximum range for bombardment
+175
+Unit blinking speed if selected
+7
+Unit blinking if selected between these two alpha values on 3D map
+0.1
+0.3
+Unit blinking if selected between these two alpha values on PaperMap
+0.7
+1
+Fire Range brightness [0-1]
+1.25
+Fire Range alpha [0-1]
+0.6
+Fire Range color fire ready [rrr-ggg-bbb]
+065-237-230
+Fire Range color reloading [rrr-ggg-bbb]
+045-217-210
+Fire Range color fire ready papermap [rrr-ggg-bbb]
+255-000-051
+Fire Range color reloading  papermap [rrr-ggg-bbb]
+235-000-030
+Symbol color of left artillery guns [rrr-ggg-bbb-aaa]
+050-050-050-200
+############################################################ Unit Icons ##############################################################
+Distance to cam to show unit info icons
+230
+Cover yellow level to green level (unit icons)
+0.3
+Cohesion alert level (unit icons) <
+0.3
+Fatigue alert level (unit icons) >
+0.7
+Low Ammo alert level (unit icons) <
+0.25
+Morale - Icon starting to blink <
+0.5
+################################################## Interactions, Loss Calculation & Morale, Commander Attributes ##############################################################
+Relative casualties of envolved coy block when building gets destroyed (occupying unit)
+0.3
+Relative casualties of envolved coy block when building cracks down (occupying unit)
+0.6
+Random loss factor if casualties occure due to building events [the factors above determine the maximum casualties, the minimum casualties = max - this value]
+0.2
+Unit cracks below morale of [0-1]
+0.25
+Unit cracks below morale of x while in melee [0-1]
+0.50
+The minimum distance to retreat if unit was routed in a melee
+40
+Necessary range to target brigade for commander for rally command
+40
+Factor of commander's range within a rallying happens (1=full commander range) 
+0.5
+Rally to maximum morale of [0-1]
+0.9
+Rally morale increase per hour (base) [0-1]
+0.20
+Base rally value increase per hour (without commander)
+0.3
+Experience multiplier on base rally value, a value of 1.0 multiplies the rally gain by 100%, a value of 0% does not influence rally value through experience
+0.66
+Minimum distance to enemy for group commanders to offer rally points for cracked units
+70
+Rally zone variation distance (scattering of troops)
+10
+Time to last received fire to count for fire from flanks (in unistorm hrs), after this time, the variables are cleared if no new fire is received
+0.2
+Max. distance to the firing enemy in order to be recognized as "fire from flank", mostly to exclude far range artillery fire
+65
+Max. distance to enemy unit in order to be recognized as outflanked
+60
+Fireangle front (left, right), used to determine flanking fire
+300
+60
+Fireangle back (left, right), used to determine flanking fire
+225
+135
+Max. range of own cavalry to get a pickup for morale
+75
+Within this range own and enemy routed units are recognized for morale calculations (time of routing is relevant)
+60
+Impact on morale -> one time for each friendly unit nearby
+-0.075
+Impact on morale -> one time for each enemy unit nearby
+0.05
+Routed unit influences are reduced by this value each hour
+0.3
+First time in battle, overall morale cap
+0.6
+Effect of drill on first time morale value reduction (full [1] drill = this reduction of morale malus while morale malus = 1-morale cap]
+0.5
+Effect of commander's leadership on first time morale value reduction
+0.5
+Supportive own units, morale increase per hour for each secured flank (left/right/behind)
+0.05
+Morale effect of enemy flanking (left/right) per hour for each flank
+-0.008
+Morale effect of enemy flanking (rear) per hour 
+-0.25
+Morale effect of enemy flanking fire (left/right) per hour for each flank
+-0.25
+Morale effect of enemy flanking fire (rear) per hour
+-0.5
+Maximum range of commanders to give morale bonus to their troops
+50
+Base morale increase of commander nearby per hour
+0.025
+Morale multiplier of commander's leadership on presence near troops (for full value)
+0.125
+Morale multiplier of commander's fame on presence near troops (for full value)
+0.075
+Morale multiplier of commander's leadership if wounded (for full value)
+-0.03
+Morale multiplier of commander's fame if wounded (for full value)
+-0.015
+Morale multiplier of commander's leadership if killed (for full value)
+-0.05
+Morale multiplier of commander's fame if killed (for full value)
+-0.02
+Morale effect factor of friendly unit behind cover (multiplied by the cover value, per hour)
+0.15
+Morale effect factor of enemy unit in front behind cover (multiplied by the cover value, per hour)
+-0.25
+Morale effect on low ammo per hour, lasting 0.5 hrs
+-0.1
+Morale effect on out of ammo, lasting 0.5 hrs
+-0.2
+Maximum time horizon (in hrs) the unit remembers enemy incoming fire (used for morale effect and flanking fire recognition)
+0.15
+Morale effect of each incoming artillery fire, per battery, per hour
+-0.01
+Morale effect reduction factor of incoming artillery fire when behind full cover
+0.75
+Morale effect leverage of incoming artillery fire per distance (eg. morale effect -0.05 / (distance 100 x this leverage 0.0025) = effect per hour -0.2)
+0.0025
+High momentary casualties effect on morale (is counted for the time horizon of incoming fire - see above)
+-0.6
+Trigger for high momentary casualties in casualties (factor in relation to total strength), for the given time period
+0.04
+Factor effect of drill for reducing momentary casualties (for full value)
+0.7
+Trigger for routing when suffering unbearable losses in relation to total original strength mil exp 0
+0.8
+Trigger for routing when suffering unbearable losses in relation to total original strength mil exp 100%
+0.55
+Influence of experience on unbearable losses trigger at exp 100%
+0.91
+Influence of training on unbearable losses trigger at exp 100%
+0.9
+Influence of commander leadership on unbearable losses trigger at 100%
+0.75
+Unbearable loss trigger modifier for skirmishers
+0.5
+Morale effect for troops falling back under fire per hour, time period of incoming fire used from above
+-0.075
+Morale effect for troops retreating under fire per hour, time period of incoming fire used from above
+-0.15
+Positive morale effect if at least one friendly cavalry unit is close, per hour
+0.05
+Time in hrs for morale effect on melee stats (eg. hit by enemy cavalry)
+0.05
+Morale effect of enemy cavalry hitting the formation, per hour
+-0.5
+Morale effect on charged units if cohesion is lower than those of opponent, per hour
+-1
+Weighting of cohesion in charged by determined foe
+0.4
+Morale effect if cohesion falls below the cohesion alert level (stated above under unit symbols), per hour
+-0.1
+Morale effect if the unit is outside commander radius and therefore cut off, per hour
+-0.1
+Morale effect on high fatigue, per hour
+-0.1
+Overall influence of experience on negative morale impact (factor)
+1
+Overall influence of leadership on negative morale impact (factor)
+1
+Fallen to loss ratio (determines how many sprites are animated to fall down in relation to the suffered casualties in men, multiplied by the sprite to men ratio; example: losses 10 * sprite to men ratio 0.025 * this factor 8 = 2 sprites are shown to fall, although only 0.25 sprites are reduced from brigade platform) 
+4
+Permanent visibility of fallen sprites factor (how many of the fallen sprites do not disappear, should approx the reciprocal value of fallen to loss ratio)
+0.5
+Time non permanent sprites are shown until they disappear (in game hrs)
+0.3
+Time of the counter the non permanent sprites start to fade out alpha (should be less then time they are shown)
+0.015
+Max. Distance for the sprite to fall to front (slightly)
+2
+Max. Distance for the sprite to fall to back (slightly)
+2
+Max. Distance for the sprite to fall to back (tremendously, eg ari fire)
+4
+Time until final position is reached (slightly, in game hrs)
+0.0007
+Time until final position is reached (tremendously, in game hrs)
+0.0012
+Time to reload factor (normally time is taken from rpm [excel], this is a factor to leverage this time for balancing reasons, the higher, the longer reloading takes)
+3.75
+Duration of fire animations before starting reloading process (in real world seconds)
+0.8
+Long range fire distance factor of total fire range 
+1
+Medium range fire distance factor of total fire range 
+0.65
+Small range fire distance factor of total fire range 
+0.4
+error factor traverse (sideways) for projectile targets (multiplied by distance)
+0.03
+error factor range for projectile targets (multiplied by distance)
+0.05
+Weighting of overall accuracy factors for targeting error [>0.1] (a factor of 3 means that accuracy is decreased by 3x between highest and lowest accuracy factors)
+3
+Maximum terrain elevation on point of ground hit for bullet ditching effect (in % 0.000-1.000)
+0.1
+Ditching distance from the point of first terrain hit
+30
+Ditching first terrain hit distance before target
+-15
+Ditching bounce distance after first hit
+7
+Artillery bullet size
+0.2
+Adjustment to real calculated bullet "flight" time (simple factor calculation)
+5
+Standard height over ground for explosives
+8
+Deviation factor for explosives height (0-1)
+0.5
+Leverage for shrapnel pieces related to projectile weight (kg), used for explosives
+5
+Leverage for explosives range related to projectile weight (kg)
+3
+Dead ratio musket (standard)
+0.15
+Dead ratio artillery (solid)
+0.5
+Dead ratio artillery (explosives)
+0.2
+Dead ratio artillery (canister)
+0.6
+Standard ratio for missing in action
+0.15
+Random factor for casualties impact in relation to max casualties determined by firepower in weapon stats (0-1), 0.5 means the effective casualties are calculated between max*0.5 and max
+0.33
+General casualties adjustment factor in relation to firepower
+1.2
+General casualties adjustment factor for artillery
+0.75
+Influence of experience on accuracy (accuracy total = (accuracy weapon + experience * this factor + morale*moraleinfluenceonaccuracy)/(1+this factor+moraleinfluenceonaccuracy))
+0.66
+Influence of morale on accuracy (accuracy total = (accuracy weapon + experience * this factor + morale*moraleinfluenceonaccuracy)/(1+this factor+moraleinfluenceonaccuracy))
+0.25
+Zeroing effect multiplier for artillery - accuracy malus for first shot
+5
+Zeroing effect multiplier for artillery - accuracy malus for second shot
+3
+Zeroing effect multiplier for artillery - accuracy malus for third shot
+1.5
+Random reloading deviation factor [0-<1]
+0.35
+Experience effect on reloading time for inexperienced troops (linear interpolation), how much longer do inexperienced troops need to reload? [1-x]
+1.4
+Fatigue effect on reloading time for exhausted troops (linear interpolation), how much longer do exhausted troops need to reload? [1-x]
+1.25
+Canister range in % of total fire range
+0.23
+Factor to reduce loading speed when loading canister [0-1], 0 means no reduction of loading speed
+0.3
+Factor probability to use explosives for counterbattery fire (rest=solid) [0-1]
+0.25
+Factor probability to use explosives on open field (rest=solid) [0-1]
+0.33
+Factor probability to use explosives for bombardment (rest=solid) [0-1]
+0.33
+Factor probability to use explosives for units behind cover (rest=solid) [0-1]
+0.75
+Increasing factor probability to use explosives for distances > 50% of max fire range (rest=solid) [0-1], value is added to probabilities above
+0.25
+Increase of fatigue when reloading in game hrs [1 means 100%]
+1.00
+Reduction of accuracy when unit is exhausted (this factor is multiplied with fatigue value and deducted from accuracy) [0-1], only applicable for non artillery units
+0.33
+Factor for losses behind cover (is multiplied by 1-cover value [0-1]), the higher the value, the more cover value reduces the losses for range fire
+0.5
+Reduction of loss behind cover factor (prior) if explosives are used (cover has less effect when using explosives), this factor is multiplied with the prior one if explosives are used
+0.5
+Increase of accuracy when unit is skirmishing (skirmishers, scouts), simple multiplier
+1.1
+Decrease of accuracy when unit is mounted (cavalry), simple multiplier
+0.6
+Increase of reloading speed when unit is mounted (cavalry), simple multiplier
+1.25
+The leverage to projectile weight for damaging buildings (per shot)
+0.33
+Fire range increase/decrease due to terrain height difference, distance adjustment = (position height - target height)*this factor; the higher the factor, the greater the influence of height differences on distance 
+1
+Casualties modifier if enemy unit is layn down
+0.4
+Range reduction factor for layn down units
+0.75
+Casualties modifier if enemy unit is in skirmishing formation
+0.66
+Formation modifier for melee losses (increases/reduces losses of defending unit) - Line
+1.2
+Formation modifier for melee losses (increases/reduces losses of defending unit) - Skirmish
+2.5
+Formation modifier for melee losses (increases/reduces losses of defending unit) - Attack Column
+0.7
+Formation modifier for melee losses (increases/reduces losses of defending unit) - March Column
+2.5
+Formation modifier for melee losses (increases/reduces losses of defending unit) - Square
+0.7
+Additional defense factor values against Cavalry charges (increases/(reduces losses of defending unit) - Line
+1
+Additional defense factor values against Cavalry charges (increases/(reduces losses of defending unit) - Skirmish
+1.8
+Additional defense factor values against Cavalry charges (increases/(reduces losses of defending unit) - Attack Column
+1
+Additional defense factor values against Cavalry charges (increases/(reduces losses of defending unit) - March Column
+1.2
+Additional defense factor values against Cavalry charges (increases/(reduces losses of defending unit) - Square
+0.5
+Influence weighting factor on casualties - weapon strength
+0.5
+Influence weighting factor on casualties - experience
+0.8
+Influence weighting factor on casualties - fatigue
+0.25
+Influence weighting factor on casualties - cohesion
+0.3
+Influence weighting factor on casualties - strength
+0.25
+Influence weighting factor on casualties - speed shock
+1
+Loss adjustment factor for melee casualties overall
+1.5
+Maximum time horizon (in hrs) the unit remembers casualties due to melee (used for morale effects)
+0.15
+Surrender time counter in game hrs (if unit is routed and chased [within melee] more than this time frame it surrenders)
+0.2
+If unit has surrendered, show surrendering sprites this long (game hrs)
+0.07
+Firing height regular (standing, cav mounted)
+1.5
+Firing height kneeling
+1
+Firing height layn down
+0.25
+Firing height artillery
+1
+Firing z displacement artillery (how far to front?)
+2
+Rate of fire (ROF) factor if ammo below alert level
+0.25
+Showing low ammo instead of amounts in panel, lower than (0-1)
+0.1
+Rate of fire (ROF) factor if ammo is out
+0.1
+Auto cancel of bombardment orders for artillery if explosive ammo goes below % [0-1]
+0.16
+Probability of commander dead if hit on group was detected
+0.005
+Probability of commander wounded if hit on group was detected
+0.02
+Probability of brigade commander dead if unit is in firefight (calculated out of suffered casualties / remaining strength * this value)
+0.04
+Probability of brigade commander wounded if unit is in firefight (calculated out of suffered casualties / remaining strength * this value)
+0.2
+Probability of brigade commander dead if unit is in melee (calculated out of suffered casualties / remaining strength * this value)
+0.04
+Probability of brigade commander wounded if unit is in melee (calculated out of suffered casualties / remaining strength * this value)
+0.2
+Probability of brigade commander surrendering if unit is in melee and routed (calculated out of suffered casualties / remaining strength * this value)
+0.275
+Reduction factor of commander abilities (leadership, fame) if commander is out of duty (kia, wia, missed)
+0.5
+Influence of morale on mia/pow when units are retreating
+0.5
+Influence of experience on mia/pow when units are retreating
+0.5
+Influence of commander leadership on mia/pow when units are retreating
+0.6
+Relation mia vs. pow [0-1, where 0=mia, 1 = all pow] when units are retreating and suffer losses
+0.4
+Factor for casualties per distance (exponential); casualty rate = 1 / (distance ^ casfactexp) * casfactlin
+1.5
+Factor for casualties per distance (linear); casualty rate = 1 / (distance ^ casfactexp) * casfactlin
+2.5
+Experience gain for unit that inflicts casualties on the enemy (experience increase per casualty [scale 0-1])
+0.0002
+Experience gain for commander of the unit that inflicts casualties on the enemy (experience increase per casualty [scale 0-1])
+0.000145
+Experience gain factor for group commanders above the unit that inflicts casualties on the enemy (multiplier for each level above the unit, base is the exp gain for the unit commander; eg: corps commander = exp gain brigade commander * this value * this value)
+0.30
+Adjustment factor for experience to influence commander attributes (admin, initiative, cunning, leadership) [0-1, 1 means experience of 0 is totally reducing all effects to zero, 0.5 means half, 0 means exp has no influence) [deactivated]
+0.5
+Increase experience cap due to national military experience by this value if commander is a veteran [0-1]
+0.25
+Decrease experience cap due to national military experience by this value if commander is defamed [0-1]
+0.2
+Increase factor of morale recovery of units if commander fits to branch of arms [>1]
+1.25
+Increase factor for rate of fire (artillery) if commander fits to branch of arms [>1]
+1.2
+Increase factor of accuracy (artillery) if commander fits to branch of arms [>1]
+1.1
+Increase factor of engineering points if commander fits to branch of arms (engineers) [>1]
+1.5
+Influence of commander attributes on fighting spirit of the unit [brigade level], first line=experience, second line=fame, third line=leadership; [0-1]
+0.33
+0.05
+0.2
+Influence of commander attributes on fighting spirit of the unit [first level above brigade], first line=experience, second line=fame, third line=leadership; [0-1]
+0.33
+0.1
+0.15
+Influence of commander attributes on fighting spirit of the unit [second level above brigade], first line=experience, second line=fame, third line=leadership; [0-1]
+0.33
+0.15
+0.1
+Influence of commander attributes on fighting spirit of the [third level above brigade], first line=experience, second line=fame, third line=leadership; [0-1]
+0.33
+0.20
+0.05
+Reduction of commander's attributes (fame and leadership) in calculating fighting spirit if he is non active (wia, kia etc.), factor [0-1], reduction to
+0.5
+Influence factor of commander on subordinates [0-1]
+0.33
+Fame increase factor if commander is famous [>1]
+1.4
+Fame decrease factor if commander is defamed [<1]
+0.7
+Time in game hrs to wait for first volley to be finished before charging 
+0.02
+Fire range reduction per forest field (factor), eg. 0.9 means fire range is reduced by 10% for each forest fields
+0.975
+Auto assign firing target for skirmishers within this range from the enemy to the skirmisher unit (skirmisher will move to fire range), below [stance screen]
+60
+Skirmishers do not move/chase enemy targets that are farther away than this range to own parent unit [stance screen]
+75
+Auto assign firing target for skirmishers within this range from the enemy to the skirmisher unit (skirmisher will move to fire range), below [stance defend]
+75
+Skirmishers do not move/chase enemy targets that are farther away than this range to own parent unit [stance defend]
+90
+Auto assign firing target for skirmishers within this range from the enemy to the skirmisher unit (skirmisher will move to fire range), below [stance attack]
+90
+Skirmishers do not move/chase enemy targets that are farther away than this range to own parent unit [stance attack]
+120
+Increased fire range factor from buildings (multiplicator)
+1.5
+Minimum morale level for influence of fatigue on morale
+0.3
+Reduction of fighting spirit if units are fighting on enemy soil (mil exp 0 and 1)
+-0.30
+-0.10
+Minimum support value that is taken into account for fighting spirit caps (before the leverage!) -> inactive
+0.20
+The leverage to the support value that caps the fighting spirit of the units -> inactive
+2.0
+Weapon accuracy curve per distance exp
+0.8
+Weapon accuracy curve per distance lin
+10
+Min distance to own unit to allow overshooting with arty [>0]
+35
+Min distance to own unit to allow overshooting with arty if own unit to front is layn down [>0]
+20
+Min distance from own unit to enemy to allow overshooting with arty
+35
+Above this absolute morale value the morale does improve slower above the battle start morale [0-1]
+0.5
+Slower morale improvement above morale start value, multiplier
+0.15
+POW ratio of total unit strength if unit surrenders
+0.6
+POW ratio variation
+0.2
+POW multiplier if unit exp is 100 [<1]
+0.7
+POW multiplier if unit fighting spirit is 100 [<1]
+0.5
+Modifier for gaining exp of artillery units compared to regular troops, multiplier
+3.5
+The factor to increase the unbearable losses no exp EOD
+1.10
+the factor to increase the unbearable losses full exp EOD
+1.30
+############################################################ Perks #################################################################################
+Perk experience multiplier Lvl 0 inf/cav/art
+0.15
+0.25
+0.4
+Perk experience increase for building pontoons (per game hour)
+1.5
+Perk experience increase for building obstacles (per game hour)
+1
+Engineering Lvl 1 engineering points from unit 
+2
+Engineering Lvl 2 engineering points from unit 
+3
+Engineering Lvl 3 engineering points from unit 
+4
+Engineering Lvl 1 pontoon building speed
+1
+Engineering Lvl 2 pontoon building speed
+1.25
+Engineering Lvl 3 pontoon building speed
+2
+Sharpshooters perk experience increased at range from xxx to 100% of max [0-1 where 1=100% of max range]
+0.75
+Perk experience increase per casualty above min sharpshooter range
+0.001
+Sharpshooter Lvl 1 accuracy adjustment factor
+1.1
+Sharpshooter Lvl 2 accuracy adjustment factor
+1.25
+Sharpshooter Lvl 3 accuracy adjustment factor
+1.5
+Sharpshooter Lvl 1 range adjustment factor
+1
+Sharpshooter Lvl 2 range adjustment factor
+1
+Sharpshooter Lvl 3 range adjustment factor
+1.25
+Zouaves perk experience increase per casualty
+0.001
+Zouaves Lvl 1 fatigue increase factor 
+1
+Zouaves Lvl 2 fatigue increase factor 
+0.75
+Zouaves Lvl 3 fatigue increase factor 
+0.5
+Expert Skirmishers Lvl 1 concealment adjustment (the higher the less visible)
+10
+Expert Skirmishers Lvl 2 concealment adjustment (the higher the less visible)
+25
+Expert Skirmishers Lvl 3 concealment adjustment (the higher the less visible)
+50
+Expert Skirmishers Lvl 1 reload speed factor (1.1=10% faster)
+1.0
+Expert Skirmishers Lvl 2 reload speed factor (1.1=10% faster)
+1.05
+Expert Skirmishers Lvl 3 reload speed factor (1.1=10% faster)
+1.1
+Expert Skirmishers perk experience increase per casualty
+0.001
+Spirited Charge Lvl 1 melee bonus factor
+1.1
+Spirited Charge Lvl 2 melee bonus factor
+1.2
+Spirited Charge Lvl 3 melee bonus factor
+1.5
+Spirited Charge perk experience increase per casualty
+0.003
+Deadly volley Lvl 1 casualties increase factor
+1.05
+Deadly volley Lvl 2 casualties increase factor
+1.10
+Deadly volley Lvl 3 casualties increase factor
+1.25
+Deadly volley perk experience increase per casualty
+0.002
+Deadly volley reduction of morale hit from high momentry casualties (factor)
+0.5
+Ace of spade Lvl 1 cover value factor
+1.1
+Ace of spade Lvl 2 cover value factor
+1.2
+Ace of spade Lvl 3 cover value factor
+1.5
+Ace of spade morale bonus factor if unit is behind cover Lvl 1
+1.0
+Ace of spade morale bonus factor if unit is behind cover Lvl 2
+2.0
+Ace of spade morale bonus factor if unit is behind cover Lvl 3
+2.0
+Ace of spade reload bonus factor if unit is behind cover (>1 = faster) Lvl 1
+1.0
+Ace of spade reload bonus factor if unit is behind cover (>1 = faster) Lvl 2
+1.0
+Ace of spade reload bonus factor if unit is behind cover (>1 = faster) Lvl 3
+1.25
+Ace of spade perk experience increase per casualty
+0.001
+Iron discipline cohesion recovery speed Lvl 1 factor
+1.25
+Iron discipline cohesion recovery speed Lvl 2 factor
+1.50
+Iron discipline cohesion recovery speed Lvl 3 factor
+2.00
+Iron discipline perk experience increase per suffered casualty
+0.002
+Expert scouts concealment adjustment Lvl 1 (the higher the less visible)
+10
+Expert scouts concealment adjustment Lvl 2 (the higher the less visible)
+25
+Expert scouts concealment adjustment Lvl 3 (the higher the less visible)
+50
+Expert scouts visibility range factor Lvl 1
+1.0
+Expert scouts visibility range factor Lvl 2
+1.25
+Expert scouts visibility range factor Lvl 3
+1.50
+Expert scouts perk exp increase for each enemy unit revealed 
+0.1
+Cold steel melee effectiveness factor Lvl 1
+1.1
+Cold steel melee effectiveness factor Lvl 2
+1.2
+Cold steel melee effectiveness factor Lvl 3
+1.5
+Cold steel hit by cavalry malus for enemy factor Lvl 1
+1.0
+Cold steel hit by cavalry malus for enemy factor Lvl 2
+2.0
+Cold steel hit by cavalry malus for enemy factor Lvl 3
+2.0
+Cold steel perk experience per casualty (melee only)
+0.004
+Mounted rifles malus factor (accuracy, reload) for firing mounted Lvl 1
+0.75
+Mounted rifles malus factor (accuracy, reload) for firing mounted Lvl 2
+0.5
+Mounted rifles malus factor (accuracy, reload) for firing mounted Lvl 3
+0.2
+Mounted rifles perk exp increase for each casualty (when firing mounted)
+0.002
+Stormers accuracy factor when firing in loose formation Lvl 1
+1.0
+Stormers accuracy factor when firing in loose formation Lvl 2
+1.1
+Stormers accuracy factor when firing in loose formation Lvl 3
+1.25
+Stormers perk exp increase for each casualty (when firing in loose formation)
+0.001
+Vanguard perk exp increase for each casualty (when fighting detached)
+0.002
+Lightning brigade cover value factor Lvl 1
+1.1
+Lightning brigade cover value factor Lvl 2
+1.2
+Lightning brigade cover value factor Lvl 3
+1.5
+Lightning brigade in cover morale factor Lvl 1
+1.0
+Lightning brigade in cover morale factor Lvl 2
+2.0
+Lightning brigade in cover morale factor Lvl 3
+2.0
+Lightning brigade reloading speed factor in cover Lvl 1 (higher value means faster reloading)
+1.0
+Lightning brigade reloading time factor in cover Lvl 2 (higher value means faster reloading)
+1.0
+Lightning brigade reloading time factor in cover Lvl 3 (higher value means faster reloading)
+1.25
+Lightning brigade perk exp increase for each casualty
+0.0015
+Close support canister weaponstrength multiplicator (all levels)
+2.0
+Close support reload speed fact canister Lvl 1 (higher value means faster reloading)
+1.0
+Close support reload speed fact canister Lvl 2 (higher value means faster reloading)
+1.1
+Close support reload speed fact canister Lvl 3 (higher value means faster reloading)
+1.2
+Close support melee strength factor Lvl 1
+1.0
+Close support melee strength factor Lvl 2
+1.25
+Close support melee strength factor Lvl 3
+1.5
+Close support perk exp increase for each casualty when using canister
+0.0025
+Skilled laying Counter battery fire accuracy factor Lvl 1
+1.1
+Skilled laying Counter battery fire accuracy factor Lvl 2
+1.2
+Skilled laying Counter battery fire accuracy factor Lvl 3
+1.5
+Skilled laying under artillery fire demoralization factor Lvl 1
+1.0
+Skilled laying under artillery fire demoralization factor Lvl 2
+0.5
+Skilled laying under artillery fire demoralization factor Lvl 3
+0.0
+Skilled laying perk exp increase per shot on enemy artillery during counter battery fire
+0.005
+Grand battery bombardment accuracy factor Lvl 1
+1.1
+Grand battery bombardment accuracy factor Lvl 2
+1.2
+Grand battery bombardment accuracy factor Lvl 3
+1.3
+Grand battery morale malus factor for enemies under fire Lvl 1
+1.0
+Grand battery morale malus factor for enemies under fire Lvl 2
+1.5
+Grand battery morale malus factor for enemies under fire Lvl 3
+2.0
+Grand battery perk exp increase per shot on enemy artillery during bombardment
+0.005
+Flying battery unit speed factor Lvl 1
+1.15
+Flying battery unit speed factor Lvl 2
+1.3
+Flying battery unit speed factor Lvl 3
+1.5
+Flying battery perk exp increase for each game hour the unit is on retreat/falling back within fire range of enemy unit
+5.0
+Sapper gunners cover factor Lvl 1
+1.1
+Sapper gunners cover factor Lvl 2
+1.2
+Sapper gunners cover factor Lvl 3
+1.5
+Sapper gunners in cover morale factor Lvl 1
+1.0
+Sapper gunners in cover morale factor Lvl 2
+2.0
+Sapper gunners in cover morale factor Lvl 3
+2.0
+Sapper gunners reloadspeed factor when in cover Lvl 1 (>1 is faster)
+1.0
+Sapper gunners reloadspeed factor when in cover Lvl 2 (>1 is faster)
+1.0
+Sapper gunners reloadspeed factor when in cover Lvl 3 (>1 is faster)
+1.25
+Sapper gunners perk exp increase for each casualty when firing behind cover
+0.005
+############################################################ Supply & End of Day ##############################################################
+Top unit for starting supply chains on battlefield (according to unit type: 13=Brigade, 14=Division, 15=Corps, 16=Army), using overridden state
+15
+If no top unit of stated hierarchy exists (eg. because unit was detached and takes part in battle separately), use supply factor malus:
+0.5
+Distance modificator for supplies (formula for supply ratio = 1 / distance ^ this factor), the lower the less difference between far and near distances
+0.1
+Weighting of distance on supply level [0-1, 0 means no weighting, 1 full weighting)
+0.15
+Weighting on commander's administration level on the supply [0-1, 0 means no influence, 1 full influence), eg. if 1 and admin is 0 then 0 supplies reach unit, if 0 and admin is 1 then admin has no influence on supply
+0.25
+The speed of flow animation for supply lines, note: also dependend of the connection line flow speed
+3
+Group supply reserve in days -> ammunition infantry
+1.0
+Group supply reserve in days -> ammunition artillery
+1.0
+Group supply reserve in days -> provision
+2.5
+Group supply reserve in days -> forage
+2.5
+Warning coloring for low supplies (yellow) [0-1], below
+0.5
+Warning coloring for very low supplies (red), below
+0.25
+Leveling of ammo at end of day within all units of the following group hierarchy level (using group level id's of unit types 14-x)
+14
+Experience factor on high casualties' influence on morale (eod) -> lower values reduce reduction of morale influence
+1
+Training/Drill factor on high casualties' influence on morale (eod) -> lower values reduce reduction of morale influence
+1
+Casualties influence on morale eod (exponential), the higher the value, the less influence of lower casualties but the higher when casualties are high
+5
+Casualties influence on morale eod (linear, factor), simple leverage
+3
+Supply influence on morale eod (exponential), the higher the value, the less influence of higher supply but the higher when supply is low
+7
+Supply influence on morale eod (linear, factor), simple leverage
+0.7
+Commander's fame factor influence on desertions (eod) 
+0.2
+Commander's admin factor influence on desertions (eod) 
+0.2
+Morale influence on desertions eod (exponential), the higher the value, the less influence at higher morale but the higher when morale is low
+2
+Morale influence on desertions eod (linear, factor), simple leverage
+0.2
+Reduction of condition of men when provisions are zero (per day), negative value [-1 to 0]
+-0.25
+Reduction of condition of horses when forage is zero (per day), negative value [-1 to 0]
+-0.25
+############################################################ Performance Optimization ##############################################################
+Reduced update cycle for units farther away, starting at distance
+125
+Leap Leverage (1.0 means regular updates, 2.0 means half the time etc.)
+2
+Reduced update cycle for units out of cam, Leap Leverage (1.0 means regular updates, 2.0 means half the time etc.)
+6
+Immediate sprite placement for units out of cam (true/false)
+true
+Immediate sprite placement for units that are visible but farther away, starting at distance [999999 to deactivate]
+60
+Sprite update trigger by cohesion change (sprites are updated every 0.xx change of the cohesion factor)
+0.1
+Check for unit collisions every xth frame 
+5
+Check rhythm for final waypoints 
+10
+Maximum Sprite Game Objects on screen [adjust carefully] -> inactive
+2000
+Distance to reduce sprites shown by 1/2 -> inactive
+125
+Distance to reduce sprites shown by 2/3 -> inactive
+250
+Distance to reduce sprites shown by 3/4 -> inactive
+400
+Distance to hide sprites
+500
+Update for reattachment order -> readjusting distance -> greater distance than this leads to update of waypoint of detachment if reattachment order was given (also used for grabbing left guns)
+2
+Distance of sprites to old position for sprite facing updates (to cam) [deactivated]
+1.5
+Sprite rotation speed
+5
+Unit sprite update cycles (update facing and animation every xth frame), per distance [lower than] [deactivated]
+2
+2
+5
+10
+Unit sprite update cycles distances to camera [up to] [deactivated]
+60
+100
+150
+9999
+Path smoothing, full figures between 1-x (=smooth leverage), a value of 3 means 3 fold more pathpoints than calculated 
+3
+Pathpoint updating when still in rotation process, every xth frame (at least 1, the more the better the performance but the more delayed are destination marks)
+5
+Hide units from distance
+320
+Minimum distance for update of range radius if radius has moved (the higher the less updates)
+0.5
+Minimum distance for difference between linked unit and unit linked to for path updates -> single units
+5
+Minimum distance for difference between linked unit and unit linked to for path updates -> groups
+100
+Permanent updates of non main moving functions (commander positions, ranges, linked units, order processing...) -> every xth frame
+15
+Permanent updates of non main moving but slow functions (charge targets, fatigue, cohesion, supply lines, strength calculations...)-> every xth frame
+45
+Raycast cycles for each regiment per cycle (used to build up line of sight, enemy detection, flank protections, fire angles etc.)
+1
+Lower raycast cycles for units whose nearest enemy is farther away than (first value cycle [3 means every 3rd frame], second value distance [above])
+2
+150
+Lower raycast cycles for units whose nearest enemy is farther away than (first value cycle [3 means every 3rd frame], second value distance [above])
+2
+150
+Possible error distance for raycast cycles (the higher, the faster but the less accurate recognition in raycasting)
+10
+Update of Unit icon drawing orders, measured in change of object position to last position
+5
+Fallen layer updates per cycle
+15
+Firing and reloading checks, amount of sprites per unit and cycle
+5
+Firing checks for all sprites per brigade, time distance to last check in game hrs
+0.00050
+Position update of linked units if unit is group, in game hrs
+0.02
+Position update of linked units if unit is brigade or lower, in game hrs
+0.001
+Cam distance difference to force visibility updates of units
+4
+Cam rotation difference to force visibility updates of units
+6
+The probability of showing musket fire smoke and flash 0-1
+0.33
+Reduction of update unit range searches if closest enemy unit is above interruption distance (high values means faster searches, although lower accuracy), every xth frame [not active]
+2
+Use sprite acceleration (sprites may become blurry but much faster) [deactivated]
+true
+The number of fireblockchecks for each unit, the more the slower but more accurate
+72
+The number of fireblock updates for each cycle, the more the slower the performance but the faster the ranges are updated
+3
+Model Prefs updates each xx cycle, the lower the smoother but the slower the performance [1-x]
+3
