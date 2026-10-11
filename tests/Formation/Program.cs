@@ -25,6 +25,20 @@ units = Chain(); engine = new BattleUnits { IsCampaign = true };
 units[0].transform.position = new Vector3(80, 0, 70);
 Order(engine, units[0], true, default);
 Check(units[0].LastPosition == units[0].transform.position, "Campaign formation without target retains root position");
+units = Chain(); engine = new BattleUnits { IsCampaign = true };
+units[0].permanentlydetached = true;
+units[1].permanentlydetached = true;
+GameVars.useorderdelays = true;
+var destination = new Vector3(120, 0, 160);
+HierarchyFormation.Formation(engine, units[0], 0, 90, destination, false, true, false, 0, -1, false, false, true, false, false);
+Check(units[0].Paths == 1 && units[0].LastPosition == destination && units[0].OrderRoot == units[0] && units[0].LastPathState == 0,
+    "Independent campaign Army receives a pending path with order delays enabled");
+Check(units[1].Paths == 0 && units[0].permanentlydetached && units[1].permanentlydetached,
+    "Explicit Army order preserves independent Corps detachment");
+Order(engine, units[0], true, destination);
+Check(units[0].Placements == 1 && units[1].Placements == 0,
+    "Independent Army placement also exempts only the root from detachment filtering");
+GameVars.useorderdelays = false;
 SixLevelRuntime.Active = false;
 engine = new BattleUnits(); Order(engine, units[0], true, default);
 Check(engine.Fallbacks == 1 && engine.Measured.Count == 0, "Inactive mod uses original formation implementation");
@@ -47,7 +61,7 @@ public static class GameVars
 public static class GamePrefs { public static float groupunitdistancetoback = 5, refuseflankdepth = 1, refuseflankskew = 2; }
 public class Regiment
 {
-    public int unittyp, groupformation, formationordered, Placements, Paths;
+    public int unittyp, groupformation, formationordered, Placements, Paths, LastPathState;
     public bool pathinterrupted, withinrotationprocess, permanentlydetached, isrouted, immediateunitplacement;
     public float lastsetwaypointrotation;
     public Vector3 lastsetwaypointposition, LastPosition;
@@ -60,7 +74,7 @@ public class Regiment
     public float GetDepth() => 5;
     public void SetNewPosition(Vector3 pos, float facing, bool cover, bool ignore) { LastPosition = pos; Placements++; }
     public void RegimentSetPath(Vector3 pos, bool path, bool cover, float rotation, bool modify, int state, float speed, Regiment root, bool advance, bool options)
-    { Paths++; LastPosition = pos; OrderRoot = root; }
+    { Paths++; LastPosition = pos; OrderRoot = root; LastPathState = state; }
 }
 public class BattleUnits
 {

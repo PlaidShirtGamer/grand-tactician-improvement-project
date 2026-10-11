@@ -99,3 +99,18 @@ Validation: 33 stub checks pass (19 hierarchy/rank, 8 formation, 6 insertion),
 and 18 preserved-method wrappers pass serialized assembly verification. Unity
 layout and campaign movement still require in-game testing. The interrupted UI
 update is a likely cause of blocked map input; movement is not yet confirmed.
+
+## 0.2.3 campaign Army movement
+
+Native Regiment.Initialize marks every visible campaign unit permanentlydetached,
+including a top-level Army. The custom Army formation handler incorrectly applied
+its subordinate detachment filter to the order's root as well, skipping both
+RegimentSetPath and immediate placement for that Army. The order UI could still
+start its delay even though no pending movement path had been assigned.
+
+The root now receives its path/placement just as it does in native SetGroupFormation.
+Detached or routed subordinate units retain their native exclusions. This does
+not bypass order delays, force movement speed, or change independent Corps orders.
+Three regression checks cover a detached campaign Army receiving a pending path,
+preserved Corps detachment, and immediate placement. Total: 36 stub checks
+(19 hierarchy/rank, 11 formation, 6 insertion). Live movement remains to be retested.

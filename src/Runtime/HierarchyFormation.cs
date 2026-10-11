@@ -60,7 +60,10 @@ namespace GTIP
                     new List<int> { 4, 5, 6, 9, 10, 11, 12, 13 }) : null;
                 void Move(Regiment unit, Vector3 position, float facing)
                 {
-                    if (unit.permanentlydetached || unit.isrouted) return;
+                    // Campaign map HQs are permanently detached by native initialization.
+                    // As in native SetGroupFormation, these filters apply only to
+                    // subordinates, never to the unit explicitly receiving the order.
+                    if (unit != root && (unit.permanentlydetached || unit.isrouted)) return;
                     if (immediate) unit.SetNewPosition(position, facing, true, ignoreDeployment);
                     else
                     {

@@ -3,7 +3,7 @@
 Experimental support for **Regiment → Brigade → Division → Corps → Army → Army Group**
 in the main campaign, without enabling Whiskey & Lemons career mechanics.
 
-Version **0.2.2** implements the additional Army HQ using the existing type-18
+Version **0.2.3** implements the additional Army HQ using the existing type-18
 data slot. Fleet remains type 17; Army Groups remain native, separate ArmyGroup
 objects above Army HQs. This is a test build, not a validated campaign release.
 
@@ -27,7 +27,7 @@ objects above Army HQs. This is a test build, not a validated campaign release.
 - Newly created Army Groups receive distinct Army Group names. Existing project
   and commander requirements for Army Groups remain in effect.
 
-The menu displays **GTIP v0.2.2**. That confirms the runtime is loaded; it does
+The menu displays **GTIP v0.2.3**. That confirms the runtime is loaded; it does
 not prove the current save contains a complete six-tier chain. Hooks activate
 when the command hierarchy shift is -1 and the DLC career scenario is inactive.
 Other scenarios retain original implementations. Existing saves and historical
@@ -41,17 +41,17 @@ Requires .NET SDK 8 and the supported game build. NuGet restores Mono.Cecil
 0.11.6 and .NET Standard references; proprietary game assemblies stay local.
 
 ```powershell
-./build.ps1 -GameInstall 'C:\path\to\Grand Tactician' -Output './artifacts/six-level-0.2.2'
+./build.ps1 -GameInstall 'C:\path\to\Grand Tactician' -Output './artifacts/six-level-0.2.3'
 ```
 
 For an already patched installation, supply the pristine original backup:
 
 ```powershell
-./build.ps1 -GameInstall 'C:\path\to\Grand Tactician' -Output './artifacts/six-level-0.2.2' -OriginalAssembly 'C:\path\to\backup\Assembly-CSharp.dll'
+./build.ps1 -GameInstall 'C:\path\to\Grand Tactician' -Output './artifacts/six-level-0.2.3' -OriginalAssembly 'C:\path\to\backup\Assembly-CSharp.dll'
 ```
 
 Choose a new output folder each time. The script builds, runs 19 hierarchy and
-8 formation and 6 Army insertion checks using stubs, and stages two DLLs plus a SHA-256 manifest.
+11 formation and 6 Army insertion checks using stubs, and stages two DLLs plus a SHA-256 manifest.
 The patcher rejects unknown original assemblies and verifies serialized hooks.
 These checks cannot validate Unity UI, terrain/pathfinding, campaign AI, or an
 actual campaign-to-battle-to-save round trip. Building does not modify the install.

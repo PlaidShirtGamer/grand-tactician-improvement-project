@@ -1,8 +1,8 @@
-# Testing GTIP 0.2.2
+# Testing GTIP 0.2.3
 
 ## Existing Corps attached directly to an Army Group
 
-Version 0.2.0 missed the upgrade and group-assignment paths. In 0.2.2, select
+Version 0.2.0 missed the upgrade and group-assignment paths. In 0.2.3, select
 an existing top-level Corps (including one already assigned to an Army Group)
 and use the Corps-to-Army upgrade control. This inserts a new Army HQ above
 the Corps, retaining the Corps, its commander and subordinates, and its Army
@@ -19,7 +19,7 @@ Army HQ → XX Corps → Divisions → Brigades → Regiments.
 This build implements the extra Army HQ. It still requires an in-game acceptance
 test; successfully loading an older save alone does not exercise the new tier.
 
-1. Launch the test installation and confirm **GTIP v0.2.2** on the main menu.
+1. Launch the test installation and confirm **GTIP v0.2.3** on the main menu.
 2. Start or load a disposable main-campaign save with hierarchy shift -1,
    outside the Whiskey & Lemons career scenario. Save under a new name.
 3. Use **Raise Army** and select a state. It should create an Army, not a Corps.
@@ -59,7 +59,7 @@ fallbacks, cleanup on failure, and assembly wiring; they do not run the game.
 
 ## Retesting the reported upgrade problem
 
-Restart the game and confirm GTIP v0.2.2. Load a disposable copy of the affected
+Restart the game and confirm GTIP v0.2.3. Load a disposable copy of the affected
 save. An already-created Army should have its invalid commander rank repaired;
 do not upgrade the same Corps again just to apply the fix. Alternatively, load
 the pre-upgrade save and confirm the tooltip says Upgrade Corps to Army.
@@ -70,3 +70,11 @@ connections and sidebar indentation, then issue a campaign movement order with
 time running. Save/reload and repeat selection and movement. Check Player.log
 for new UpdateCommanderPanel errors. GTIP informational log messages may be
 suppressed by the game's logging filter, so their absence is not a load failure.
+
+## Retesting Army movement in 0.2.3
+
+Restart and confirm GTIP v0.2.3, then load the affected test save and issue a
+fresh movement order to the Army during daylight. After the normal delay, verify
+that its HQ moves toward the destination. Independent Corps remain separately
+commanded, matching the native campaign detachment rules. Check a Corps and a
+Division still move normally, then save/reload and repeat the Army order.
