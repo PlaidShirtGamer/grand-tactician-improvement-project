@@ -97,7 +97,7 @@ try
         throw new InvalidOperationException("Staged menu indicator verification failed.");
     File.WriteAllText(Path.Combine(output, "manifest.json"), JsonSerializer.Serialize(new
     {
-        status = "experimental-traversal-only", modVersion = "0.1.1", menuIndicator = true, originalSha256 = hash,
+        status = "experimental-traversal-only", modVersion = "0.1.2", menuIndicator = true, originalSha256 = hash,
         patchedSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(destination))),
         reroutedCallSites = rerouted, runtimeSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(runtime))),
         sixTierGameplayComplete = false

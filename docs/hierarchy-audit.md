@@ -52,8 +52,10 @@ The staged DLL is structurally verified after writing. Stub tests exercise
 six levels, cycle protection, duplicate references, recipient filters, and
 fallback behavior. The user reported successful test-save loading and a battle
 with the initial prototype. This is a smoke test, not complete gameplay or
-save/load validation. Version 0.1.1 adds a main-menu runtime-loaded indicator;
-its hook is structurally verified but its appearance still needs in-game confirmation.
+save/load validation. The user confirmed the version 0.1.1 menu indicator loaded,
+but its position overlapped the DLC message. Version 0.1.2 shortens it to
+`GTIP v0.1.2` and anchors it to the canvas above the other status lines;
+the revised placement still needs in-game confirmation.
 
 ## Acceptance criteria for a playable release
 
