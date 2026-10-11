@@ -77,6 +77,7 @@ try
     var callStatus = menuIl.Create(OpCodes.Call, game.MainModule.ImportReference(statusHook));
     menuIl.InsertAfter(exit, callStatus);
     menuIl.InsertAfter(callStatus, menuIl.Create(OpCodes.Ret));
+    var sixLevelHooks = SixLevelPatches.Apply(game, helper);
     Directory.CreateDirectory(output);
     string destination = Path.Combine(output, "Assembly-CSharp.dll");
     if (File.Exists(destination)) throw new IOException("Output already exists; choose a new output directory.");
@@ -84,6 +85,7 @@ try
     File.Copy(runtime, Path.Combine(output, "GTIP.Runtime.dll"), false);
     // Re-read the artifact to verify serialization and hook wiring.
     using var staged = AssemblyDefinition.ReadAssembly(destination, new ReaderParameters { AssemblyResolver = resolver });
+    SixLevelPatches.Verify(staged);
     var stagedType = staged.MainModule.Types.Single(t => t.Name == "BattleUnits");
     if (stagedType.Methods.Count(m => m.Name == "GTIP_Original_Dispatch") != 1 ||
         !stagedType.Methods.Single(m => m.Name == methodName && m.Parameters[0].ParameterType.Name == "Regiment")
@@ -97,12 +99,12 @@ try
         throw new InvalidOperationException("Staged menu indicator verification failed.");
     File.WriteAllText(Path.Combine(output, "manifest.json"), JsonSerializer.Serialize(new
     {
-        status = "experimental-traversal-only", modVersion = "0.1.2", menuIndicator = true, originalSha256 = hash,
+        status = "experimental-six-level", modVersion = "0.2.0", sixLevelHooks, menuIndicator = true, originalSha256 = hash,
         patchedSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(destination))),
         reroutedCallSites = rerouted, runtimeSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(runtime))),
         sixTierGameplayComplete = false
     }, new JsonSerializerOptions { WriteIndented = true }));
-    Console.WriteLine($"Staged and structurally verified traversal patch: {destination}\nRerouted {rerouted} call sites. Six-tier gameplay is not yet implemented.");
+    Console.WriteLine($"Staged and structurally verified experimental six-level patch: {destination}\nRerouted {rerouted} dispatch call sites and verified {sixLevelHooks.Count} additional hooks/changes. In-game validation remains required.");
     return 0;
 }
 catch (Exception error)

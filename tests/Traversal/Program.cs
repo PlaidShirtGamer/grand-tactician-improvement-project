@@ -33,7 +33,22 @@ DLC_WL.dlc_scenarioactive = true; Dispatch();
 Check(units.FallbackCalls == 1, "DLC delegates to original game dispatcher");
 DLC_WL.dlc_scenarioactive = false; GamePrefs.commandhierarchyshift = 0; Dispatch();
 Check(units.FallbackCalls == 2, "Unshifted hierarchy delegates to original game dispatcher");
-Console.WriteLine("All traversal checks passed. These use stubs and do not validate Unity gameplay.");
+Check(new[] { 18, 16, 15 }.Select(HierarchyModel.ChildHeadquarters).SequenceEqual(new[] { 16, 15, 14 }),
+    "Army recruitment chain skips fleet and reaches Brigade");
+Check(HierarchyModel.ChildHeadquarters(17) == -1 && HierarchyModel.ChildHeadquarters(14) == -1,
+    "Fleet and Brigade cannot create a land HQ child");
+Check(HierarchyModel.LoadType(17, 18) == 18 && HierarchyModel.LoadType(14, 18) == 18,
+    "Full and empty Army HQs reload as Army, never Fleet or Brigade");
+Check(HierarchyModel.LoadType(17, 17) == 17 && HierarchyModel.LoadType(14, 17) == 17,
+    "Fleet save markers remain naval, regardless of inferred depth");
+Check(new[] { 14, 15, 16 }.All(t => HierarchyModel.LoadType(t, t) == t), "Existing land HQ save types remain compatible");
+GamePrefs.commandhierarchyshift = -1;
+var actualTypes = new[] { 18, 16, 15, 14, 0 }.Select(t => new Regiment(Math.Max(13, t))).ToArray();
+for (int i = 0; i < actualTypes.Length - 1; i++) actualTypes[i].Children.Add(actualTypes[i + 1]);
+HierarchyCommands.Dispatch(units, actualTypes[0], 13, "Test", 42, false, false, false);
+Check(actualTypes.Last().gameObject.Messages.Count == 1 && actualTypes.Take(4).All(r => r.gameObject.Messages.Count == 0),
+    "Real Army-to-Regiment ID chain delivers combat-unit orders through four HQs");
+Console.WriteLine("All hierarchy checks passed. These use stubs and do not validate Unity gameplay or save files.");
 
 public static class DLC_WL { public static bool dlc_scenarioactive; }
 public static class GamePrefs { public static int commandhierarchyshift = -1; }

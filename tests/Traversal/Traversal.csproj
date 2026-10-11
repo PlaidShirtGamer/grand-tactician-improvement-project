@@ -1,4 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>disable</Nullable></PropertyGroup>
-  <ItemGroup><Compile Include="../../src/Runtime/HierarchyCommands.cs" Link="HierarchyCommands.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../src/Runtime/HierarchyCommands.cs" Link="HierarchyCommands.cs" /><Compile Include="../../src/Runtime/HierarchyModel.cs" Link="HierarchyModel.cs" /></ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 # Hierarchy audit of the supplied test install
 
-Status: **research and traversal prototype; full six-tier mod unfinished**.
+Status: **v0.2.0 experimental six-tier implementation; gameplay acceptance pending**.
 
 The target is Regiment → Brigade → Division → Corps → Army → Army Group
 in the main campaign, without activating Whiskey & Lemons career mechanics.
@@ -36,26 +36,33 @@ in the main campaign, without activating Whiskey & Lemons career mechanics.
 | Save/load | `ImportExportUnitData` stores hierarchy shift and unit records; army-group references are separate | Round-trip a complete six-tier tree, commander references, and fleet controls |
 | Initial campaign OOBs | Existing scenarios already have their own hierarchy and sizes | Add a deliberate scenario conversion strategy; smaller recruitment caps alone do not split existing units |
 
-## Prototype boundary
+## Implementation boundary in 0.2.0
 
-The prototype changes **only** the group-command dispatcher. It retains the
-original method and delegates to it for DLC scenarios and campaigns with a
-hierarchy shift other than -1. The replacement uses a visited set and a stack,
-so it sends once per recipient and has no fixed depth limit.
+The new runtime uses land HQ IDs 14 (Brigade), 15 (Division), 16 (Corps), and
+18 (Army), with combat units below Brigade and native ArmyGroup objects above
+Army. Fleet ID 17 is preserved. The findings above describe the original game;
+recruitment, OOB, formation, visibility, symbols, naming, array capacity,
+save-type restoration, and AI integration now have experimental patches.
 
-Filtering retains the original distinction between the root recipient and
-descendants, along with level, active-state, detachment, routed/retreating, and
-AI-group filters. Descendants are visited in the original order. This does not
-enable recruitment of new tiers and does not change scenario data.
+All replacements retain the original method and delegate outside the shifted
+main-campaign mode. Ordinary Corps formations and OOBs retain native behavior;
+Army-rooted trees use the new traversal. Recruitment skips Fleet. Army Group
+project/commander requirements remain native. The importer restores type 18
+from its persisted override marker, including for empty Armies. Historical
+starting forces are not automatically split or restructured.
 
-The staged DLL is structurally verified after writing. Stub tests exercise
-six levels, cycle protection, duplicate references, recipient filters, and
-fallback behavior. The user reported successful test-save loading and a battle
-with the initial prototype. This is a smoke test, not complete gameplay or
-save/load validation. The user confirmed the version 0.1.1 menu indicator loaded,
-but its position overlapped the DLC message. Version 0.1.2 shortens it to
-`GTIP v0.1.2` and anchors it to the canvas above the other status lines;
-the revised placement still needs in-game confirmation.
+The patcher checks the original assembly hash and exact hook signatures, expands
+short IL branches affected by insertions, then verifies all 13 preserved-method
+wrappers after serialization. It also rejects native call sites bypassing those
+wrappers. Sixteen hierarchy checks and eight formation checks use stubs; they
+cover the real ID chain, fleet preservation, empty Army import mapping, movement
+to deepest branches, and restoration of detached units after a layout failure.
+They do not establish successful Unity execution or actual save-file round trips.
+
+Version 0.1.2's menu placement was confirmed by the user. Version 0.2.0 retains
+that placement and updates the version text. The earlier successful campaign
+and battle smoke tests predate the new Army tier and do not validate this build.
+See [testing-six-level.md](testing-six-level.md) for the acceptance procedure.
 
 ## Acceptance criteria for a playable release
 

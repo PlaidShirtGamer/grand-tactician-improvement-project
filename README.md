@@ -1,61 +1,70 @@
 # Grand Tactician Improvement Project
 
-Work toward regimental gameplay in the main campaign with the full hierarchy:
-**Regiment → Brigade → Division → Corps → Army → Army Group**.
+Experimental support for **Regiment → Brigade → Division → Corps → Army → Army Group**
+in the main campaign, without enabling Whiskey & Lemons career mechanics.
 
-**Current status: unfinished.** The repository contains a build-specific,
-experimental patch for one fixed-depth group-command traversal, plus an audit
-of the remaining hierarchy limits. It does not yet provide playable six-tier
-gameplay. No game files or saves are changed by the build script.
+Version **0.2.0** implements the additional Army HQ using the existing type-18
+data slot. Fleet remains type 17; Army Groups remain native, separate ArmyGroup
+objects above Army HQs. This is a test build, not a validated campaign release.
 
-See [the hierarchy audit](docs/hierarchy-audit.md) for confirmed findings,
-remaining work, and the gameplay acceptance criteria.
+## What the patch changes
 
-## Build and stage the traversal prototype
+- Raise Army creates a type-18 Army; Raise Corps creates a type-16 Corps.
+- Group recruitment follows Army → Corps → Division → Brigade, skipping Fleet.
+- Army OOBs use recursive layout and the game's existing selection, recruitment,
+  drag/drop, and Army Group controls.
+- Group orders traverse the entire tree. Army formation measurement and placement
+  also traverse the extra depth, retaining native offset calculations and paths.
+- Army HQs receive campaign visibility, Army symbols/names, safe statistics arrays,
+  and fighting-spirit coefficients inherited from the previous highest HQ tier.
+- Save import recognizes the persisted Army symbol instead of mistaking a
+  four-HQ hierarchy for a Fleet. No save format is added.
+- AI recruitment can wrap newly raised standalone Corps in Army HQs; its
+  fighting-force lookup recognizes the new HQ. Long-term AI behavior remains unverified.
+- Newly created Army Groups receive distinct Army Group names. Existing project
+  and commander requirements for Army Groups remain in effect.
 
-Requires .NET SDK 8 and a legally obtained copy of the tested game build.
-The first build restores Mono.Cecil 0.11.6 and .NET Standard references from NuGet.
-The game assemblies are referenced locally and must not be committed.
+The menu displays **GTIP v0.2.0**. That confirms the runtime is loaded; it does
+not prove the current save contains a complete six-tier chain. Hooks activate
+when the command hierarchy shift is -1 and the DLC career scenario is inactive.
+Other scenarios retain original implementations. Existing saves and historical
+OOBs are not automatically reorganized or split into historical regiments.
 
-```powershell
-./build.ps1 -GameInstall 'C:\path\to\Grand Tactician' -Output './artifacts/traversal'
-```
+See [in-game testing](docs/testing-six-level.md) and [the technical audit](docs/hierarchy-audit.md).
 
-The script builds the patcher/runtime, runs isolated traversal tests, then
-stages `Assembly-CSharp.dll`, `GTIP.Runtime.dll`, and a hash manifest in the
-output folder. Choose a new output folder for each run. The patcher refuses
-unknown game builds and output inside the game's Managed directory.
+## Build and stage
 
-The original dispatcher is preserved inside the staged assembly. Ten internal
-call sites are rerouted through the wrapper in the inspected build. DLC
-scenarios and an unshifted command hierarchy call the original dispatcher.
-
-Version 0.1.2 displays **GTIP v0.1.2** at the bottom left, inset from the screen
-edge and above the version and DLC status lines. The runtime creates this indicator when the menu opens
-and hides it when leaving the menu; the original game version is preserved.
-The message confirms the runtime and menu hook loaded, not that six-tier
-gameplay is implemented or that traversal is enabled for the current scenario.
-The same message is written to Unity's log with the `[GTIP]` prefix.
-
-When rebuilding an already patched install, supply the original assembly backup:
+Requires .NET SDK 8 and the supported game build. NuGet restores Mono.Cecil
+0.11.6 and .NET Standard references; proprietary game assemblies stay local.
 
 ```powershell
-./build.ps1 -GameInstall 'C:\path\to\Grand Tactician' -Output './artifacts/traversal-0.1.2' -OriginalAssembly 'C:\path\to\backup\Assembly-CSharp.dll'
+./build.ps1 -GameInstall 'C:\path\to\Grand Tactician' -Output './artifacts/six-level-0.2.0'
 ```
 
-The backup must match the supported original hash. The build never patches an
-already patched assembly. The initial traversal prototype passed a user-reported
-campaign-load and battle smoke test. The new menu indicator still needs visual
-confirmation in-game. Formation placement, recruitment, OOB layout, AI, and
-save/load for six-tier gameplay still require implementation and validation.
+For an already patched installation, supply the pristine original backup:
+
+```powershell
+./build.ps1 -GameInstall 'C:\path\to\Grand Tactician' -Output './artifacts/six-level-0.2.0' -OriginalAssembly 'C:\path\to\backup\Assembly-CSharp.dll'
+```
+
+Choose a new output folder each time. The script builds, runs 16 hierarchy and
+8 formation checks using stubs, and stages two DLLs plus a SHA-256 manifest.
+The patcher rejects unknown original assemblies and verifies serialized hooks.
+These checks cannot validate Unity UI, terrain/pathfinding, campaign AI, or an
+actual campaign-to-battle-to-save round trip. Building does not modify the install.
+
+To install, close the game, back up both existing DLLs, then copy the staged
+`Assembly-CSharp.dll` and `GTIP.Runtime.dll` into
+`The Civil War (1861-1865)_Data/Managed`. Keep both DLLs from the same build.
+Use a separate test save. Restoring the old DLLs also requires returning to a
+save made before the new Army HQs were created.
 
 ## Source layout
 
-- `src/Patcher`: hash-guarded offline assembly patcher; game installation is read only.
-- `src/Runtime`: original mod code implementing iterative hierarchy traversal.
-- `tests/Traversal`: isolated behavioral tests using small game/Unity stubs.
-- `docs/hierarchy-audit.md`: investigation findings and completion criteria.
+- `src/Patcher`: hash-guarded offline Mono.Cecil patcher.
+- `src/Runtime`: hierarchy traversal, recruitment, OOB, formation, and integration hooks.
+- `tests/Traversal`, `tests/Formation`: isolated behavioral checks with game/Unity stubs.
+- `docs`: implementation boundary and gameplay acceptance steps.
 
-Decompiled game source, proprietary assemblies, downloaded tools, and local
-build artifacts are ignored. This repository distributes original mod source
-only; it does not distribute the game's code or DLLs.
+Decompiled source, proprietary assemblies, tools, backups, and build artifacts
+are ignored. This repository distributes original mod source only.
