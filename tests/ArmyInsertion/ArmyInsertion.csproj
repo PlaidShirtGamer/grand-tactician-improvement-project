@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>disable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/Runtime/ArmyInsertion.cs" Link="ArmyInsertion.cs" />
+    <Compile Include="../../src/Runtime/HierarchyModel.cs" Link="HierarchyModel.cs" />
+    <Compile Include="../../src/Runtime/NativeAccess.cs" Link="NativeAccess.cs" />
+  </ItemGroup>
+</Project>

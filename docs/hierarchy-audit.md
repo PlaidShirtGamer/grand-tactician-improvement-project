@@ -1,6 +1,6 @@
 # Hierarchy audit of the supplied test install
 
-Status: **research and traversal prototype; full six-tier mod unfinished**.
+Status: **v0.2.2 experimental six-tier implementation; gameplay acceptance pending**.
 
 The target is Regiment → Brigade → Division → Corps → Army → Army Group
 in the main campaign, without activating Whiskey & Lemons career mechanics.
@@ -36,26 +36,33 @@ in the main campaign, without activating Whiskey & Lemons career mechanics.
 | Save/load | `ImportExportUnitData` stores hierarchy shift and unit records; army-group references are separate | Round-trip a complete six-tier tree, commander references, and fleet controls |
 | Initial campaign OOBs | Existing scenarios already have their own hierarchy and sizes | Add a deliberate scenario conversion strategy; smaller recruitment caps alone do not split existing units |
 
-## Prototype boundary
+## Implementation boundary in 0.2.2
 
-The prototype changes **only** the group-command dispatcher. It retains the
-original method and delegates to it for DLC scenarios and campaigns with a
-hierarchy shift other than -1. The replacement uses a visited set and a stack,
-so it sends once per recipient and has no fixed depth limit.
+The new runtime uses land HQ IDs 14 (Brigade), 15 (Division), 16 (Corps), and
+18 (Army), with combat units below Brigade and native ArmyGroup objects above
+Army. Fleet ID 17 is preserved. The findings above describe the original game;
+recruitment, OOB, formation, visibility, symbols, naming, array capacity,
+save-type restoration, and AI integration now have experimental patches.
 
-Filtering retains the original distinction between the root recipient and
-descendants, along with level, active-state, detachment, routed/retreating, and
-AI-group filters. Descendants are visited in the original order. This does not
-enable recruitment of new tiers and does not change scenario data.
+All replacements retain the original method and delegate outside the shifted
+main-campaign mode. Ordinary Corps formations and OOBs retain native behavior;
+Army-rooted trees use the new traversal. Recruitment skips Fleet. Army Group
+project/commander requirements remain native. The importer restores type 18
+from its persisted override marker, including for empty Armies. Historical
+starting forces are not automatically split or restructured.
 
-The staged DLL is structurally verified after writing. Stub tests exercise
-six levels, cycle protection, duplicate references, recipient filters, and
-fallback behavior. The user reported successful test-save loading and a battle
-with the initial prototype. This is a smoke test, not complete gameplay or
-save/load validation. The user confirmed the version 0.1.1 menu indicator loaded,
-but its position overlapped the DLC message. Version 0.1.2 shortens it to
-`GTIP v0.1.2` and anchors it to the canvas above the other status lines;
-the revised placement still needs in-game confirmation.
+The patcher checks the original assembly hash and exact hook signatures, expands
+short IL branches affected by insertions, then verifies all 18 preserved-method
+wrappers after serialization. It also rejects native call sites bypassing those
+wrappers. Nineteen hierarchy checks and eight formation checks use stubs; they
+cover the real ID chain, fleet preservation, empty Army import mapping, movement
+to deepest branches, and restoration of detached units after a layout failure.
+They do not establish successful Unity execution or actual save-file round trips.
+
+Version 0.1.2's menu placement was confirmed by the user. Version 0.2.2 retains
+that placement and updates the version text. The earlier successful campaign
+and battle smoke tests predate the new Army tier and do not validate this build.
+See [testing-six-level.md](testing-six-level.md) for the acceptance procedure.
 
 ## Acceptance criteria for a playable release
 
@@ -73,3 +80,54 @@ the revised placement still needs in-game confirmation.
 9. Decide and implement a migration policy before loading existing saves.
 
 Until these pass, there is no supported installation for six-tier gameplay.
+
+## 0.2.2 regression fixes
+
+The reported commander-panel failure was traced to an out-of-range rank index:
+the native dummy-commander constructor assigns rank 10 to type 18, and
+BattleUI.UpdateCommanderPanel indexes rankabbrev with that value. The resulting
+exception interrupts UI updates, leaving commander names and unit details stale.
+The runtime repairs invalid Army commander ranks on creation/loading and before
+panel rendering, without replacing commander IDs or changing valid ranks.
+
+The upgrade tooltip now distinguishes Division-to-Corps from Corps-to-Army.
+Army OOBs stack combat units under Brigades and draw orthogonal connectors in
+the actual icon coordinate system. The campaign sidebar visits parents before
+children, indents by depth, and refreshes after Army insertion.
+
+Validation: 33 stub checks pass (19 hierarchy/rank, 8 formation, 6 insertion),
+and 18 preserved-method wrappers pass serialized assembly verification. Unity
+layout and campaign movement still require in-game testing. The interrupted UI
+update is a likely cause of blocked map input; movement is not yet confirmed.
+
+## 0.2.3 campaign Army movement
+
+Native Regiment.Initialize marks every visible campaign unit permanentlydetached,
+including a top-level Army. The custom Army formation handler incorrectly applied
+its subordinate detachment filter to the order's root as well, skipping both
+RegimentSetPath and immediate placement for that Army. The order UI could still
+start its delay even though no pending movement path had been assigned.
+
+The root now receives its path/placement just as it does in native SetGroupFormation.
+Detached or routed subordinate units retain their native exclusions. This does
+not bypass order delays, force movement speed, or change independent Corps orders.
+Three regression checks cover a detached campaign Army receiving a pending path,
+preserved Corps detachment, and immediate placement. Total: 36 stub checks
+(19 hierarchy/rank, 11 formation, 6 insertion). Live movement remains to be retested.
+
+## 0.2.4 Army commander replacement
+
+The native CheckSuitableRank method treats type 18 as Army Group eligibility.
+Besides rank bounds, it requires minimumexpcommanderarmygroup when an officer is
+at the minimum rank. The added Army HQ shares that ID, so suitable-rank MGs can
+be excluded by the Army Group experience check. For an actual type-18 Regiment
+in shifted main-campaign mode, the hook supplies zero for that experience
+threshold. Checks without an Army Regiment (including Army Group selection),
+other modes, minimum/maximum ranks, availability, branch, and state restrictions
+retain native behavior. Union Config/ranks0.txt maps the shifted Army to type 16,
+which requires rank 7 (Major General) both before and after organization reform;
+Brigadier Generals are below that threshold.
+
+39 stub checks pass (22 hierarchy/rank, 11 formation, 6 insertion); serialization
+also verifies the new eligibility hook. This identifies a code-level exclusion,
+not the complete eligibility state of the specific officers in the user's save.
