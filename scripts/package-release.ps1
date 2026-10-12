@@ -25,7 +25,7 @@ foreach ($folder in @('src', 'tests', 'docs', 'scripts', 'licenses')) {
         Copy-Item -LiteralPath $_.FullName -Destination $target
     }
 }
-Copy-Item (Join-Path $root 'README.md'),(Join-Path $root 'build.ps1') -Destination $stage
+Copy-Item (Join-Path $root 'README.md'),(Join-Path $root 'build.ps1'),(Join-Path $root 'global.json') -Destination $stage
 New-Item -ItemType Directory -Path (Join-Path $stage 'release-config') | Out-Null
 foreach ($file in @('campaignprefs.txt', 'unitprefs.txt', 'battleprefs.txt')) {
     Copy-Item -LiteralPath (Join-Path $root "release-config/$file") -Destination (Join-Path $stage 'release-config')

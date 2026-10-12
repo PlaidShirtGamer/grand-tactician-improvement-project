@@ -73,3 +73,6 @@ upload is required; publishing uses the workflow's scoped GITHUB_TOKEN.
 For local packaging, run `./scripts/package-release.ps1`. Use a new `-Output`
 directory for each attempt. To refresh release preferences, copy the three
 files from the test install into `release-config` and commit them before tagging.
+
+Maintainer builds select SDK 8.0.425 (or a later 8.0.4xx patch) through global.json. This also fixes the embedded Roslyn compiler to the .NET 8 SDK family when newer SDKs are installed.
+
