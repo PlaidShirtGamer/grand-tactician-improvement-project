@@ -74,5 +74,5 @@ are ignored. This repository distributes original mod source only.
 
 ## Releases
 
-See [release packaging and installation](docs/releases.md). Version tags create a draft prerelease containing a build-kit ZIP and the three test-install preference files. The runtime is compiled locally against the player's game DLLs.
+See [release packaging and installation](docs/releases.md). Version tags create a draft prerelease containing a self-contained Windows installer, a source build-kit ZIP, and checksums. The installer bundles the three test-install preferences and compiles GTIP against the player's game DLLs automatically; no SDK is required.
 
