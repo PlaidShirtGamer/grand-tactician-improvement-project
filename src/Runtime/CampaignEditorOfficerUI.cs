@@ -17,6 +17,7 @@ namespace GTIP
             var date = GameVars.GetCampaignFloatingDateSep();
             officerPromotion = date.year.ToString("0000") + "-" + date.month.ToString("00") + "-" + date.day.ToString("00");
             officerState = 0; officerRank = Math.Min(5, GameVars.commanderranks - 1);
+            LoadPortraitCatalog();
         }
         void DrawNewOfficer()
         {
@@ -42,7 +43,7 @@ namespace GTIP
             officerState = Pick("Home state", GameVars.nation.Select(n => n.name).ToArray(), officerState, ref stateScroll);
             GUILayout.Label("Date of birth (YYYY-MM-DD)"); officerBirth = GUILayout.TextField(officerBirth);
             GUILayout.Label("Date rank attained (YYYY-MM-DD)"); officerPromotion = GUILayout.TextField(officerPromotion);
-            GUILayout.Label("Existing portrait filename in Avatar, without .png (blank uses silhouette)"); officerPortrait = GUILayout.TextField(officerPortrait);
+            DrawPortraitPicker();
             GUILayout.Label("Starting attributes: experience/fame 0%; leadership, initiative, administration and cunning 50%. Select the new officer afterward to edit attributes and background traits.");
         }
         void ReviewNewOfficer()
@@ -63,10 +64,16 @@ namespace GTIP
             if (portrait.Length > 0 && (portrait.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || portrait.Contains(".") ||
                 !File.Exists(Path.Combine("Avatar", portrait + ".png"))))
                 throw new InvalidOperationException("Choose an existing PNG in the game's Avatar folder; enter only its filename without the extension.");
+            if (portrait.Length > 0)
+            {
+                PreviewPortrait(portrait);
+                if (portraitPreview == null) throw new InvalidOperationException(portraitError ?? "Portrait preview failed.");
+            }
             operationReview = "Create " + GameVars.ranktext[rank] + " " + first + " " + last + " in " + (faction == 0 ? "Union" : "Confederacy") +
                 ". Born " + officerBirth + "; rank attained " + officerPromotion + ". Portrait: " + (portrait.Length == 0 ? "silhouette" : portrait) + ".";
             operationApply = () => {
                 if (portrait.Length > 0 && !File.Exists(Path.Combine("Avatar", portrait + ".png"))) throw new InvalidOperationException("Portrait was removed; review again.");
+                if (portrait.Length > 0) EditorPortraitFiles.Read(Path.Combine("Avatar", portrait + ".png"));
                 var officer = new GameVars.Commander { firstname = first, name = last, combinedname = first + " " + last,
                     alliance = faction, rank = rank, historicalbranch = branch, stateid = stateId,
                     dateofbirth = new Tools.Date(birth.Day, birth.Month, birth.Year),

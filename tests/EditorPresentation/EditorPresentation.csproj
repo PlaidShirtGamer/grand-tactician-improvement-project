@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/Runtime/EditorTreeLayout.cs" Link="EditorTreeLayout.cs" />
+    <Compile Include="../../src/Runtime/EditorPortraitFiles.cs" Link="EditorPortraitFiles.cs" />
+  </ItemGroup>
+</Project>

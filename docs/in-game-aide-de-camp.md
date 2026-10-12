@@ -4,7 +4,7 @@ Branch: `feature/in-game-aide-de-camp`, forked from GTIP `test` at
 `3e206bd837300f46daa3947f80fbd6c05bc9abf9`.
 
 **Status: integration preview, not standalone feature parity.** Runtime version
-0.3.1 identifies this development branch; no production release tag is implied.
+0.3.2 identifies this development branch; no production release tag is implied.
 The target is the complete functionality of Aide-de-Camp 0.8.20, reviewed at fork
 commit `191aa6de6e0df7ca642f81ca4f45db3cf5b00e11`. The standalone app remains usable
 and is not modified by this branch.
@@ -29,18 +29,18 @@ changing selection, tabs, faction, search, refreshing, or closing.
 | --- | --- |
 | Both factions, six-level land hierarchy and Army Groups | Live indented hierarchy and search implemented |
 | Garrison and fleet lists | Live command lists implemented; ship-level rows pending |
-| NATO cards, connectors, collapse, nudges and drag/drop | Pending native tree UI |
+| Cards, connectors, collapse, nudges and drag/drop | Connected tier cards, collapse/expand, zoom, scrolling, focus and reviewed drag/drop implemented; manual card nudges and full NATO artwork pending |
 | Rename combat units and HQs | Implemented with review/undo/redo |
 | Unit experience, training, morale, condition | Implemented; native fractions converted to percentages |
 | Strength, casualties, contracts, state, weapons, perks, supplies, ETA | Pending live accounting/side-effect adapters |
 | Multi-selection, batch editing, roster copy/paste | Pending |
 | Mass naming and naming schemes | Pending |
-| Corps/Army/Army Group transfers | Reviewed native transfers implemented; graphical drag/drop and structural undo pending |
+| Corps/Army/Army Group transfers | Reviewed native transfers and graphical drag/drop implemented; structural undo pending |
 | Create combat units and HQs at verified towns | HQs from Brigade through Army Group implemented; combat-unit creation pending |
 | Delete formations while reparenting subordinates | Reviewed native deletion implemented for stationary land formations; structural undo pending |
 | Commander replacement, rank and branch editing | Eligible commander replacement implemented; editing existing ranks/branches pending |
 | Officer names, attributes and background traits | Implemented with review/undo/redo |
-| Officer creation, random names, dates and portraits | Loaded-campaign land officer creation, faction name pools, dates and existing Avatar PNGs implemented; portrait import/preview pending |
+| Officer creation, random names, dates and portraits | Loaded-campaign land officer creation, faction name pools, dates and searchable Avatar portrait picker with image preview implemented; external-file import pending |
 | Add officers to base game versus loaded save | Pending; requires separate explicit file transaction |
 | Weapon stock | Live stock editing implemented; equipment/order/standardization handling pending |
 | Treasury, population, recruits, support, projects, policies and subsidies | Read-only overview; editing pending |
@@ -77,9 +77,33 @@ Army Groups additionally retain the game's experience requirement.
 
 **New officer** adds an unassigned land officer to the loaded campaign. Random
 names come from the faction's game name pools. Enter real dates as YYYY-MM-DD;
-select an existing portrait using its filename in `Avatar`, without `.png`.
+select an existing PNG using the searchable `Avatar` portrait picker.
 A blank portrait uses the silhouette. Starting attributes can be edited afterward
 in Officers. This does not yet add officers to base-game files or import images.
+
+## Graphical tree and portraits in 0.3.2
+
+Armies and Garrisons open as connected command cards. Click a card to inspect or
+edit it. Use the corner +/- controls to collapse/expand branches, the zoom slider
+and scrollbars to navigate, and **Focus** to center the selection (or first root).
+Search includes matching cards and their ancestors, temporarily opening those
+paths. **List** switches back to the original searchable list.
+
+Drag a land formation onto a compatible HQ or Army Group. Moving near the canvas
+edges scrolls while dragging. Release to open the same reviewed transfer used by
+the form; no formation is moved until **Apply reviewed operation**. Invalid tier,
+faction, cycle, battle, movement or AI-operation conditions remain rejected.
+Dropping outside a card cancels the transfer. Use the form's Independent command
+option for detachment. Dragging moves formations, not card positions, and transfers
+still do not have structural Undo.
+
+In **New officer**, the portrait section lists PNGs from the installation's
+`Avatar` folder, with filename search and pagination. Select a name to see its
+image preview, or choose **Use silhouette**. **Refresh portraits** discovers newly
+added PNG files. PNGs must be at most 10 MB and 4096×4096 pixels. A failed preview
+blocks creation with that portrait. Only the selected texture is loaded, and it
+is released on replacement or editor close. Portrait files remain external to
+the save and must accompany it when moved to another installation.
 
 ## Implementation
 
@@ -159,3 +183,11 @@ that campaign and reported the result looked fine. The inspected Player.log
 contained no exception/error matches. Live deletion, all transfer combinations,
 portrait persistence, and battle transitions still need scenario testing; the
 automated structural tests use native-operation doubles rather than Unity saves.
+
+The 0.3.2 build passed 129 local checks and serialized patch verification. Its new
+presentation suite exercises six-level layout, independent roots, non-overlapping
+siblings, collapsed children, search ancestor paths, skipped tiers, and bounded
+PNG headers. The installed preview displayed the connected hierarchy and selected
+card inspector in a loaded campaign at 1920x1080. These automated checks do not
+simulate mouse gestures or decode images through Unity; live transfer and portrait
+checks remain part of the preview test process.

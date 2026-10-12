@@ -100,6 +100,7 @@ namespace GTIP
             eventSystem = null;
             session?.Clear(); session = null;
             selected = null; pending = null; rows.Clear(); editedOfficers.Clear(); ResetOperation();
+            CancelTreeDrag(); ClearPortraitPreview(); treeRows.Clear(); treeNodes.Clear(); collapsedTargets.Clear(); treeInitialized = false;
             // Deliberately remain paused; never resume a campaign behind the user's back.
         }
         void OnDisable() { Close(); }
@@ -123,6 +124,7 @@ namespace GTIP
             selected = null; pending = null; values = new string[0]; expected = new object[0];
             rows.Clear();
             rows = CampaignEditorData.Read(domain, side, search);
+            RebuildTree();
             editedOfficers.RemoveWhere(o => !GameVars.commander.Contains(o));
         }
         void Select(CampaignEditorRecord row)
@@ -176,14 +178,21 @@ namespace GTIP
                 if (newSide != side || newDomain != domain || newSearch != search)
                 { side = newSide; domain = newDomain; search = newSearch; Run(Reload); }
                 GUILayout.BeginHorizontal(GUILayout.ExpandHeight(true));
-                listScroll = GUILayout.BeginScrollView(listScroll, GUILayout.Width((width - 55) * .55f));
-                foreach (var row in rows)
+                if (graphicalTree && domain <= 1) DrawGraphicalTree((width - 55) * .65f);
+                else
                 {
-                    GUILayout.BeginHorizontal(); GUILayout.Space(Math.Min(6, row.Depth) * 18);
-                    if (GUILayout.Button(row.Title + "  —  " + row.Detail.Replace('\n', ' '), GUILayout.Height(48))) Select(row);
-                    GUILayout.EndHorizontal();
+                    GUILayout.BeginVertical(GUILayout.Width((width - 55) * .55f));
+                    if (domain <= 1 && GUILayout.Button("Graphical tree")) { graphicalTree = true; RebuildTree(); }
+                    listScroll = GUILayout.BeginScrollView(listScroll, GUILayout.Width((width - 55) * .55f));
+                    foreach (var row in rows)
+                    {
+                        GUILayout.BeginHorizontal(); GUILayout.Space(Math.Min(6, row.Depth) * 18);
+                        if (GUILayout.Button(row.Title + "  —  " + row.Detail.Replace('\n', ' '), GUILayout.Height(48))) Select(row);
+                        GUILayout.EndHorizontal();
+                    }
+                    GUILayout.EndScrollView();
+                    GUILayout.EndVertical();
                 }
-                GUILayout.EndScrollView();
                 editScroll = GUILayout.BeginScrollView(editScroll, GUILayout.ExpandWidth(true));
                 if (operation != null) DrawOperation();
                 else if (selected == null) GUILayout.Label("Select a formation or record to inspect it.\n\nUse Create HQ for a new command, or select a land formation for transfers, commander replacement and deletion. Other standalone features are tracked in the branch's parity checklist.");
