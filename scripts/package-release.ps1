@@ -4,7 +4,7 @@ $root = Split-Path -Parent $PSScriptRoot
 [xml]$project = Get-Content (Join-Path $root 'src/Runtime/Runtime.csproj') -Raw
 $version = @($project.Project.PropertyGroup.Version | Where-Object { $_ })[0]
 if ($Tag -and $Tag -cne "v$version") { throw "Tag $Tag must match runtime version v$version" }
-foreach ($file in @('src/Runtime/MenuStatus.cs', 'src/Patcher/Program.cs')) {
+foreach ($file in @('src/Runtime/MenuStatus.cs', 'src/Patcher/PatchEngine.cs')) {
     if (!(Get-Content (Join-Path $root $file) -Raw).Contains('"' + $version + '"')) { throw "Version mismatch in $file" }
 }
 $Output = [IO.Path]::GetFullPath($Output)
@@ -15,9 +15,9 @@ $zip = Join-Path $Output "$name.zip"
 if ((Test-Path $stage) -or (Test-Path $zip)) { throw 'Package output exists; use a new output directory.' }
 New-Item -ItemType Directory -Path $stage | Out-Null
 # Explicit extensions exclude local build products and proprietary game assemblies.
-foreach ($folder in @('src', 'tests', 'docs', 'scripts')) {
+foreach ($folder in @('src', 'tests', 'docs', 'scripts', 'licenses')) {
     Get-ChildItem (Join-Path $root $folder) -File -Recurse | Where-Object {
-        $_.Extension -in @('.cs', '.csproj', '.md', '.ps1') -and $_.FullName -notmatch '[\\/](bin|obj)[\\/]'
+        $_.Extension -in @('.cs', '.csproj', '.md', '.ps1', '.manifest', '.txt') -and $_.FullName -notmatch '[\\/](bin|obj)[\\/]'
     } | ForEach-Object {
         $relative = [IO.Path]::GetRelativePath($root, $_.FullName)
         $target = Join-Path $stage $relative

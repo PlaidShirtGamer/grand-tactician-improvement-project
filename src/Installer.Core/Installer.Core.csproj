@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+    <Reference Include="Microsoft.CodeAnalysis"><HintPath>$(MSBuildSDKsPath)/../Roslyn/bincore/Microsoft.CodeAnalysis.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp"><HintPath>$(MSBuildSDKsPath)/../Roslyn/bincore/Microsoft.CodeAnalysis.CSharp.dll</HintPath><Private>true</Private></Reference>
+    <Compile Include="../Patcher/PatchEngine.cs" Link="PatchEngine.cs" />
+    <Compile Include="../Patcher/SixLevelPatches.cs" Link="SixLevelPatches.cs" />
+    <EmbeddedResource Include="../Runtime/*.cs" LogicalName="Runtime.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../../release-config/*.txt" LogicalName="Config.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../../licenses/*.txt" LogicalName="Licenses.%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

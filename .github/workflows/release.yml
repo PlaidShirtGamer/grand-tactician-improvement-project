@@ -16,7 +16,7 @@ concurrency:
 jobs:
   package:
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -27,7 +27,7 @@ jobs:
         run: |
           dotnet build src/Patcher/Patcher.csproj -c Release
           if ($LASTEXITCODE -ne 0) { throw 'Patcher build failed' }
-          foreach ($suite in @('Traversal', 'Formation', 'ArmyInsertion')) {
+          foreach ($suite in @('Traversal', 'Formation', 'ArmyInsertion', 'Installer')) {
             dotnet run --project "tests/$suite/$suite.csproj" -c Release
             if ($LASTEXITCODE -ne 0) { throw "$suite tests failed" }
           }
@@ -39,11 +39,27 @@ jobs:
         run: |
           $tag = if ($env:REF_TYPE -eq 'tag') { $env:REF_NAME } else { '' }
           ./scripts/package-release.ps1 -Tag $tag
+      - name: Package self-contained Windows installer
+        shell: pwsh
+        run: |
+          ./scripts/package-installer.ps1
+          $exe = (Get-Item artifacts/releases/*-Setup.exe).FullName
+          $report = Join-Path $env:RUNNER_TEMP 'gtip-installer-smoke.txt'
+          $info = [Diagnostics.ProcessStartInfo]::new($exe)
+          $info.UseShellExecute = $false
+          $info.CreateNoWindow = $true
+          $info.ArgumentList.Add('--self-test')
+          $info.ArgumentList.Add($report)
+          $process = [Diagnostics.Process]::Start($info)
+          $process.WaitForExit()
+          if ($process.ExitCode -ne 0) { throw 'Bundled installer smoke test failed' }
+          Get-Content $report
       - uses: actions/upload-artifact@v4
         with:
           name: GTIP-release-package
           path: |
             artifacts/releases/*.zip
+            artifacts/releases/*.exe
             artifacts/releases/*.sha256
           if-no-files-found: error
   release:
@@ -64,9 +80,9 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           cat > notes.md <<'EOF'
-          Experimental GTIP build kit with the tested campaignprefs.txt, unitprefs.txt, and battleprefs.txt.
+          Experimental GTIP Windows installer with the tested campaignprefs.txt, unitprefs.txt, and battleprefs.txt.
 
-          Requires a supported Grand Tactician installation and .NET SDK 8. Build locally against your own game DLLs using build.ps1. See docs/releases.md inside the ZIP for installation steps. The ZIP does not contain a prepatched game assembly.
+          Download GTIP-Setup.exe, run it, choose your supported game installation, and click Install / Update. The installer includes .NET and its compiler; no SDK or separate runtime download is required. It compiles and patches locally against your game DLLs, backs up replaced files, and includes Uninstall / Restore. The source build-kit ZIP is available separately. No game DLLs are distributed.
           EOF
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             echo 'A release already exists for this tag; refusing to overwrite its assets.' >&2
