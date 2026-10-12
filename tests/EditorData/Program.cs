@@ -29,6 +29,13 @@ Check(!ReferenceEquals(rows[0].Target,rows[1].Target),"Weapon selection identiti
 session.Apply(rows[1].Fields,new[]{"250"});
 Check(GameVars.alliance[0].weaponstock.SequenceEqual(new[]{100f,250f}),"Stock edit changes only selected weapon"); session.Undo();
 Check(GameVars.alliance[0].weaponstock[1]==200,"Stock undo restores exact value");
+GameVars.nation = new[]{new GameVars.Nation{name="Ohio",population=2000000,volunteers=new[]{500,600},drafts=new[]{700,800},support=new[]{.7f,.3f}}};
+var stateRow=CampaignEditorData.Read(5,0,"").Last();
+Check(stateRow.Detail.Contains("500") && stateRow.Detail.Contains("700"),"Nation shows selected faction recruit pools");
+session.Apply(stateRow.Fields,new[]{"2100000","75","1200","1400"});
+Check(GameVars.nation[0].volunteers.SequenceEqual(new[]{1200,600}) && GameVars.nation[0].drafts.SequenceEqual(new[]{1400,800}),"Pool edits preserve other faction");
+session.Undo(); Check(GameVars.nation[0].population==2000000 && GameVars.nation[0].volunteers[0]==500,"Nation undo restores population and recruits");
+bool rejected=false;try{stateRow.Fields[2].Parse("1.5");}catch(InvalidOperationException){rejected=true;}Check(rejected,"Recruit pools require whole people");
 Console.WriteLine("Projection checks use synthetic game objects; actual game smoke testing remains required.");
 
 public class Transform { public Regiment Unit; public Transform parent; public T GetComponent<T>()=>(T)(object)Unit; }
@@ -55,8 +62,8 @@ public static class GameVars
     public static Alliance[] alliance={new(),new()}; public static Nation[] nation=Array.Empty<Nation>();
     public class Commander {public string name,firstname,combinedname;public int alliance,rank,status;public bool activeincampaign=true,veteran,westpoint,political;public float exp,fame,leadership,initiative,administration,cunning;public Regiment currentcommand;}
     public class Weapon {public string name;}
-    public class Alliance {public string name;public float treasury;public float[] weaponstock;}
-    public class Nation {public string name;public float population;}
+    public class Alliance {public string name;public float treasury,volunteersavailable,draftsavailable;public float[] weaponstock;}
+    public class Nation {public string name;public float population;public bool recruitable=true;public int alliance;public int[] volunteers=new int[2],drafts=new int[2];public float[] support=new float[2];}
 }
 public static class CampaignMainPanel {public static object lastregtextupdate;}
 public static class ToolsUnitList {public static void SetDirty(){}}

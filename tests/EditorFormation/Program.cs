@@ -16,7 +16,9 @@ Reject(()=>EditorFormationOperations.Move(otherArmy,division),"Descendant cycles
 var enemy=Unit(18);enemy.alliance=1;
 Reject(()=>EditorFormationOperations.Move(corps,enemy),"Cross-faction transfer rejected");
 division.inbattle=true;
-Reject(()=>EditorFormationOperations.Move(corps,army),"In-battle descendant blocks whole transfer"); division.inbattle=false;
+EditorFormationOperations.CheckMove(corps,army);
+Check(true,"In-battle descendants do not block native transfers");
+Reject(()=>EditorFormationOperations.CheckDelete(corps),"Deletion retains battle protection"); division.inbattle=false;
 var first=new ArmyGroup(); var second=new ArmyGroup(); BattleUnits.armygroups.AddRange(new[]{first,second});
 first.GTIP_Original_AddArmyGroupUnit(otherArmy,false,false);
 EditorFormationOperations.Move(otherArmy,second);
@@ -42,7 +44,10 @@ var created=(Regiment)EditorFormationOperations.Create(0,18,"Created Army",null,
 Check(created.name=="Created Army" && created.commander==eligible && GameVars.commander[eligible].currentcommand==created,"Creation assigns requested commander and name");
 Reject(()=>EditorFormationOperations.Create(0,18,"Duplicate",null,town,eligible),"Assigned commander cannot be reused");
 var busy=Unit(16); AICampaign.aifaction[0].unitsinoffensiveoperations.Add(busy);
-Reject(()=>EditorFormationOperations.Move(busy,army),"Active AI operations block structural edits");
+busy.regimentpaths=2; busy.transfertime=3;
+EditorFormationOperations.Move(busy,army);
+Check(busy.transform.parent==army.transform,"Moving and AI-assigned formations can use native transfer");
+Reject(()=>EditorFormationOperations.CheckDelete(busy),"Deletion retains operation protection");
 Console.WriteLine("Structural adapter checks use native-operation doubles; in-game save/reload verification remains necessary.");
 
 public class Regiment {

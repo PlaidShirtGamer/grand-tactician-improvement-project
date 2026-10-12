@@ -31,4 +31,9 @@ try
     File.WriteAllBytes(file, new byte[10 * 1024 * 1024 + 1]); Rejected("Reject oversized file before decode");
 }
 finally { File.Delete(file); }
+Check(EditorNaming.Number(11,0)=="11th" && EditorNaming.Number(22,0)=="22nd" && EditorNaming.Number(113,0)=="113th", "Ordinal exceptions");
+Check(EditorNaming.Number(1944,2)=="MCMXLIV", "Roman subtraction");
+Check(EditorNaming.Render("{number} {state} {type}",2,0,1,"Ohio","Infantry","Regiment","old")=="2ND OHIO INFANTRY", "Naming tokens and case");
+Check(EditorNaming.Render("Guard {old}",1,1,0,"","","","Existing")=="Guard Existing", "Literal text and existing name");
+bool invalid=false;try{EditorNaming.Render("{unknown}",1,0,0,"","","","");}catch(InvalidOperationException){invalid=true;}Check(invalid,"Unknown naming tokens rejected");
 Console.WriteLine($"Editor presentation: {checks} checks passed.");

@@ -68,6 +68,7 @@ namespace GTIP
         }
         void DrawOperation()
         {
+            if (operation == "naming") { DrawNaming(); return; }
             GUILayout.Label(operation == "create" ? "Create headquarters" : operation == "officer" ? "Create officer in loaded campaign" : operation + ": " + DestinationName(operationSource));
             GUILayout.Label("Structural changes use the game's native operations. They clear this editor session's undo history and cannot be undone here. Save a separate checkpoint before applying.");
             if (operationReview != null)

@@ -51,17 +51,17 @@ namespace GTIP
         }
         internal static void CheckMove(Regiment unit, object destination)
         {
-            Check(unit);
+            CheckTransferUnit(unit);
             if (destination is Regiment parent)
             {
-                Check(parent);
+                CheckTransferUnit(parent);
                 EditorFormationRules.Transfer(unit.unittyp, parent.unittyp, unit.alliance, parent.alliance,
                     unit == parent, parent.transform.IsChildOf(unit.transform));
                 if (Parent(unit) == parent) throw new InvalidOperationException("Already attached to that headquarters.");
             }
             else if (destination is ArmyGroup group)
             {
-                CheckGroup(group);
+                if (!BattleUnits.armygroups.Contains(group)) throw new InvalidOperationException("Army Group no longer exists.");
                 if (unit.unittyp < 14 || group.GetAlliance() != unit.alliance || unit.assignedarmygroup == group)
                     throw new InvalidOperationException("Choose a different Army Group of the same faction for a headquarters.");
                 if (!group.CanAddFurtherUnits()) throw new InvalidOperationException("Army Group has reached its native command capacity.");
@@ -69,15 +69,27 @@ namespace GTIP
             else if (destination != null || unit.unittyp < 14 || Parent(unit) == null && unit.assignedarmygroup == null)
                 throw new InvalidOperationException("Only an attached headquarters can become an independent command.");
         }
+        static void CheckTransferUnit(Regiment unit)
+        {
+            if (unit == null || !BattleUnits.completeunitlist.Contains(unit) || !EditorFormationRules.Land(unit.unittyp))
+                throw new InvalidOperationException("Select an existing land formation.");
+            // Native MoveUnit owns transfer delays and campaign status handling.
+            // Deletion's stationary/operation guards must not govern regrouping.
+        }
         internal static void Move(Regiment unit, object destination)
         {
             CheckMove(unit, destination);
             var oldParent = Parent(unit);
+            var previousGroup = unit.assignedarmygroup;
             DetachGroup(unit);
             if (destination is Regiment parent)
             {
                 Engine.MoveUnit(unit.gameObject, parent.gameObject, skipdlccheck: true);
-                if (Parent(unit) != parent) throw new InvalidOperationException("The game rejected this transfer.");
+                if (Parent(unit) != parent)
+                {
+                    if (previousGroup != null) NativeAccess.Call(previousGroup, "GTIP_Original_AddArmyGroupUnit", unit, false, false);
+                    throw new InvalidOperationException("The game rejected this transfer; original Army Group membership was retained.");
+                }
                 if (unit.unittyp >= 16) unit.permanentlydetached = true;
             }
             else

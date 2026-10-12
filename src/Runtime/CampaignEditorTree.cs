@@ -19,6 +19,12 @@ namespace GTIP
         bool treeInitialized;
         bool centerTree = true;
         GUIStyle treeText;
+        float cardHeight = 150;
+        string CardText(CampaignEditorRecord row)
+        {
+            string symbol = row.Target is ArmyGroup ? "XXXXX" : row.Target is Regiment u ? u.unittyp == 18 ? "XXXX" : u.unittyp == 16 ? "XXX" : u.unittyp == 15 ? "XX" : u.unittyp == 14 ? "X" : "I" : "";
+            return symbol + "\n" + row.Title + "\n" + row.Detail;
+        }
         void CancelTreeDrag()
         {
             if (treeControl != 0 && GUIUtility.hotControl == treeControl) GUIUtility.hotControl = 0;
@@ -40,7 +46,7 @@ namespace GTIP
                 new HashSet<int>(Enumerable.Range(0, treeRows.Count).Where(i => collapsedTargets.Contains(treeRows[i].Target))));
             centerTree = true;
         }
-        Rect TreeCard(EditorTreeNode n) => new Rect(20 + n.X * treeZoom, 20 + n.Y * treeZoom, 220 * treeZoom, 150 * treeZoom);
+        Rect TreeCard(EditorTreeNode n) => new Rect(20 + n.X * treeZoom, 20 + n.Depth * (cardHeight + 50) * treeZoom, 220 * treeZoom, cardHeight * treeZoom);
         void TreeLine(Vector2 a, Vector2 b)
         {
             var old = GUI.color; GUI.color = new Color(.45f, .62f, .68f);
@@ -61,6 +67,10 @@ namespace GTIP
             GUILayout.EndHorizontal();
             GUILayout.Label("Click a card to edit. Drag a unit onto an HQ or Army Group to review a transfer.");
             Rect viewport = GUILayoutUtility.GetRect(width, 300, GUILayout.ExpandHeight(true));
+            if (treeText == null) treeText = new GUIStyle(skin.label) { alignment = TextAnchor.MiddleCenter, wordWrap = true };
+            treeText.fontSize = Math.Max(9, (int)(15 * treeZoom));
+            cardHeight = Math.Max(150, treeNodes.Count == 0 ? 150 : treeNodes.Max(n =>
+                (treeText.CalcHeight(new GUIContent(CardText(treeRows[n.Index])), 220 * treeZoom - 36) + 12) / treeZoom));
             if (centerTree && Event.current.type == EventType.Repaint && treeNodes.Count > 0)
             {
                 var focus = treeNodes.FirstOrDefault(n => treeRows[n.Index].Target == selected?.Target) ?? treeNodes.OrderBy(n => n.Depth).ThenBy(n => n.Index).First();
@@ -84,8 +94,6 @@ namespace GTIP
                 }
             var view = new Rect(treeScroll.x, treeScroll.y, viewport.width, viewport.height);
             EditorTreeNode hovered = null;
-            if (treeText == null) treeText = new GUIStyle(skin.label) { alignment = TextAnchor.MiddleCenter, wordWrap = true };
-            treeText.fontSize = Math.Max(9, (int)(15 * treeZoom));
             foreach (var n in treeNodes)
             {
                 var card = TreeCard(n); if (!view.Overlaps(card)) continue;
@@ -99,8 +107,7 @@ namespace GTIP
                     GUI.color = new Color(.95f, .7f, .25f);
                     GUI.DrawTexture(new Rect(card.x, card.y, card.width, 3), Texture2D.whiteTexture); GUI.color = old;
                 }
-                string symbol = row.Target is ArmyGroup ? "XXXXX" : row.Target is Regiment u ? u.unittyp == 18 ? "XXXX" : u.unittyp == 16 ? "XXX" : u.unittyp == 15 ? "XX" : u.unittyp == 14 ? "X" : "I" : "";
-                GUI.Label(new Rect(card.x + 4, card.y + 2, card.width - 8, card.height - 4), symbol + "\n" + row.Title + "\n" + row.Detail, treeText);
+                GUI.Label(new Rect(card.x + 6, card.y + 6, card.width - 36, card.height - 12), CardText(row), treeText);
                 if (n.Children.Count > 0 && GUI.Button(new Rect(card.xMax - 24, card.y, 24, 24), collapsedTargets.Contains(row.Target) ? "+" : "−"))
                 { if (!collapsedTargets.Add(row.Target)) collapsedTargets.Remove(row.Target); RebuildTree(); break; }
             }

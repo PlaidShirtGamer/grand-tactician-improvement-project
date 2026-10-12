@@ -4,7 +4,7 @@ Branch: `feature/in-game-aide-de-camp`, forked from GTIP `test` at
 `3e206bd837300f46daa3947f80fbd6c05bc9abf9`.
 
 **Status: integration preview, not standalone feature parity.** Runtime version
-0.3.2 identifies this development branch; no production release tag is implied.
+0.3.3 identifies this development branch; no production release tag is implied.
 The target is the complete functionality of Aide-de-Camp 0.8.20, reviewed at fork
 commit `191aa6de6e0df7ca642f81ca4f45db3cf5b00e11`. The standalone app remains usable
 and is not modified by this branch.
@@ -34,7 +34,7 @@ changing selection, tabs, faction, search, refreshing, or closing.
 | Unit experience, training, morale, condition | Implemented; native fractions converted to percentages |
 | Strength, casualties, contracts, state, weapons, perks, supplies, ETA | Pending live accounting/side-effect adapters |
 | Multi-selection, batch editing, roster copy/paste | Pending |
-| Mass naming and naming schemes | Pending |
+| Mass naming and naming schemes | Template schemes, filters, preview, persistence and batch undo implemented; standalone rule import and advanced rule parity pending |
 | Corps/Army/Army Group transfers | Reviewed native transfers and graphical drag/drop implemented; structural undo pending |
 | Create combat units and HQs at verified towns | HQs from Brigade through Army Group implemented; combat-unit creation pending |
 | Delete formations while reparenting subordinates | Reviewed native deletion implemented for stationary land formations; structural undo pending |
@@ -43,7 +43,7 @@ changing selection, tabs, faction, search, refreshing, or closing.
 | Officer creation, random names, dates and portraits | Loaded-campaign land officer creation, faction name pools, dates and searchable Avatar portrait picker with image preview implemented; external-file import pending |
 | Add officers to base game versus loaded save | Pending; requires separate explicit file transaction |
 | Weapon stock | Live stock editing implemented; equipment/order/standardization handling pending |
-| Treasury, population, recruits, support, projects, policies and subsidies | Read-only overview; editing pending |
+| Treasury, population, recruits, support, projects, policies and subsidies | Treasury, population, faction support and current volunteer/draftee balances editable; projects, policies and subsidies pending |
 | Ship condition, construction, repair and assignment | Pending |
 | Validation and jump to affected record | Field validation implemented; campaign-wide review/jump pending |
 | Save browser and save backup/conflict checks | Game's own save interface currently used; parity pending |
@@ -67,9 +67,11 @@ another HQ. Deleting an Army Group preserves all attached commands. Empty Army
 Groups are retained when their last command transfers out, preserving their
 commander and identity. Combat-unit deletion uses native disbanding accounting.
 
-Structural actions require stationary land formations outside battles, retreats,
-existing transfers, garrisons, detached companies and active AI operations. Native
-transfers may introduce a transfer delay. These operations clear field undo/redo
+Deletion and other guarded structural actions require stationary land formations
+outside battles and active operations. Regrouping instead delegates to native
+transfer handling without the editor's stationary/battle/operation checks. Faction,
+tier, cycle, existence and Army Group capacity checks remain. Cross-command
+combat-unit transfers retain the native distance/speed transfer delay. These operations clear field undo/redo
 history and **cannot currently be undone**; save a separate checkpoint beforehand.
 If a native operation fails after starting, reload that checkpoint. Creation and
 replacement list only available officers who meet rank and branch requirements;
@@ -92,7 +94,7 @@ paths. **List** switches back to the original searchable list.
 Drag a land formation onto a compatible HQ or Army Group. Moving near the canvas
 edges scrolls while dragging. Release to open the same reviewed transfer used by
 the form; no formation is moved until **Apply reviewed operation**. Invalid tier,
-faction, cycle, battle, movement or AI-operation conditions remain rejected.
+faction and cycle conditions remain rejected; native transfer rules handle status.
 Dropping outside a card cancels the transfer. Use the form's Independent command
 option for detachment. Dragging moves formations, not card positions, and transfers
 still do not have structural Undo.
@@ -144,7 +146,7 @@ HTTP server, exposed remote command interface, or external WPF process.
    battle transitions, resolutions and long-running campaign behavior.
 
 The 0.3.1 structural adapter suite covers Corps-to-Army transfer, rejection of
-cycles/cross-faction/battle/AI-operation changes, retained empty Army Groups,
+cycles/cross-faction changes, retained empty Army Groups,
 HQ child preservation on deletion, native combat disbanding delegation, commander
 eligibility, and assignment during HQ creation. It uses native-operation doubles;
 it cannot establish correctness of the game's own movement or serialization.
@@ -191,3 +193,32 @@ PNG headers. The installed preview displayed the connected hierarchy and selecte
 card inspector in a loaded campaign at 1920x1080. These automated checks do not
 simulate mouse gestures or decode images through Unity; live transfer and portrait
 checks remain part of the preview test process.
+
+## Naming and Nation editing in 0.3.3
+
+Open **Naming schemes** in the header. Choose a formation type, optional name and
+home-state filters, and optionally the selected command's subtree. Templates
+accept `{number}`, `{state}`, `{type}`, `{tier}`, and `{old}` plus literal text.
+Number styles include ordinal, cardinal, Roman and dotted numbers; start/skip
+numbers, state abbreviations and case conversion are available. Numbering follows
+hierarchy order and restarts per state when the template includes `{state}`.
+Formations without a home state are skipped for state-based templates.
+
+Preview every old/new name before applying the batch. Duplicate proposed names
+and collisions with excluded formations are rejected. Apply uses one transaction
+with Undo/Redo. **Save scheme** persists settings to
+`Config/GTIP-naming-schemes.json`, with a backup on replacement. These are native
+GTIP templates, not imports of standalone ADC rule files. Weapon filters, special
+name slots and preservation of existing numeral assignments remain pending.
+
+Nation now edits treasury, shared population, faction support, and current state
+volunteer/draftee balances. Recruitment totals refresh after edits and Undo.
+Pools are current balances, not permanent overrides: advancing the campaign may
+recalculate them from population, support, policies and recruitment history.
+
+Tree cards measure wrapped text before sizing rows and connectors, reserving space
+for collapse controls. List rows also expand for their displayed text.
+
+Version 0.3.3 passed 140 automated checks plus serialized patch verification.
+The tests use synthetic objects/native-operation doubles. Live visual checks,
+transfer scenarios, naming persistence and save/reload still require game testing.

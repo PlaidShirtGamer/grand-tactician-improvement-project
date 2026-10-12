@@ -108,11 +108,33 @@ namespace GTIP
             else if (domain == 5 && GameVars.nation != null)
             {
                 var alliance = GameVars.alliance[side];
-                records.Add(new CampaignEditorRecord { Target = alliance, Title = alliance.name,
-                    Detail = "Treasury: " + alliance.treasury.ToString("N0", Inv) + "\nEconomic and project editing is not yet ported." });
+                var treasury = new CampaignEditorRecord { Target = alliance, Title = alliance.name,
+                    Detail = "Treasury: " + alliance.treasury.ToString("N0", Inv) + "\nNational cash balance. Projects and policy editing are not yet ported." };
+                treasury.Fields.Add(new LiveEditField { Label = "Treasury ($)", Read = () => alliance.treasury,
+                    Write = value => alliance.treasury = (float)value, Parse = text => LiveEditSession.Number(text, -100000000, 100000000000) });
+                records.Add(treasury);
                 foreach (var nation in GameVars.nation.Where(n => n != null))
-                    records.Add(new CampaignEditorRecord { Target = nation, Title = nation.name,
-                        Detail = "Population: " + nation.population.ToString("N0", Inv) + "\nState editing is not yet ported." });
+                {
+                    var row = new CampaignEditorRecord { Target = nation, Title = nation.name,
+                        Detail = "Population: " + nation.population.ToString("N0", Inv) + "\nAvailable volunteers: " + Math.Max(0, nation.volunteers[side]).ToString("N0", Inv) +
+                            " | Draftees: " + Math.Max(0, nation.drafts[side]).ToString("N0", Inv) +
+                            "\nRecruit pools and support apply to the selected faction. Population is shared. Pool edits change current balances; the game recalculates them as the campaign advances." };
+                    row.Fields.Add(new LiveEditField { Label = "Population (shared)", Read = () => nation.population,
+                        Write = value => nation.population = (float)value, Parse = text => LiveEditSession.Number(text, 0, 1000000000) });
+                    row.Fields.Add(new LiveEditField { Label = "Support (%)", Read = () => nation.support[side], Write = value => nation.support[side] = (float)value,
+                        Parse = text => LiveEditSession.Number(text, 0, 100, 100), Format = value => ((float)value * 100).ToString("0.###", Inv) });
+                    foreach (var pool in new[] { new { Label = "Volunteers", Values = nation.volunteers }, new { Label = "Draftees", Values = nation.drafts } })
+                    {
+                        var balances = pool.Values;
+                        row.Fields.Add(new LiveEditField { Label = pool.Label + " balance (negative = deficit)", Read = () => balances[side],
+                            Write = value => balances[side] = (int)value, Parse = text => {
+                                if (!int.TryParse(text, NumberStyles.Integer, Inv, out int value) || value < 0 || value > 100000000)
+                                    throw new InvalidOperationException("Enter a whole number from 0 to 100,000,000 for the available recruit pool.");
+                                return value;
+                            } });
+                    }
+                    records.Add(row);
+                }
             }
             return string.IsNullOrWhiteSpace(search) ? records : records.Where(r =>
                 (r.Title + " " + r.Detail).IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
@@ -128,6 +150,13 @@ namespace GTIP
         }
         internal static void Refresh()
         {
+            if (GameVars.nation != null && GameVars.alliance != null)
+                for (int faction = 0; faction < Math.Min(2, GameVars.alliance.Length); faction++)
+                {
+                    var activeStates = GameVars.nation.Where(n => n != null && n.recruitable && n.alliance <= 1).ToArray();
+                    GameVars.alliance[faction].volunteersavailable = activeStates.Sum(n => (float)Math.Max(0, n.volunteers[faction]));
+                    GameVars.alliance[faction].draftsavailable = activeStates.Sum(n => (float)Math.Max(0, n.drafts[faction]));
+                }
             foreach (var unit in BattleUnits.completeunitlist.Where(u => u != null && u.unittyp >= 14))
                 unit.UpdateGroupStrength(overridecalc: true, ignoreactivestate: true);
             CampaignMainPanel.lastregtextupdate = null;

@@ -87,8 +87,8 @@ namespace GTIP
                 BattleUnits.unitfolder != campaignRoot || !ReferenceEquals(officers, GameVars.commander) ||
                 GameVars.GetCampaignFloatingDate() != campaignDate)
                 throw new InvalidOperationException("Campaign changed. Close and reopen Aide-de-Camp.");
-            if (selected != null && selected.Target is Regiment unit && (unit == null || !BattleUnits.completeunitlist.Contains(unit) || unit.inbattle))
-                throw new InvalidOperationException("This unit is unavailable or in battle.");
+            if (selected != null && selected.Target is Regiment unit && (unit == null || !BattleUnits.completeunitlist.Contains(unit)))
+                throw new InvalidOperationException("This unit is unavailable.");
         }
         void Close()
         {
@@ -165,6 +165,7 @@ namespace GTIP
                 GUILayout.BeginArea(new Rect(20, 15, width - 40, height - 30));
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Aide-de-Camp | GTIP " + MenuStatus.Version + " | Integration preview", GUILayout.ExpandWidth(true));
+                if (GUILayout.Button("Naming schemes", GUILayout.Width(145))) Run(BeginNaming);
                 if (GUILayout.Button("Create HQ", GUILayout.Width(120))) Run(() => BeginOperation("create"));
                 if (GUILayout.Button("New officer", GUILayout.Width(120))) Run(() => BeginOperation("officer"));
                 if (GUILayout.Button("Close (F8 / Esc)", GUILayout.Width(165))) Close();
@@ -187,7 +188,9 @@ namespace GTIP
                     foreach (var row in rows)
                     {
                         GUILayout.BeginHorizontal(); GUILayout.Space(Math.Min(6, row.Depth) * 18);
-                        if (GUILayout.Button(row.Title + "  —  " + row.Detail.Replace('\n', ' '), GUILayout.Height(48))) Select(row);
+                        string label = row.Title + "\n" + string.Join("\n", row.Detail.Split('\n').Take(2));
+                        float rowHeight = Math.Max(48, skin.label.CalcHeight(new GUIContent(label), (width - 55) * .55f - 45 - Math.Min(6, row.Depth) * 18) + 12);
+                        if (GUILayout.Button(label, GUILayout.Height(rowHeight))) Select(row);
                         GUILayout.EndHorizontal();
                     }
                     GUILayout.EndScrollView();
