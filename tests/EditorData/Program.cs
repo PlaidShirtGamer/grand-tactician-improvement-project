@@ -42,7 +42,7 @@ public class Regiment
     public int GetInstanceID()=>GetHashCode();
     public void UpdateGroupStrength(bool overridecalc,bool ignoreactivestate){}
 }
-public class ArmyGroup { public string name; public List<Regiment> attachedunits; }
+public class ArmyGroup { public string name; public List<Regiment> attachedunits; public int GetAlliance()=>0; public int GetCommanderID()=>-1; }
 public static class BattleUnits
 {
     public static List<Regiment> completeunitlist=new(); public static List<ArmyGroup> armygroups=new();

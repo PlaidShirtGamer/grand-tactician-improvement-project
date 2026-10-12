@@ -19,6 +19,8 @@ dotnet run --project (Join-Path $PSScriptRoot 'tests/LiveEditor/LiveEditor.cspro
 if ($LASTEXITCODE -ne 0) { throw 'Live editor tests failed' }
 dotnet run --project (Join-Path $PSScriptRoot 'tests/EditorData/EditorData.csproj') -c Release -p:UseSharedCompilation=false
 if ($LASTEXITCODE -ne 0) { throw 'Editor data tests failed' }
+dotnet run --project (Join-Path $PSScriptRoot 'tests/EditorFormation/EditorFormation.csproj') -c Release -p:UseSharedCompilation=false
+if ($LASTEXITCODE -ne 0) { throw 'Editor formation tests failed' }
 $patcherDir = Join-Path $PSScriptRoot 'src/Patcher/bin/Release/net8.0'
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'src/Runtime/bin/Release/netstandard2.0/GTIP.Runtime.dll') -Destination $patcherDir
 dotnet (Join-Path $patcherDir 'Patcher.dll') stage $GameInstall $Output $OriginalAssembly

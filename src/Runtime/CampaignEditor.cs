@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 namespace GTIP
 {
     // Native Unity UI. It does not launch WPF or expose a network listener.
-    public sealed class CampaignEditor : MonoBehaviour
+    public sealed partial class CampaignEditor : MonoBehaviour
     {
         static CampaignEditor instance;
         static int suppressUntilFrame = -1;
@@ -99,7 +99,7 @@ namespace GTIP
             disabledInputModules = new BaseInputModule[0];
             eventSystem = null;
             session?.Clear(); session = null;
-            selected = null; pending = null; rows.Clear(); editedOfficers.Clear();
+            selected = null; pending = null; rows.Clear(); editedOfficers.Clear(); ResetOperation();
             // Deliberately remain paused; never resume a campaign behind the user's back.
         }
         void OnDisable() { Close(); }
@@ -119,6 +119,7 @@ namespace GTIP
         readonly HashSet<GameVars.Commander> editedOfficers = new HashSet<GameVars.Commander>();
         void Reload()
         {
+            ResetOperation();
             selected = null; pending = null; values = new string[0]; expected = new object[0];
             rows.Clear();
             rows = CampaignEditorData.Read(domain, side, search);
@@ -126,6 +127,7 @@ namespace GTIP
         }
         void Select(CampaignEditorRecord row)
         {
+            ResetOperation();
             selected = row; pending = null; editScroll = Vector2.zero;
             expected = row.Fields.Select(field => field.Read()).ToArray();
             values = row.Fields.Select((field, i) => field.Format(expected[i])).ToArray();
@@ -161,6 +163,8 @@ namespace GTIP
                 GUILayout.BeginArea(new Rect(20, 15, width - 40, height - 30));
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Aide-de-Camp | GTIP " + MenuStatus.Version + " | Integration preview", GUILayout.ExpandWidth(true));
+                if (GUILayout.Button("Create HQ", GUILayout.Width(120))) Run(() => BeginOperation("create"));
+                if (GUILayout.Button("New officer", GUILayout.Width(120))) Run(() => BeginOperation("officer"));
                 if (GUILayout.Button("Close (F8 / Esc)", GUILayout.Width(165))) Close();
                 GUILayout.EndHorizontal();
                 int newSide = GUILayout.Toolbar(side, new[] { "Union", "Confederacy" });
@@ -181,7 +185,8 @@ namespace GTIP
                 }
                 GUILayout.EndScrollView();
                 editScroll = GUILayout.BeginScrollView(editScroll, GUILayout.ExpandWidth(true));
-                if (selected == null) GUILayout.Label("Select a formation or record to inspect it.\n\nPreview coverage: live hierarchy, unit names and training/condition, officer names and attributes, weapon stock. Other standalone features are tracked in the branch's parity checklist.");
+                if (operation != null) DrawOperation();
+                else if (selected == null) GUILayout.Label("Select a formation or record to inspect it.\n\nUse Create HQ for a new command, or select a land formation for transfers, commander replacement and deletion. Other standalone features are tracked in the branch's parity checklist.");
                 else
                 {
                     GUILayout.Label(selected.Title); GUILayout.Label(selected.Detail);
@@ -211,6 +216,7 @@ namespace GTIP
                         });
                         if (GUILayout.Button("Cancel review")) pending = null;
                     }
+                    if (pending == null && (selected.Target is Regiment || selected.Target is ArmyGroup)) DrawFormationButtons();
                 }
                 GUILayout.EndScrollView(); GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();

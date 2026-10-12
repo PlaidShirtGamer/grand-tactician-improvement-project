@@ -1,4 +1,4 @@
-> Development branch: native in-game Aide-de-Camp integration preview (GTIP 0.3.0).
+> Development branch: native in-game Aide-de-Camp integration preview (GTIP 0.3.1).
 > Press F8 in a loaded regimental main campaign. Full standalone feature parity is
 > still in progress: see [coverage and implementation checklist](docs/in-game-aide-de-camp.md).
 

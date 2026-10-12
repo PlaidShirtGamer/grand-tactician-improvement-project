@@ -63,9 +63,9 @@ namespace GTIP
                     foreach (var child in byParent[unit].OrderBy(u => u.name)) add(child, depth + 1);
                 };
                 if (domain == 0 && BattleUnits.armygroups != null)
-                    foreach (var group in BattleUnits.armygroups.Where(g => g != null && g.attachedunits != null && g.attachedunits.Any(u => u != null && u.alliance == side)))
+                    foreach (var group in BattleUnits.armygroups.Where(g => g != null && g.attachedunits != null && g.GetAlliance() == side))
                     {
-                        var row = new CampaignEditorRecord { Target = group, Title = group.name, Detail = "Army Group" };
+                        var row = new CampaignEditorRecord { Target = group, Title = group.name, Detail = "Army Group | " + OfficerName(group.GetCommanderID()) };
                         row.Fields.Add(Name(() => group.name, value => group.name = value, "Name")); records.Add(row);
                         foreach (var root in group.attachedunits.Where(u => u != null && included.Contains(u)).OrderBy(u => u.name)) add(root, 1);
                     }

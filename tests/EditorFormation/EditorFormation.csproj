@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>disable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/Runtime/EditorFormationRules.cs" Link="EditorFormationRules.cs" />
+    <Compile Include="../../src/Runtime/EditorFormationOperations.cs" Link="EditorFormationOperations.cs" />
+    <Compile Include="../../src/Runtime/NativeAccess.cs" Link="NativeAccess.cs" />
+    <Compile Include="../../src/Runtime/LiveEditSession.cs" Link="LiveEditSession.cs" />
+  </ItemGroup>
+</Project>

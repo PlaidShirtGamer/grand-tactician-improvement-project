@@ -4,7 +4,7 @@ Branch: `feature/in-game-aide-de-camp`, forked from GTIP `test` at
 `3e206bd837300f46daa3947f80fbd6c05bc9abf9`.
 
 **Status: integration preview, not standalone feature parity.** Runtime version
-0.3.0 identifies this development branch; no production release tag is implied.
+0.3.1 identifies this development branch; no production release tag is implied.
 The target is the complete functionality of Aide-de-Camp 0.8.20, reviewed at fork
 commit `191aa6de6e0df7ca642f81ca4f45db3cf5b00e11`. The standalone app remains usable
 and is not modified by this branch.
@@ -35,12 +35,12 @@ changing selection, tabs, faction, search, refreshing, or closing.
 | Strength, casualties, contracts, state, weapons, perks, supplies, ETA | Pending live accounting/side-effect adapters |
 | Multi-selection, batch editing, roster copy/paste | Pending |
 | Mass naming and naming schemes | Pending |
-| Corps/Army/Army Group transfers | Pending native move validation and reversible bookkeeping |
-| Create combat units and HQs at verified towns | Pending |
-| Delete formations while reparenting subordinates | Pending; native DeleteUnit destroys descendants unless moved first |
-| Commander replacement, rank and branch editing | Pending rank/experience eligibility adapter |
+| Corps/Army/Army Group transfers | Reviewed native transfers implemented; graphical drag/drop and structural undo pending |
+| Create combat units and HQs at verified towns | HQs from Brigade through Army Group implemented; combat-unit creation pending |
+| Delete formations while reparenting subordinates | Reviewed native deletion implemented for stationary land formations; structural undo pending |
+| Commander replacement, rank and branch editing | Eligible commander replacement implemented; editing existing ranks/branches pending |
 | Officer names, attributes and background traits | Implemented with review/undo/redo |
-| Officer creation, random names, dates and portraits | Pending |
+| Officer creation, random names, dates and portraits | Loaded-campaign land officer creation, faction name pools, dates and existing Avatar PNGs implemented; portrait import/preview pending |
 | Add officers to base game versus loaded save | Pending; requires separate explicit file transaction |
 | Weapon stock | Live stock editing implemented; equipment/order/standardization handling pending |
 | Treasury, population, recruits, support, projects, policies and subsidies | Read-only overview; editing pending |
@@ -51,6 +51,35 @@ changing selection, tabs, faction, search, refreshing, or closing.
 
 Items marked pending must not be advertised as working or exposed as unchecked
 raw-field writes. Feature parity requires the remaining adapters and game tests.
+
+## Formation operations in 0.3.1
+
+Use **Create HQ** for Brigades, Divisions, Corps, Armies and Army Groups. A new
+independent HQ spawns at a selected owned town; subordinate HQs spawn at their
+parent. Army Groups start empty and acquire their map position from attached
+commands. Select a formation for **Transfer / regroup**, **Replace commander**,
+or **Delete formation**. Review identifies the destination and affected children.
+
+Deleting an HQ reparents its immediate children to its parent. Deleting a root HQ
+promotes its HQ children to independent commands and retains its Army Group
+membership. A root HQ with direct combat children must first be attached under
+another HQ. Deleting an Army Group preserves all attached commands. Empty Army
+Groups are retained when their last command transfers out, preserving their
+commander and identity. Combat-unit deletion uses native disbanding accounting.
+
+Structural actions require stationary land formations outside battles, retreats,
+existing transfers, garrisons, detached companies and active AI operations. Native
+transfers may introduce a transfer delay. These operations clear field undo/redo
+history and **cannot currently be undone**; save a separate checkpoint beforehand.
+If a native operation fails after starting, reload that checkpoint. Creation and
+replacement list only available officers who meet rank and branch requirements;
+Army Groups additionally retain the game's experience requirement.
+
+**New officer** adds an unassigned land officer to the loaded campaign. Random
+names come from the faction's game name pools. Enter real dates as YYYY-MM-DD;
+select an existing portrait using its filename in `Avatar`, without `.png`.
+A blank portrait uses the silhouette. Starting attributes can be edited afterward
+in Officers. This does not yet add officers to base-game files or import images.
 
 ## Implementation
 
@@ -80,15 +109,21 @@ HTTP server, exposed remote command interface, or external WPF process.
 ## Remaining implementation sequence
 
 1. Finish native unit/commander accounting adapters and multi-selection.
-2. Add reversible hierarchy transfers, HQ/unit creation and deletion. Validate
+2. Add structural undo and combat-unit creation. Extend validation of
    AI ownership lists, Army Group membership, commander ownership, campaign paths,
    recruitment pools, equipment stocks, and save/reload for each operation.
-3. Port officer creation/dates/portraits and separate base-game writes with backups.
+3. Finish officer portrait importing/preview and separate base-game writes with backups.
 4. Port ships, state/nation economics, projects, subsidies and policies.
 5. Complete graphical tree interactions, naming/clipboard, validation navigation,
    save backup workflow and persistent UI settings.
 6. Run the parity checklist on copied campaigns, including return to menu, reload,
    battle transitions, resolutions and long-running campaign behavior.
+
+The 0.3.1 structural adapter suite covers Corps-to-Army transfer, rejection of
+cycles/cross-faction/battle/AI-operation changes, retained empty Army Groups,
+HQ child preservation on deletion, native combat disbanding delegation, commander
+eligibility, and assignment during HQ creation. It uses native-operation doubles;
+it cannot establish correctness of the game's own movement or serialization.
 
 The standalone WPF/.NET 8 window cannot load in the game's Unity runtime. The
 integration therefore ports behavior through native adapters rather than hosting
@@ -114,3 +149,13 @@ The campaign remained paused and the temporary rename was undone without saving.
 The corrected build produced no exceptions in Player.log during this smoke test.
 Save/reload persistence, battle transitions, and full standalone parity have not
 yet been validated.
+
+The 0.3.1 build passed all seven local suites (116 checks), compiled against the
+supported original assembly, and passed serialized patch verification. It was
+installed and tested at 1920x1080 in a loaded campaign: the randomizer generated
+a new Major General, the officer appeared as available and unassigned, and Army
+creation at an owned town assigned him correctly. The user saved and reloaded
+that campaign and reported the result looked fine. The inspected Player.log
+contained no exception/error matches. Live deletion, all transfer combinations,
+portrait persistence, and battle transitions still need scenario testing; the
+automated structural tests use native-operation doubles rather than Unity saves.
