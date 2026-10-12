@@ -6,7 +6,7 @@ namespace GTIP
 {
     public static class MenuStatus
     {
-        public const string Version = "0.2.4";
+        public const string Version = "0.2.5";
         public const string Label = "GTIP v" + Version;
         private static TextMeshProUGUI status;
 
@@ -15,6 +15,7 @@ namespace GTIP
         {
             try
             {
+                if (visible) AiOrganizationDiagnostics.ResetSession();
                 if (status == null && visible)
                 {
                     var versionObject = GameObject.Find("UICampaign/VersionID");

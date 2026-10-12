@@ -76,3 +76,5 @@ are ignored. This repository distributes original mod source only.
 
 See [release packaging and installation](docs/releases.md). Version tags create a draft prerelease containing a self-contained Windows installer, a source build-kit ZIP, and checksums. The installer bundles the three test-install preferences and compiles GTIP against the player's game DLLs automatically; no SDK is required.
 
+
+AI diagnostics and experimental Army organization improvements in 0.2.5: [setup, behavior, and testing](docs/ai-organization.md).

@@ -210,16 +210,7 @@ namespace GTIP
             if (!Active || noGrandArmy || brigade == null) return brigade;
             var top = BattleUnits.GetHighestParent(brigade);
             if (top == null || top.unittyp != HierarchyModel.Corps || top.assignedarmygroup != null) return brigade;
-            EnsureArmyData();
-            var engine = NativeAccess.Get<BattleUnits>(typeof(AICampaign), "bunits");
-            var army = engine.CreateUnitDefault(null, -1, HierarchyModel.Army, _alliance: top.alliance,
-                forcedcreationposition: top.transform.position, overridelev: HierarchyModel.Army);
-            if (army == null) return brigade;
-            top.transform.SetParent(army.transform, true);
-            top.istopunit = false;
-            BattleUnits.UpdateAllParentUnits(top.gameObject, true);
-            var ownUnits = NativeAccess.Get<List<Regiment>>(faction, "ownunits");
-            if (!ownUnits.Contains(army)) ownUnits.Add(army);
+            AiArmyOrganization.IntegrateRaisedCorps(faction, top, forceNew);
             return brigade;
         }
     }

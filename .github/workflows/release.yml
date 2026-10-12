@@ -27,7 +27,7 @@ jobs:
         run: |
           dotnet build src/Patcher/Patcher.csproj -c Release
           if ($LASTEXITCODE -ne 0) { throw 'Patcher build failed' }
-          foreach ($suite in @('Traversal', 'Formation', 'ArmyInsertion', 'Installer')) {
+          foreach ($suite in @('Traversal', 'Formation', 'ArmyInsertion', 'AiBehavior', 'Installer')) {
             dotnet run --project "tests/$suite/$suite.csproj" -c Release
             if ($LASTEXITCODE -ne 0) { throw "$suite tests failed" }
           }
