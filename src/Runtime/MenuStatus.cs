@@ -7,7 +7,7 @@ namespace GTIP
     public static class MenuStatus
     {
         public const string Version = "0.3.8";
-        public const string Label = "GTIP v" + Version;
+        public const string Label = MpBuild.Label;
         private static TextMeshProUGUI status;
 
         // Called after the game's own menu activation, including on return to menu.
@@ -16,6 +16,8 @@ namespace GTIP
             try
             {
                 CampaignEditor.Bootstrap();
+                MultiplayerCampaign.Bootstrap();
+                MultiplayerCampaign.MenuChanged(visible);
                 if (visible) { AiOrganizationDiagnostics.ResetSession(); CampaignEditor.MenuOpened(); }
                 if (status == null && visible)
                 {

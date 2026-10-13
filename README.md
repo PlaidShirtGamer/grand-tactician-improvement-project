@@ -1,3 +1,7 @@
+> **mp-test branch: GTIP MP Test v0.13.** Multiplayer versioning is independent of base GTIP.
+> Guests join from the main menu and receive a host checkpoint. Native-map movement and stop requests are supported.
+> See [multiplayer test instructions](docs/multiplayer-test.md). Complete state replication and versus remain unfinished.
+
 > Development branch: native in-game Aide-de-Camp integration preview (GTIP 0.3.8).
 > Press F8 in a loaded regimental main campaign. Full standalone feature parity is
 > still in progress: see [coverage and implementation checklist](docs/in-game-aide-de-camp.md).

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/Runtime/MultiplayerCheckpoint.cs" Link="MultiplayerCheckpoint.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerIdentity.cs" Link="MultiplayerIdentity.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerProtocol.cs" Link="MultiplayerProtocol.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerCodec.cs" Link="MultiplayerCodec.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerTransport.cs" Link="MultiplayerTransport.cs" />
+  </ItemGroup>
+</Project>

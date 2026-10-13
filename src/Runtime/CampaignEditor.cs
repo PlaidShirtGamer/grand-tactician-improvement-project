@@ -41,13 +41,15 @@ namespace GTIP
         public static void MenuOpened() { if (instance != null) { instance.Close(); instance.ResetReveal(); } }
         public static void EditorBattleUI(BattleUI target)
         {
+            MultiplayerCampaign.Observe(target);
+            if (MultiplayerCampaign.BlocksInput || MultiplayerCampaign.IsReplica) return;
             if (instance != null) instance.InputTick(target);
             if (!BlocksInput) NativeAccess.Call(target, "GTIP_Original_EditorBattleUI");
         }
         public static void EditorCamera(Camera_Battlefield target)
-        { if (!BlocksInput) NativeAccess.Call(target, "GTIP_Original_EditorCamera"); }
+        { if (!BlocksInput && !MultiplayerCampaign.BlocksInput) NativeAccess.Call(target, "GTIP_Original_EditorCamera"); }
         public static void EditorCampaignAi(AICampaign target)
-        { if (!BlocksInput) NativeAccess.Call(target, "GTIP_Original_EditorCampaignAi"); }
+        { if (!BlocksInput && !MultiplayerCampaign.HoldsCampaignAi && !MultiplayerCampaign.IsReplica) NativeAccess.Call(target, "GTIP_Original_EditorCampaignAi"); }
 
         void InputTick(BattleUI target)
         {
@@ -165,7 +167,7 @@ namespace GTIP
                 GUI.Box(new Rect(0, 0, width, height), "");
                 GUILayout.BeginArea(new Rect(20, 15, width - 40, height - 30));
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Aide-de-Camp | GTIP " + MenuStatus.Version + " | Integration preview", GUILayout.ExpandWidth(true));
+                GUILayout.Label("Aide-de-Camp | " + MpBuild.Label + " | Integration preview", GUILayout.ExpandWidth(true));
                 if (GUILayout.Button("Naming schemes", GUILayout.Width(145))) Run(BeginNaming);
                 if (GUILayout.Button("Create HQ", GUILayout.Width(120))) Run(() => BeginOperation("create"));
                 if (GUILayout.Button("New officer", GUILayout.Width(120))) Run(() => BeginOperation("officer"));

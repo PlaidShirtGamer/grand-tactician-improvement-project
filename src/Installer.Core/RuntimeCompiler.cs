@@ -17,7 +17,7 @@ public static class RuntimeCompiler
         var trees = Resources.GetManifestResourceNames().Where(n => n.StartsWith("Runtime.")).OrderBy(n => n)
             .Select(n => { using var reader = new StreamReader(Resources.GetManifestResourceStream(n)!);
                 return CSharpSyntaxTree.ParseText(reader.ReadToEnd(), new CSharpParseOptions(LanguageVersion.Latest), n); }).ToList();
-        trees.Add(CSharpSyntaxTree.ParseText("[assembly: System.Reflection.AssemblyVersion(GTIP.MenuStatus.Version)]"));
+        trees.Add(CSharpSyntaxTree.ParseText("[assembly: System.Reflection.AssemblyVersion(GTIP.MpBuild.Version)]"));
         var refs = new List<MetadataReference>();
         foreach (var path in Directory.GetFiles(managed, "*.dll").OrderBy(p => p))
         {
