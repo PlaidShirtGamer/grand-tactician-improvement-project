@@ -44,4 +44,6 @@ Check(OfficerVisibilityRules.Hide(true,true,true,4,7,""), "Unmarked naval placeh
 Check(OfficerVisibilityRules.Hide(false,true,true,0,7,""), "Outside GTIP mode unchanged");
 Check(OfficerVisibilityRules.Hide(true,true,false,0,7,""), "Inactive dummy unchanged");
 Check(!OfficerVisibilityRules.Hide(true,false,true,0,7,""), "Historical officer unchanged");
+Check(!OfficerVisibilityRules.Hide(true,true,true,-1,7,""), "Generated MG with native unspecified land branch is visible");
+Check(OfficerVisibilityRules.Hide(true,true,true,-1,3,""), "Unspecified-branch junior placeholder stays hidden");
 Console.WriteLine($"Editor presentation: {checks} checks passed.");

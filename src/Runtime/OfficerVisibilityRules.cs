@@ -7,7 +7,7 @@ namespace GTIP
         {
             if (!enabled || !dummy || !active) return dummy;
             bool created = history != null && history.StartsWith("Created with GTIP Aide-de-Camp", StringComparison.Ordinal);
-            bool landGeneral = branch >= 0 && branch <= 3 && rank >= 6 && rank <= 9;
+            bool landGeneral = branch >= -1 && branch <= 3 && rank >= 6 && rank <= 9;
             return !(created || landGeneral);
         }
     }

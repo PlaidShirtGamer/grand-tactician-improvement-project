@@ -119,12 +119,16 @@ namespace GTIP
         internal static void ReplaceCommander(object target, int id)
         {
             var unit = target as Regiment; var group = target as ArmyGroup;
-            if (unit != null) Check(unit); else CheckGroup(group);
+            if (unit != null) CheckTransferUnit(unit);
+            else if (group == null || !BattleUnits.armygroups.Contains(group))
+                throw new InvalidOperationException("Army Group no longer exists.");
             int side = unit != null ? unit.alliance : group.GetAlliance();
             if (!Commanders(side, unit != null ? unit.unittyp : 18, unit, group != null).Contains(id))
                 throw new InvalidOperationException("Commander is no longer available or eligible.");
             if (unit != null) GameVars.commander[id].AssignCommando(unit, updatename: false);
             else ArmyGroup.AppointCommander(group, id);
+            if (unit != null ? unit.commander != id || GameVars.commander[id].currentcommand != unit : group.GetCommanderID() != id)
+                throw new InvalidOperationException("The game did not assign the selected commander. Reopen the commander list and review eligibility.");
             Refresh();
         }
         internal static void CheckCreate(int side, int type, Regiment parent, Town town, int commander)

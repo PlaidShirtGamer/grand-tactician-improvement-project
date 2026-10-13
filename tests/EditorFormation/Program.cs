@@ -50,6 +50,11 @@ Check(busy.transform.parent==army.transform,"Moving and AI-assigned formations c
 Reject(()=>EditorFormationOperations.CheckDelete(busy),"Deletion retains operation protection");
 Console.WriteLine("Structural adapter checks use native-operation doubles; in-game save/reload verification remains necessary.");
 
+var replacementHQ = Unit(15); var movingChild = Unit(0, replacementHQ); movingChild.regimentpaths = 1;
+int replacementId = GameVars.commander.Count; GameVars.commander.Add(new GameVars.Commander { rank = 7 });
+EditorFormationOperations.ReplaceCommander(replacementHQ, replacementId);
+Check(replacementHQ.commander == replacementId && GameVars.commander[replacementId].currentcommand == replacementHQ, "HQ replacement succeeds with moving subordinate");
+
 public class Regiment {
     public int unittyp,alliance,commander;public string name; public bool inbattle,onretreat,isgarrisonbasicunit,istopunit,permanentlydetached;
     public float transfertime,embarkmentduration;public int regimentpaths;public object garrisonreference,parentregiment,detachedregiment;
@@ -64,7 +69,7 @@ public class ArmyGroup {
     public int GetAlliance()=>alliance;public bool CanAddFurtherUnits()=>true;public void UpdateHierarchyLevel(){}
     public void GTIP_Original_AddArmyGroupUnit(Regiment unit,bool load,bool rename){attachedunits.Add(unit);unit.AssignArmyGroup(this);}
     public void RemoveArmyGroup(){foreach(var u in attachedunits)u.AssignArmyGroup(null);BattleUnits.armygroups.Remove(this);Destroyed=true;}
-    public static void AppointCommander(ArmyGroup group,int id){}
+    public int commanderId = -1; public int GetCommanderID()=>commanderId; public static void AppointCommander(ArmyGroup group,int id){group.commanderId=id;}
     public static ArmyGroup CreateNewArmyGroup(GameObject prefab,string name,int commander,List<Regiment> units,bool excludeplayerunits){var g=new ArmyGroup{name=name};BattleUnits.armygroups.Add(g);return g;}
 }
 public class BattleUnits {
