@@ -188,9 +188,9 @@ namespace GTIP
                     foreach (var row in rows)
                     {
                         GUILayout.BeginHorizontal(); GUILayout.Space(Math.Min(6, row.Depth) * 18);
-                        string label = row.Title + "\n" + string.Join("\n", row.Detail.Split('\n').Take(2));
+                        string label = domain == 5 ? row.Title : row.Title + "\n" + string.Join("\n", row.Detail.Split('\n').Take(2));
                         float rowHeight = Math.Max(48, skin.label.CalcHeight(new GUIContent(label), (width - 55) * .55f - 45 - Math.Min(6, row.Depth) * 18) + 12);
-                        if (GUILayout.Button(label, GUILayout.Height(rowHeight))) Select(row);
+                        if (GUILayout.Button(label, new GUIStyle(skin.button) { fixedHeight = 0 }, GUILayout.Height(domain == 5 ? 36 : rowHeight))) Select(row);
                         GUILayout.EndHorizontal();
                     }
                     GUILayout.EndScrollView();

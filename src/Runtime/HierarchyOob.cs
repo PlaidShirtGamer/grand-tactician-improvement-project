@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 using UnityEngine;
 
 namespace GTIP
@@ -111,22 +112,23 @@ namespace GTIP
             }
             // Native buttons apply their own prefab scale. Draw in their actual
             // local coordinate system rather than the unscaled logical layout.
-            foreach (var node in nodes)
+            // Shared trunks must be drawn once, not alpha-blended once per child.
+            foreach (var parent in nodes.Where(n => n.Children.Count > 0))
             {
-                if (node.Parent == null) continue;
-                var childRect = NativeAccess.Get<RectTransform>(node.Icon, "referencebuttonrecttf");
-                var parentRect = NativeAccess.Get<RectTransform>(node.Parent.Icon, "referencebuttonrecttf");
+                var parentRect = NativeAccess.Get<RectTransform>(parent.Icon, "referencebuttonrecttf");
                 Vector2 from = parentRect.localPosition;
-                Vector2 to = childRect.localPosition;
                 from.y -= view.iconsizey * parentRect.localScale.y / 3;
-                to.y += view.iconsizey * childRect.localScale.y / 3;
                 float joint = from.y - view.sparey * parentRect.localScale.y / 2;
-                var a = new Vector2(from.x, joint);
-                var b = new Vector2(to.x, joint);
+                var tips = parent.Children.Select(child => {
+                    var rect = NativeAccess.Get<RectTransform>(child.Icon, "referencebuttonrecttf");
+                    Vector2 tip = rect.localPosition; tip.y += view.iconsizey * rect.localScale.y / 3; return tip;
+                }).ToArray();
                 var color = new Color(.16f, .16f, .16f, .36f);
-                Tools.DrawLineUI(lines, from, a, 2, color);
-                Tools.DrawLineUI(lines, a, b, 2, color);
-                Tools.DrawLineUI(lines, b, to, 2, color);
+                Tools.DrawLineUI(lines, from, new Vector2(from.x, joint), 2, color);
+                float left = Math.Min(from.x, tips.Min(t => t.x)), right = Math.Max(from.x, tips.Max(t => t.x));
+                if (right > left) Tools.DrawLineUI(lines, new Vector2(left, joint), new Vector2(right, joint), 2, color);
+                foreach (var column in tips.GroupBy(t => t.x))
+                    Tools.DrawLineUI(lines, new Vector2(column.Key, joint), new Vector2(column.Key, column.Min(t => t.y)), 2, color);
             }
             view.panelhandler.ActivateDragAndDrop(new[] { 123 });
             view.UpdatePlusIcons();

@@ -4,7 +4,7 @@ Branch: `feature/in-game-aide-de-camp`, forked from GTIP `test` at
 `3e206bd837300f46daa3947f80fbd6c05bc9abf9`.
 
 **Status: integration preview, not standalone feature parity.** Runtime version
-0.3.3 identifies this development branch; no production release tag is implied.
+0.3.4 identifies this development branch; no production release tag is implied.
 The target is the complete functionality of Aide-de-Camp 0.8.20, reviewed at fork
 commit `191aa6de6e0df7ca642f81ca4f45db3cf5b00e11`. The standalone app remains usable
 and is not modified by this branch.
@@ -222,3 +222,21 @@ for collapse controls. List rows also expand for their displayed text.
 Version 0.3.3 passed 140 automated checks plus serialized patch verification.
 The tests use synthetic objects/native-operation doubles. Live visual checks,
 transfer scenarios, naming persistence and save/reload still require game testing.
+
+## Navigation and candidate comparison in 0.3.4
+
+Mousewheel over the tree zooms. Left-drag blank canvas or middle-drag anywhere
+in the canvas pans; left-dragging a formation still reviews a transfer. Existing
+zoom and scroll controls remain available. Commander selection for creation and
+replacement displays attributes out of 100 and supports ascending/descending
+sorting by name, rank, experience, leadership, initiative, administration, cunning
+and fame. Sorting preserves the selected officer; eligibility rules are unchanged.
+
+Nation list entries show names only, with population and pool details in the
+selected record's inspector. Variable-height list buttons no longer inherit the
+skin's fixed button height. Native six-level OOB connectors draw shared trunks
+and combat columns once, avoiding repeated translucent strokes turning dark.
+
+The 0.3.4 build passed the existing 140 automated checks and serialized patch
+verification. Mouse gestures, candidate presentation and connector appearance
+still require visual confirmation in the game.

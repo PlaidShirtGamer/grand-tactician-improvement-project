@@ -10,6 +10,7 @@ namespace GTIP
         string operation, operationReview, operationName, optionSearch = "";
         object operationSource;
         Action operationApply;
+        int commanderSort; bool commanderDescending = true;
         int createTier, destinationIndex, commanderIndex, townIndex;
         Vector2 destinationScroll, commanderScroll, townScroll;
         readonly List<object> destinations = new List<object>();
@@ -66,6 +67,31 @@ namespace GTIP
                     GUILayout.Button((index == i ? "✓ " : "") + labels[i])) index = i;
             GUILayout.EndScrollView(); return index;
         }
+        static readonly string[] CommanderStats = { "exp", "leadership", "initiative", "administration", "cunning", "fame" };
+        static readonly string[] CommanderSortLabels = { "Name", "Rank", "Experience", "Leadership", "Initiative", "Administration", "Cunning", "Fame" };
+        void DrawCommanderPicker()
+        {
+            GUILayout.Label("Available eligible commanders - attributes out of 100");
+            int selectedId = eligibleCommanders.Count > 0 ? eligibleCommanders[Math.Min(commanderIndex, eligibleCommanders.Count - 1)] : -1;
+            commanderSort = GUILayout.SelectionGrid(commanderSort, CommanderSortLabels, 4);
+            commanderDescending = GUILayout.Toggle(commanderDescending, "Descending order");
+            Func<int, double> score = id => commanderSort == 1 ? GameVars.commander[id].rank :
+                commanderSort >= 2 ? NativeAccess.Get<float>(GameVars.commander[id], CommanderStats[commanderSort - 2]) : 0;
+            IEnumerable<int> sorted = commanderSort == 0 ? (commanderDescending ? eligibleCommanders.OrderByDescending(CampaignEditorData.OfficerName) : eligibleCommanders.OrderBy(CampaignEditorData.OfficerName)) :
+                (commanderDescending ? eligibleCommanders.OrderByDescending(score) : eligibleCommanders.OrderBy(score)).ThenBy(CampaignEditorData.OfficerName);
+            var ordered = sorted.ToArray(); eligibleCommanders.Clear(); eligibleCommanders.AddRange(ordered);
+            commanderIndex = Math.Max(0, eligibleCommanders.IndexOf(selectedId));
+            commanderScroll = GUILayout.BeginScrollView(commanderScroll, GUILayout.Height(260));
+            var style = new GUIStyle(skin.button) { fixedHeight = 0, alignment = TextAnchor.MiddleLeft, wordWrap = true };
+            for (int i = 0; i < eligibleCommanders.Count; i++)
+            {
+                int id = eligibleCommanders[i]; string name = CampaignEditorData.OfficerName(id);
+                if (!string.IsNullOrWhiteSpace(optionSearch) && name.IndexOf(optionSearch, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                string detail = string.Join(" | ", CommanderStats.Select((field, index) => CommanderSortLabels[index + 2] + " " + (NativeAccess.Get<float>(GameVars.commander[id], field) * 100).ToString("0.#")));
+                if (GUILayout.Button((i == commanderIndex ? "> " : "") + name + "\n" + detail, style, GUILayout.MinHeight(66))) commanderIndex = i;
+            }
+            GUILayout.EndScrollView();
+        }
         void DrawOperation()
         {
             if (operation == "naming") { DrawNaming(); return; }
@@ -100,7 +126,7 @@ namespace GTIP
                     if (operation == "create" && CreateTypes[createTier] != 19 && destinations[destinationIndex] == null)
                         townIndex = Pick("Spawn town", ownedTowns.Select(t => t.CityName + " — " + GameVars.nation[t.state].name).ToArray(), townIndex, ref townScroll);
                     if (operation != "move")
-                        commanderIndex = Pick("Available eligible commanders", eligibleCommanders.Select(CampaignEditorData.OfficerName).ToArray(), commanderIndex, ref commanderScroll);
+                        DrawCommanderPicker();
                 }
                 if (operation == "delete") GUILayout.Label("HQ children move to its parent, or become independent HQs when there is no parent. Army Group members remain independent commands. Combat-unit deletion uses native disbanding and returns recruits/equipment.");
                 if (GUILayout.Button("Review operation")) Run(ReviewOperation);

@@ -11,7 +11,7 @@ namespace GTIP
         float treeZoom = .7f;
         Vector2 treeScroll, dragStart;
         CampaignEditorRecord dragRecord;
-        bool dragging;
+        bool dragging, panning;
         int treeControl;
         List<CampaignEditorRecord> treeRows = new List<CampaignEditorRecord>();
         List<EditorTreeNode> treeNodes = new List<EditorTreeNode>();
@@ -28,7 +28,7 @@ namespace GTIP
         void CancelTreeDrag()
         {
             if (treeControl != 0 && GUIUtility.hotControl == treeControl) GUIUtility.hotControl = 0;
-            dragRecord = null; dragging = false;
+            dragRecord = null; dragging = false; panning = false;
         }
         void RebuildTree()
         {
@@ -65,8 +65,16 @@ namespace GTIP
             if (Math.Abs(zoom - treeZoom) > .001f) { treeScroll *= zoom / treeZoom; treeZoom = zoom; CancelTreeDrag(); }
             if (GUILayout.Button("List", GUILayout.Width(60))) { graphicalTree = false; CancelTreeDrag(); }
             GUILayout.EndHorizontal();
-            GUILayout.Label("Click a card to edit. Drag a unit onto an HQ or Army Group to review a transfer.");
+            GUILayout.Label("Wheel: zoom. Drag blank space or middle-drag: pan. Drag a card onto an HQ to transfer.");
             Rect viewport = GUILayoutUtility.GetRect(width, 300, GUILayout.ExpandHeight(true));
+            var input = Event.current;
+            if (viewport.Contains(input.mousePosition) && input.type == EventType.ScrollWheel)
+            {
+                var anchor = input.mousePosition - viewport.position;
+                float next = Mathf.Clamp(treeZoom * Mathf.Pow(1.1f, -input.delta.y), .55f, 1.2f);
+                treeScroll = (treeScroll + anchor) * (next / treeZoom) - anchor;
+                treeZoom = next; centerTree = false; CancelTreeDrag(); input.Use();
+            }
             if (treeText == null) treeText = new GUIStyle(skin.label) { alignment = TextAnchor.MiddleCenter, wordWrap = true };
             treeText.fontSize = Math.Max(9, (int)(15 * treeZoom));
             cardHeight = Math.Max(150, treeNodes.Count == 0 ? 150 : treeNodes.Max(n =>
@@ -111,7 +119,18 @@ namespace GTIP
                 if (n.Children.Count > 0 && GUI.Button(new Rect(card.xMax - 24, card.y, 24, 24), collapsedTargets.Contains(row.Target) ? "+" : "−"))
                 { if (!collapsedTargets.Add(row.Target)) collapsedTargets.Remove(row.Target); RebuildTree(); break; }
             }
-            if (ev.type == EventType.MouseDown && ev.button == 0 && hovered != null)
+            if (ev.type == EventType.MouseDown && inside && (ev.button == 2 || ev.button == 0 && hovered == null))
+            { CancelTreeDrag(); panning = true; centerTree = false; GUIUtility.hotControl = treeControl; ev.Use(); }
+            else if (panning && GUIUtility.hotControl == treeControl && ev.type == EventType.MouseDrag)
+            {
+                treeScroll -= ev.delta;
+                treeScroll.x = Mathf.Clamp(treeScroll.x, 0, Math.Max(0, contentW - viewport.width + 18));
+                treeScroll.y = Mathf.Clamp(treeScroll.y, 0, Math.Max(0, contentH - viewport.height + 18));
+                ev.Use();
+            }
+            else if (panning && GUIUtility.hotControl == treeControl && ev.type == EventType.MouseUp)
+            { CancelTreeDrag(); ev.Use(); }
+            else if (ev.type == EventType.MouseDown && ev.button == 0 && hovered != null)
             {
                 dragRecord = treeRows[hovered.Index]; dragStart = ev.mousePosition; dragging = false;
                 GUIUtility.hotControl = treeControl; ev.Use();
