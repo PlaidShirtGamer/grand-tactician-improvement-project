@@ -48,4 +48,14 @@ Check(!OfficerVisibilityRules.Hide(true,true,true,-1,7,""), "Generated MG with n
 Check(OfficerVisibilityRules.Hide(true,true,true,-1,3,""), "Unspecified-branch junior placeholder stays hidden");
 Check(!OfficerVisibilityRules.Hide(true,true,true,2,4,"",true), "Veteran or professional dummy lieutenant colonel visible");
 Check(OfficerVisibilityRules.Hide(true,true,true,4,4,"",true), "Naval placeholder background does not change land rule");
+var nativeCorps = new Regiment { unittyp = 16 };
+var candidate = new GameVars.Commander { rank = 1 };
+Check(!OfficerVisibility.Suitable(candidate,nativeCorps), "Native Corps picker rejects lieutenant despite permissive native check");
+candidate.rank=4; Check(!OfficerVisibility.Suitable(candidate,nativeCorps), "Native Corps picker rejects lieutenant colonel");
+candidate.rank=6; Check(OfficerVisibility.Suitable(candidate,nativeCorps), "Native Corps picker accepts BG meeting native conditions");
+candidate.nativeSuitable=false; Check(!OfficerVisibility.Suitable(candidate,nativeCorps), "Native suitability rejection retained");
+Check(OfficerVisibility.RecruitableOfficerState(new GameVars.Nation()), "Non-recruitable home state does not hide officers in GTIP");
+SixLevelRuntime.Active=false; candidate.nativeSuitable=true;candidate.rank=1;
+Check(OfficerVisibility.Suitable(candidate,nativeCorps) && !OfficerVisibility.RecruitableOfficerState(new GameVars.Nation()), "Outside GTIP native rank and state behavior retained");
+SixLevelRuntime.Active=true;
 Console.WriteLine($"Editor presentation: {checks} checks passed.");

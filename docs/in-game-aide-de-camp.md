@@ -4,7 +4,7 @@ Branch: `feature/in-game-aide-de-camp`, forked from GTIP `test` at
 `3e206bd837300f46daa3947f80fbd6c05bc9abf9`.
 
 **Status: integration preview, not standalone feature parity.** Runtime version
-0.3.6 identifies this development branch; no production release tag is implied.
+0.3.7 identifies this development branch; no production release tag is implied.
 The target is the complete functionality of Aide-de-Camp 0.8.20, reviewed at fork
 commit `191aa6de6e0df7ca642f81ca4f45db3cf5b00e11`. The standalone app remains usable
 and is not modified by this branch.
@@ -263,3 +263,19 @@ invokes native assignment, and checks the resulting commander identity before
 reporting success. Lower-rank unmarked dummy officers retain native exclusion.
 Other native browser filters, including state recruitment eligibility, still apply.
 Regi Test 3 also marks Mendenhall as dummy despite his West Point/veteran background. Active land officers with professional, veteran or political backgrounds now remain visible regardless of general rank; unmarked junior placeholders remain excluded.
+
+## Native picker consistency in 0.3.7
+
+Sturgis in Regi Test 3 has Nevada as his home state. Nevada's base nation record
+is non-recruitable; the native officer list excluded its officers even with all
+states selected, unlike the Army Group picker. In GTIP mode the officer-list
+recruitable-state exclusion is bypassed. State/name selections remain active;
+recruit pools and the state's recruitability are not modified.
+
+Both native regiment-target suitability checks (filtering and assignment button
+eligibility) now enforce the configured minimum rank after native suitability.
+This prevents lieutenants/lieutenant colonels from qualifying for Corps when the
+minimum is BG. Native maximum rank, availability, status and state restrictions
+within suitability remain. Army Group experience handling is unchanged.
+Six new adapter tests cover rank rejection, BG acceptance, native rejection,
+non-recruitable state visibility and inactive-mode behavior.

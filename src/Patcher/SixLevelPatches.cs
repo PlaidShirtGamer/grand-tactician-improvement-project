@@ -72,6 +72,16 @@ internal static class SixLevelPatches
         dummyReads[1].OpCode = OpCodes.Call;
         dummyReads[1].Operand = Helper("OfficerVisibility", "HideDummy");
         hooks.Add("CommandersList.UnassignedDummyFilter");
+        var stateReads = officerList.Body.Instructions.Where(i => i.OpCode == OpCodes.Ldfld &&
+            i.Operand is FieldReference f && f.Name == "recruitable").ToArray();
+        if (stateReads.Length != 1) throw new InvalidOperationException("Unexpected officer state filter.");
+        stateReads[0].OpCode = OpCodes.Call; stateReads[0].Operand = Helper("OfficerVisibility", "RecruitableOfficerState");
+        var rankChecks = officerList.Body.Instructions.Where(i => i.Operand is MethodReference r &&
+            r.Name == "CheckSuitableRank" && r.Parameters.Count == 1 && r.Parameters[0].ParameterType.Name == "Regiment").ToArray();
+        if (rankChecks.Length != 2) throw new InvalidOperationException("Unexpected officer rank checks.");
+        foreach (var check in rankChecks) { check.OpCode = OpCodes.Call; check.Operand = Helper("OfficerVisibility", "Suitable"); }
+        hooks.Add("CommandersList.StateAndMinimumRank");
+
 
         var create = Method("BattleUnits", "create_regiment");
         var cil = create.Body.GetILProcessor();
@@ -127,6 +137,9 @@ internal static class SixLevelPatches
         if (officerList.Body.Instructions.Count(i => i.Operand is MethodReference r && r.DeclaringType.FullName == "GTIP.OfficerVisibility" && r.Name == "HideDummy") != 1 ||
             officerList.Body.Instructions.Count(i => i.OpCode == OpCodes.Ldfld && i.Operand is FieldReference f && f.Name == "usedummyphoto") != 1)
             throw new InvalidOperationException("Officer-list filter verification failed.");
+        foreach (var expected in new[] { ("RecruitableOfficerState", 1), ("Suitable", 2) })
+            if (officerList.Body.Instructions.Count(i => i.Operand is MethodReference r && r.DeclaringType.FullName == "GTIP.OfficerVisibility" && r.Name == expected.Item1) != expected.Item2)
+                throw new InvalidOperationException("Officer state/rank hook verification failed.");
         int originals = 0;
         foreach (var type in Types(game.MainModule.Types))
         foreach (var original in type.Methods.Where(m => m.Name.StartsWith("GTIP_Original_")))

@@ -6,7 +6,7 @@ namespace GTIP
 {
     public static class MenuStatus
     {
-        public const string Version = "0.3.6";
+        public const string Version = "0.3.7";
         public const string Label = "GTIP v" + Version;
         private static TextMeshProUGUI status;
 

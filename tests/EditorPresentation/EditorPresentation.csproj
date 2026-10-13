@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework></PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../src/Runtime/OfficerVisibility.cs" Link="OfficerVisibility.cs" />
     <Compile Include="../../src/Runtime/OfficerVisibilityRules.cs" Link="OfficerVisibilityRules.cs" />
     <Compile Include="../../src/Runtime/EditorNaming.cs" Link="EditorNaming.cs" />
     <Compile Include="../../src/Runtime/LiveEditSession.cs" Link="LiveEditSession.cs" />
