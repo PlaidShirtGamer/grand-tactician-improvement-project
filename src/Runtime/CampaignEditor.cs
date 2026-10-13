@@ -29,7 +29,7 @@ namespace GTIP
         Vector2 listScroll, editScroll;
         GUISkin skin;
         Texture2D background;
-        static readonly string[] Domains = { "Armies", "Garrisons", "Fleets", "Officers", "Weapons", "Nation" };
+        static readonly string[] Domains = { "Armies", "Garrisons", "Fleets", "Officers", "Weapons", "Nation", "Diagnostics" };
 
         public static void Bootstrap()
         {
@@ -38,7 +38,7 @@ namespace GTIP
             DontDestroyOnLoad(go);
             instance = go.AddComponent<CampaignEditor>();
         }
-        public static void MenuOpened() { if (instance != null) instance.Close(); }
+        public static void MenuOpened() { if (instance != null) { instance.Close(); instance.ResetReveal(); } }
         public static void EditorBattleUI(BattleUI target)
         {
             if (instance != null) instance.InputTick(target);
@@ -53,6 +53,7 @@ namespace GTIP
         {
             try
             {
+                ValidateReveal(target);
                 if (open)
                 {
                     if (!target.IsCampaign || target.IsMainMenu || BattleUnits.unitfolder != campaignRoot ||
@@ -103,7 +104,7 @@ namespace GTIP
             CancelTreeDrag(); ClearPortraitPreview(); treeRows.Clear(); treeNodes.Clear(); collapsedTargets.Clear(); treeInitialized = false;
             // Deliberately remain paused; never resume a campaign behind the user's back.
         }
-        void OnDisable() { Close(); }
+        void OnDisable() { Close(); ResetReveal(); }
         void OnDestroy()
         {
             Close(); if (skin != null) Destroy(skin); if (background != null) Destroy(background);
@@ -152,7 +153,7 @@ namespace GTIP
         }
         void OnGUI()
         {
-            if (!open) return;
+            if (!open) { DrawReveal(); return; }
             MakeSkin();
             var oldSkin = GUI.skin; var oldMatrix = GUI.matrix;
             try
@@ -179,7 +180,8 @@ namespace GTIP
                 if (newSide != side || newDomain != domain || newSearch != search)
                 { side = newSide; domain = newDomain; search = newSearch; Run(Reload); }
                 GUILayout.BeginHorizontal(GUILayout.ExpandHeight(true));
-                if (graphicalTree && domain <= 1) DrawGraphicalTree((width - 55) * .65f);
+                if (domain == 6) DrawDiagnostics();
+                else if (graphicalTree && domain <= 1) DrawGraphicalTree((width - 55) * .65f);
                 else
                 {
                     GUILayout.BeginVertical(GUILayout.Width((width - 55) * .55f));
@@ -197,7 +199,8 @@ namespace GTIP
                     GUILayout.EndVertical();
                 }
                 editScroll = GUILayout.BeginScrollView(editScroll, GUILayout.ExpandWidth(true));
-                if (operation != null) DrawOperation();
+                if (domain == 6) GUILayout.Label("Diagnostic markers are read-only. Native fog, spotting, targeting and AI settings remain unchanged. Close Aide-de-Camp to observe the map, then resume time manually.\n\nThis mode resets on leaving/reloading the campaign and is not saved.");
+                else if (operation != null) DrawOperation();
                 else if (selected == null) GUILayout.Label("Select a formation or record to inspect it.\n\nUse Create HQ for a new command, or select a land formation for transfers, commander replacement and deletion. Other standalone features are tracked in the branch's parity checklist.");
                 else
                 {

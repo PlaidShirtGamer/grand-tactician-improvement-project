@@ -4,7 +4,7 @@ Branch: `feature/in-game-aide-de-camp`, forked from GTIP `test` at
 `3e206bd837300f46daa3947f80fbd6c05bc9abf9`.
 
 **Status: integration preview, not standalone feature parity.** Runtime version
-0.3.7 identifies this development branch; no production release tag is implied.
+0.3.8 identifies this development branch; no production release tag is implied.
 The target is the complete functionality of Aide-de-Camp 0.8.20, reviewed at fork
 commit `191aa6de6e0df7ca642f81ca4f45db3cf5b00e11`. The standalone app remains usable
 and is not modified by this branch.
@@ -279,3 +279,24 @@ minimum is BG. Native maximum rank, availability, status and state restrictions
 within suitability remain. Army Group experience handling is unchanged.
 Six new adapter tests cover rank rejection, BG acceptance, native rejection,
 non-recruitable state visibility and inactive-mode behavior.
+
+## Player-only diagnostic reveal in 0.3.8
+
+Open F8 > Diagnostics and enable **Reveal enemy formations**. Close the editor
+and resume time manually to observe enemy map formations at their current
+positions. Amber labels mark formations hidden by native fog; cyan labels mark
+visible formations. An observer banner remains on screen. Reopen Diagnostics to
+disable. Markers are passive: no selection, targeting or order callbacks.
+
+This is a read-only observation overlay, not the native global fog toggle. It
+does not change GameVars.usefow, spotting records, iswithinfog, native renderers,
+unit activation or AI inputs. Native fog shading and normal enemy icons remain
+unchanged underneath it. Formations without native map representation are omitted;
+labels may overlap in dense areas. Fog state is read from the game's cached state.
+
+Reveal is session-only and resets on menu/load/campaign identity changes, scene
+exit, faction change or component disable. It is unavailable in battles and W&L.
+Faction switching and a global simulation fog toggle are not included.
+The build and existing suites plus six selection-rule checks validate compilation
+and filtering; live camera placement, map layering and prolonged AI observation
+still require in-game testing.

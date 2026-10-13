@@ -58,4 +58,10 @@ Check(OfficerVisibility.RecruitableOfficerState(new GameVars.Nation()), "Non-rec
 SixLevelRuntime.Active=false; candidate.nativeSuitable=true;candidate.rank=1;
 Check(OfficerVisibility.Suitable(candidate,nativeCorps) && !OfficerVisibility.RecruitableOfficerState(new GameVars.Nation()), "Outside GTIP native rank and state behavior retained");
 SixLevelRuntime.Active=true;
+Check(DiagnosticRevealRules.Include(0,1,true,1), "Union observer sees Confederate map formation");
+Check(DiagnosticRevealRules.Include(1,0,true,2), "Confederate observer sees Union map formation");
+Check(!DiagnosticRevealRules.Include(0,0,true,1), "Observer excludes own formations");
+Check(!DiagnosticRevealRules.Include(0,1,false,1), "Observer excludes inactive formations");
+Check(!DiagnosticRevealRules.Include(0,1,true,0), "Observer excludes subordinate formations without map markers");
+Check(!DiagnosticRevealRules.Include(0,2,true,1), "Observer excludes foreign neutral factions");
 Console.WriteLine($"Editor presentation: {checks} checks passed.");
