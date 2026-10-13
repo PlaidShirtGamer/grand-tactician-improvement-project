@@ -262,4 +262,4 @@ transfer and operation restrictions. It validates the target and candidate,
 invokes native assignment, and checks the resulting commander identity before
 reporting success. Lower-rank unmarked dummy officers retain native exclusion.
 Other native browser filters, including state recruitment eligibility, still apply.
-The historical Mendenhall discrepancy has not been reproduced in live state.
+Regi Test 3 also marks Mendenhall as dummy despite his West Point/veteran background. Active land officers with professional, veteran or political backgrounds now remain visible regardless of general rank; unmarked junior placeholders remain excluded.

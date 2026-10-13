@@ -46,4 +46,6 @@ Check(OfficerVisibilityRules.Hide(true,true,false,0,7,""), "Inactive dummy uncha
 Check(!OfficerVisibilityRules.Hide(true,false,true,0,7,""), "Historical officer unchanged");
 Check(!OfficerVisibilityRules.Hide(true,true,true,-1,7,""), "Generated MG with native unspecified land branch is visible");
 Check(OfficerVisibilityRules.Hide(true,true,true,-1,3,""), "Unspecified-branch junior placeholder stays hidden");
+Check(!OfficerVisibilityRules.Hide(true,true,true,2,4,"",true), "Veteran or professional dummy lieutenant colonel visible");
+Check(OfficerVisibilityRules.Hide(true,true,true,4,4,"",true), "Naval placeholder background does not change land rule");
 Console.WriteLine($"Editor presentation: {checks} checks passed.");
