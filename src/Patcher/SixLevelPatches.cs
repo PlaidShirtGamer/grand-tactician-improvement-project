@@ -63,6 +63,16 @@ internal static class SixLevelPatches
         Wrap("OOB", "AddPlusIcon", "PlusIcon", "HierarchyOob");
         Wrap("BattleUnits", "SetGroupFormation", "Formation", "HierarchyFormation", "Regiment");
 
+        // The first read diagnoses garrison placeholders; preserve it. The
+        // second read removes unassigned dummy officers from the native list.
+        var officerList = Method("CommandersList", "UpdateList");
+        var dummyReads = officerList.Body.Instructions.Where(i => i.OpCode == OpCodes.Ldfld &&
+            i.Operand is FieldReference f && f.Name == "usedummyphoto").ToArray();
+        if (dummyReads.Length != 2) throw new InvalidOperationException("Unexpected officer-list dummy filters.");
+        dummyReads[1].OpCode = OpCodes.Call;
+        dummyReads[1].Operand = Helper("OfficerVisibility", "HideDummy");
+        hooks.Add("CommandersList.UnassignedDummyFilter");
+
         var create = Method("BattleUnits", "create_regiment");
         var cil = create.Body.GetILProcessor();
         var entry = create.Body.Instructions[0];
@@ -113,6 +123,10 @@ internal static class SixLevelPatches
     }
     internal static void Verify(AssemblyDefinition game)
     {
+        var officerList = game.MainModule.Types.Single(t => t.Name == "CommandersList").Methods.Single(m => m.Name == "UpdateList");
+        if (officerList.Body.Instructions.Count(i => i.Operand is MethodReference r && r.DeclaringType.FullName == "GTIP.OfficerVisibility" && r.Name == "HideDummy") != 1 ||
+            officerList.Body.Instructions.Count(i => i.OpCode == OpCodes.Ldfld && i.Operand is FieldReference f && f.Name == "usedummyphoto") != 1)
+            throw new InvalidOperationException("Officer-list filter verification failed.");
         int originals = 0;
         foreach (var type in Types(game.MainModule.Types))
         foreach (var original in type.Methods.Where(m => m.Name.StartsWith("GTIP_Original_")))

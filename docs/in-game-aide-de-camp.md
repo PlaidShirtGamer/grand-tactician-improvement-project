@@ -4,7 +4,7 @@ Branch: `feature/in-game-aide-de-camp`, forked from GTIP `test` at
 `3e206bd837300f46daa3947f80fbd6c05bc9abf9`.
 
 **Status: integration preview, not standalone feature parity.** Runtime version
-0.3.4 identifies this development branch; no production release tag is implied.
+0.3.5 identifies this development branch; no production release tag is implied.
 The target is the complete functionality of Aide-de-Camp 0.8.20, reviewed at fork
 commit `191aa6de6e0df7ca642f81ca4f45db3cf5b00e11`. The standalone app remains usable
 and is not modified by this branch.
@@ -240,3 +240,15 @@ and combat columns once, avoiding repeated translucent strokes turning dark.
 The 0.3.4 build passed the existing 140 automated checks and serialized patch
 verification. Mouse gestures, candidate presentation and connector appearance
 still require visual confirmation in the game.
+
+## Native officer-list visibility in 0.3.5
+
+The native list hides unassigned officers with `usedummyphoto` set, even when
+rank and availability qualify them. In GTIP six-level mode the exclusion now
+allows active land generals (BG through General) and active officers whose
+service-history marker identifies GTIP creation. Unmarked lower-rank and naval
+placeholders retain the native exclusion. The garrison placeholder check and
+all other native availability, state, status, assignment and rank filters remain.
+No save fields or portrait flags are changed. Existing generated generals such
+as Joshua H. Sturgis are covered without a save migration; portrait fallback is
+preserved. The rule has eight automated checks and a serialized patch check.
