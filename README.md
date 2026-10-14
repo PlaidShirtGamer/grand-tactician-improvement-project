@@ -1,4 +1,4 @@
-> **mp-test branch: GTIP MP Test v0.17.** Multiplayer versioning is independent of base GTIP.
+> **mp-test branch: GTIP MP Test v0.18.** Multiplayer versioning is independent of base GTIP.
 > Guests join from the main menu and receive a host checkpoint. Live campaign record/lifecycle replication is experimental; guest movement, stop and commander requests are supported.
 > See [multiplayer test instructions](docs/multiplayer-test.md). Complete state replication and versus remain unfinished.
 

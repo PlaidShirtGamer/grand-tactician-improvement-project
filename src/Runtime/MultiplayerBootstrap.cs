@@ -109,10 +109,13 @@ namespace GTIP
             if(host && phase=="waiting") return;
             if(Time.realtimeSinceStartup-bootstrapStarted>300) throw new TimeoutException("Campaign transfer/load timed out.");
             if(Time.realtimeSinceStartup-lastKeepAlive>1) { lastKeepAlive=Time.realtimeSinceStartup; Send(new MpMessage{kind="keepalive",session=session}); }
-            if(!host && phase=="loading" && Ready && SceneManagement.batchoperation.Count==0) {
+            if(!host && phase=="loading" && Ready && GameVars.frame>60 && SceneManagement.batchoperation.Count==0) {
                 GameVars.SetGameSpeed(0,manualset:true);
                 BuildManifest(); SaveReplicaState(); root=BattleUnits.unitfolder; officers=GameVars.commander;
                 replicaReady=true; BlockInput(); phase="ready";
+                var avatar=UnityEngine.Object.FindObjectOfType<AvatarButton>();
+                if(avatar!=null)avatar.UpdateVisibility();
+                ModularUIFunctions.UpdateWindowOperations();
                 Send(new MpMessage{kind="ready",session=session,units=HierarchyManifest()});
             }
         }

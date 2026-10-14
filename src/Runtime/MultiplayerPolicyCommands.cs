@@ -75,7 +75,13 @@ namespace GTIP
         {if(present){if(!list.Contains(p))list.Add(p);}else list.Remove(p);}
         void GuestTimeKeys()
         {
+            RepairShortcutFocus();
             if(host || !authenticated || panel || choosingCommander || GameVars.deactivateshortcuts)return;
+            if(Input.GetKeyDown(GameVars.keycodes[GameVars.key_showmenu].keycode) && ui!=null && ui.panelhandler!=null) {
+                var h=ui.panelhandler;
+                if(h.panel[h.panel_mainmenusmall].state<=0)h.ShowPanel(h.panel_mainmenusmall);
+                else h.HidePanel(h.panel[h.panel_mainmenusmall]);
+            }
             if(Input.GetKeyDown(GameVars.keycodes[GameVars.key_pausegame].keycode))
                 SubmitGlobal("speed",GameVars.gamepaused?GameVars.gamespeedcampaigns[0]:0);
             if(Input.GetKeyDown(GameVars.keycodes[GameVars.key_speed0].keycode))SubmitGlobal("speed",0);

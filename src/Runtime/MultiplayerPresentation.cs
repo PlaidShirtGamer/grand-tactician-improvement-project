@@ -12,13 +12,19 @@ namespace GTIP
         static readonly HashSet<string> ReplicaNavigation = new HashSet<string> {
             "108_MessageLog", "382_PrevArmy", "383_NextArmy", "382_PrevArmy2", "383_NextArmy2",
             "390_Unit", "391_Ship", "392_Commander", "393_History",
-            "123_OOBSymbol", "124_HierarchySymbol", "470_OOB", "471_List", "123_UnitSymbol"
+            "123_OOBSymbol", "124_HierarchySymbol", "470_OOB", "471_List", "123_UnitSymbol",
+            "099_MenuButton", "159_ContinueGame", "210_ContinueGame", "097_CToolsButton", "098_ZoomInOut", "094_GameGuide",
+            "860_Units", "899_Garrisons", "861_Fleets", "862_Map", "095_CHide", "096_CShow",
+            "100_ToolsCommandControl", "101_ToolsMovementArrows", "102_ToolsAllTelegraphs", "103_ToolsMilitaryIcons",
+            "104_ToolsMapIcons", "105_MapBorders", "106_MapText", "107_SupplyLines", "120_BattleMonuments"
         };
         public static void ReplicaBattleUi(BattleUI target)
         {
             if(instance==null || BlocksInput || CampaignEditor.BlocksInput || !NativeAccess.Get<bool>(target,"initiated"))return;
             var handler=GameObject.Find("UI")?.GetComponent<PanelHandler>();
             if(handler==null)return;
+            RepairShortcutFocus();
+            ModularUIFunctions.UpdateWindowOperations();
             var hits=new List<RaycastResult>();
             if(EventSystem.current!=null)EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current){position=Input.mousePosition},hits);
             // Raycasting doesn't require an enabled input module. Keep automatic Unity click
@@ -33,6 +39,7 @@ namespace GTIP
                     if(index>=0)messages.OpenMessage(index);
                 }
             }
+            if(Input.GetMouseButtonDown(0) && button!=null)instance.RequestTimeButton(button.name);
             bool allowed=button!=null && ReplicaNavigation.Contains(button.name);
             foreach(var p in handler.panel.Concat(handler.symbol).Concat(handler.multiplepanel))
                 if(p.buttons!=null)foreach(var b in p.buttons)if(b!=null) {
@@ -41,7 +48,6 @@ namespace GTIP
                 }
             bool left=allowed && Input.GetMouseButtonDown(0), right=false, twice=false;
             handler.UpdatePanel(ref left,ref right,ref twice);
-            handler.ClearDragAndDrop();
             target.UpdateUnitPanelCampaign();
             var selected=target.selectedunitreg;
             if(selected!=null && selected.alliance==instance.guestSide && instance.ids.ContainsKey(selected))instance.guestSelection=selected;
@@ -72,7 +78,30 @@ namespace GTIP
             }
         }
         public static void ReplicaUiLate(BattleUI target)
-        { if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaUiLate"); }
+        {
+            if(!IsReplica){NativeAccess.Call(target,"GTIP_Original_ReplicaUiLate");return;}
+            if(BlocksInput || target.panelhandler==null)return;
+            var main=NativeAccess.Get<CampaignMainPanel>(target.panelhandler,"campaignmainpanel");
+            if(main!=null && (main.contentselection==0 || main.contentselection==10 || main.contentselection==11))
+                NativeAccess.Call(target,"GTIP_Original_ReplicaUiLate");
+        }
+        public static void RepairShortcutFocus()
+        {
+            if(instance==null || instance.transport==null || instance.phase!="live" || BlocksInput || CampaignEditor.BlocksInput)return;
+            var selected=EventSystem.current==null?null:EventSystem.current.currentSelectedGameObject;
+            var input=selected==null?null:selected.GetComponent<TMPro.TMP_InputField>();
+            var legacy=selected==null?null:selected.GetComponent<UnityEngine.UI.InputField>();
+            // Several native panels set this flag merely because their name field exists.
+            // In multiplayer suppress shortcuts only while the user is actually typing.
+            GameVars.deactivateshortcuts=(input!=null && input.isFocused)||(legacy!=null && legacy.isFocused);
+        }
+        void RequestTimeButton(string name)
+        {
+            if(name=="072_Pause"){SubmitGlobal("speed",0);return;}
+            string[] names={"073_Play","074_2x","075_4x","076_10x"};
+            int index=System.Array.IndexOf(names,name);
+            if(index>=0 && index<GameVars.gamespeedcampaigns.Length)SubmitGlobal("speed",GameVars.gamespeedcampaigns[index]);
+        }
         static bool PointerOverReplicaUi()
         {
             if(EventSystem.current==null)return false;

@@ -25,8 +25,10 @@ namespace GTIP
                 if(camera==null) return;
                 Regiment unit=null;
                 foreach(var hit in Physics.RaycastAll(camera.ScreenPointToRay(Input.mousePosition),100000f).OrderBy(h=>h.distance)) {
-                    var go=ui.GetUnitFromCollider(hit,true,false);
-                    var candidate=go==null?hit.collider.GetComponentInParent<Regiment>():go.GetComponent<Regiment>();
+                    if(hit.collider==null)continue;
+                    var candidate=hit.collider.GetComponentInParent<Regiment>();
+                    var coy=hit.collider.GetComponentInParent<Coy>();
+                    if(candidate==null && coy!=null)candidate=coy.assignedparentreg;
                     if(candidate!=null && candidate.alliance==guestSide && ids.ContainsKey(candidate) && candidate.gameObject.activeInHierarchy) { unit=candidate; break; }
                 }
                 LogDiagnostic("Guest selection hit: "+(unit==null?"none":Id(unit)+" / "+unit.name));
@@ -42,6 +44,18 @@ namespace GTIP
                 if(collider!=null && collider.Raycast(camera.ScreenPointToRay(Input.mousePosition),out var hit,100000f))
                     SubmitGuestOrder("move",hit.point);
             }
+        }
+        public static void ReplicaMoveUnit(BattleUnits engine,GameObject source,GameObject destination,bool skipdlccheck)
+        {
+            if(!IsReplica){NativeAccess.Call(engine,"GTIP_Original_ReplicaMoveUnit",source,destination,skipdlccheck);return;}
+            if(instance==null || !instance.authenticated || source==null || destination==null)return;
+            var unit=source.GetComponent<Regiment>();var parent=destination.GetComponent<Regiment>();
+            if(unit==null || parent==null || !instance.ids.TryGetValue(unit,out int id) || !instance.ids.TryGetValue(parent,out int parentId))return;
+            try {
+                EditorFormationOperations.CheckMove(unit,parent);
+                instance.Send(new MpMessage{kind="regroup",session=instance.session,sequence=++instance.guestSequence,unit=id,x=parentId});
+                instance.orderStatus="Regroup request sent to host.";
+            } catch(Exception e){instance.orderStatus=e.Message;}
         }
 
         void SubmitGuestOrder(string kind,Vector3 destination)

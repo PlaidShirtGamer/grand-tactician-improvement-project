@@ -42,13 +42,14 @@ namespace GTIP
         public static void EditorBattleUI(BattleUI target)
         {
             MultiplayerCampaign.Observe(target);
+            MultiplayerCampaign.RepairShortcutFocus();
             if (MultiplayerCampaign.BlocksInput) return;
             if (MultiplayerCampaign.IsReplica) { MultiplayerCampaign.ReplicaBattleUi(target); return; }
             if (instance != null) instance.InputTick(target);
             if (!BlocksInput) NativeAccess.Call(target, "GTIP_Original_EditorBattleUI");
         }
         public static void EditorCamera(Camera_Battlefield target)
-        { if (!BlocksInput && !MultiplayerCampaign.BlocksInput) NativeAccess.Call(target, "GTIP_Original_EditorCamera"); }
+        { MultiplayerCampaign.RepairShortcutFocus(); if (!BlocksInput && !MultiplayerCampaign.BlocksInput) NativeAccess.Call(target, "GTIP_Original_EditorCamera"); }
         public static void EditorCampaignAi(AICampaign target)
         { if (!BlocksInput && !MultiplayerCampaign.HoldsCampaignAi && !MultiplayerCampaign.IsReplica) NativeAccess.Call(target, "GTIP_Original_EditorCampaignAi"); }
 

@@ -86,6 +86,10 @@ Check(MpStateBaseline.FirstDifference(schema,expectedValues,schema.Capture(sourc
 sourceState.Treasury--;sourceState.Recruits[0]++;
 Check(MpStateBaseline.FirstDifference(schema,expectedValues,schema.Capture(sourceState))=="Recruits","Native readback detects array element divergence");
 var stationaryIndependent=new MpMessage{kind="commander",session="commands",sequence=1};
+var regroup=new MpMessage{kind="regroup",session="commands",sequence=1,unit=5,x=7};
+MpRules.Authorize(regroup,"commands",0,0,false,0);checks++;
+Reject(()=>MpRules.Authorize(regroup,"commands",0,1,true,0),"Regroup cannot bypass source ownership");
+Reject(()=>MpRules.Authorize(regroup,"commands",0,0,true,1),"Repeated regroup request rejected");
 MpRules.Authorize(stationaryIndependent,"commands",0,0,false,0);checks++;
 Reject(()=>MpRules.Authorize(stationaryIndependent,"commands",0,1,false,0),"Commander assignment never bypasses faction ownership");
 stationaryIndependent.kind="move";

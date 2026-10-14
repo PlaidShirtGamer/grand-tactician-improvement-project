@@ -107,7 +107,7 @@ namespace GTIP
         void Update()
         {
             if(leavingReplica && (root!=BattleUnits.unitfolder || (ui!=null && ui.IsMainMenu))){leavingReplica=false;RestoreInput();}
-            if (Input.GetKeyDown(KeyCode.Escape) && (panel || IsReplica)) {
+            if (Input.GetKeyDown(KeyCode.Escape) && panel) {
                 if(panel) ClosePanel();
                 else {
                     panel=true; BlockInput(); message="Session menu. Connection remains active; use Disconnect to leave.";
@@ -150,7 +150,7 @@ namespace GTIP
                     if(!host) Send(new MpMessage { kind = "ping", session = session });
                     else if(outgoingData==null && prepareTask==null && commitTask==null && !RosterChanged()) Send(Capture());
                 }
-            } catch (Exception error) { Debug.LogWarning("[GTIP MP] " + error); End("Session stopped: " + error.Message); }
+            } catch (Exception error) { LogDiagnostic(error.ToString()); Debug.LogWarning("[GTIP MP] " + error); End("Session stopped: " + error.Message); }
         }
         void Send(MpMessage value)
         {
@@ -260,6 +260,11 @@ namespace GTIP
             if (!units.TryGetValue(value.unit, out var unit) || unit == null || !BattleUnits.completeunitlist.Contains(unit)) throw new InvalidOperationException("Formation no longer exists.");
             MpRules.Authorize(value, session, guestSide, unit.alliance, Controllable(unit), lastSequence);
             lastSequence = value.sequence;
+            if(value.kind=="regroup") {
+                if(value.x<=0 || value.x!=(int)value.x || !units.TryGetValue((int)value.x,out var parent) || parent==null || parent.alliance!=guestSide)
+                    throw new InvalidOperationException("Destination headquarters no longer exists or belongs to another faction.");
+                EditorFormationOperations.Move(unit,parent);return;
+            }
             if(value.kind=="commander") {
                 if(value.x<0 || value.x>=GameVars.commander.Count || value.x!=(int)value.x)throw new InvalidOperationException("Unknown officer.");
                 if(value.text!=OfficerCommandIdentity((int)value.x))throw new InvalidOperationException("Officer identity changed; reopen the commander list.");

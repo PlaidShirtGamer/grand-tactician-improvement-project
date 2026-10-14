@@ -42,9 +42,11 @@ namespace GTIP
             if (!IsReplica) { NativeAccess.Call(target, "GTIP_Original_ReplicaRegiment"); return; }
             // Deliberately skip movement, supply, combat, recruitment and AI. Keep native rendering.
             NativeAccess.Call(target, "CheckRegimentVisibility");
-            target.UpdateRegimentSpritePos(forceupdate: true);
+            target.UpdateRegimentSpritePos();
             NativeAccess.Call(target, "UpdateSpriteAnimatorAll", -1, false);
-            target.UpdateUnitVisuals();
+            if((Time.frameCount+target.GetInstanceID())%30==0)target.UpdateUnitVisuals();
+            // This native presentation refresh is otherwise inside the suppressed simulation loop.
+            if((Time.frameCount+target.GetInstanceID())%30==0)NativeAccess.Call(target,"UpdatePaperMapFlagTooltipInfo");
         }
         string[] manifestKeys;
         float checkpointDate;

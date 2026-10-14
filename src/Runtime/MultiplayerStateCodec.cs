@@ -15,6 +15,8 @@ namespace GTIP
         public readonly FieldInfo[] Fields;
         public readonly string Signature;
         public readonly HashSet<string> NaNFields;
+        readonly Func<object,object>[] readers;
+        readonly Action<object,object>[] writers;
         public MpStateSchema(Type type, IEnumerable<string> names, IEnumerable<string> nanFields=null)
         {
             NaNFields=new HashSet<string>(nanFields??Array.Empty<string>(),StringComparer.Ordinal);
@@ -22,16 +24,28 @@ namespace GTIP
                 ?? throw new InvalidOperationException("Missing state field: "+type.Name+"."+n)).ToArray();
             if(Fields.Any(f=>f.IsInitOnly || !Supported(f.FieldType))) throw new InvalidOperationException("Unsupported state schema.");
             Signature=type.Name+":"+string.Join(";",Fields.Select(f=>f.Name+":"+f.FieldType.FullName+(NaNFields.Contains(f.Name)?":nan":"")));
+            readers=new Func<object,object>[Fields.Length];writers=new Action<object,object>[Fields.Length];
+            for(int i=0;i<Fields.Length;i++) {
+                var target=System.Linq.Expressions.Expression.Parameter(typeof(object));
+                var value=System.Linq.Expressions.Expression.Parameter(typeof(object));
+                var field=System.Linq.Expressions.Expression.Field(System.Linq.Expressions.Expression.Convert(target,type),Fields[i]);
+                readers[i]=System.Linq.Expressions.Expression.Lambda<Func<object,object>>(System.Linq.Expressions.Expression.Convert(field,typeof(object)),target).Compile();
+                writers[i]=System.Linq.Expressions.Expression.Lambda<Action<object,object>>(System.Linq.Expressions.Expression.Assign(field,System.Linq.Expressions.Expression.Convert(value,Fields[i].FieldType)),target,value).Compile();
+            }
         }
         public static bool Supported(Type type) => type==typeof(int) || type==typeof(float) || type==typeof(bool) || type==typeof(string) ||
             (type.IsArray && type.GetArrayRank()<=2 && (type.GetElementType()==typeof(int) || type.GetElementType()==typeof(float) || type.GetElementType()==typeof(bool) || type.GetElementType()==typeof(string)));
         public static MpStateSchema Scalars(Type type, params string[] nanFields) => new MpStateSchema(type,type.GetFields(BindingFlags.Public|BindingFlags.Instance|BindingFlags.DeclaredOnly)
             .Where(f=>!f.IsInitOnly && Supported(f.FieldType)).Select(f=>f.Name),nanFields);
-        public object[] Capture(object target) => Fields.Select(f=>{var v=f.GetValue(target); return v is Array a?a.Clone():v;}).ToArray();
+        public object[] Capture(object target) {
+            var values=new object[readers.Length];
+            for(int i=0;i<values.Length;i++){var v=readers[i](target);values[i]=v is Array a?a.Clone():v;}
+            return values;
+        }
         public void Apply(object target,object[] values)
         {
             if(values.Length!=Fields.Length) throw new InvalidDataException("State field count mismatch.");
-            for(int i=0;i<Fields.Length;i++) Fields[i].SetValue(target,values[i] is Array a?a.Clone():values[i]);
+            for(int i=0;i<Fields.Length;i++) writers[i](target,values[i] is Array a?a.Clone():values[i]);
         }
     }
     public sealed class MpStateRow

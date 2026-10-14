@@ -42,7 +42,7 @@ namespace GTIP
 
     public static class MpRules
     {
-        public const int Protocol = 11, MaxBytes = 2 * 1024 * 1024;
+        public const int Protocol = 12, MaxBytes = 2 * 1024 * 1024;
         public static void ValidateSnapshot(MpMessage value)
         {
             if (value == null || value.kind != "snapshot") throw new InvalidDataException("Expected snapshot message.");
@@ -73,8 +73,8 @@ namespace GTIP
         {
             if (message.protocol != Protocol || message.session != session || message.sequence <= lastSequence || message.sequence <= 0)
                 throw new InvalidOperationException("Stale session, protocol or duplicate order.");
-            if (message.kind != "move" && message.kind != "stop" && message.kind != "commander") throw new InvalidOperationException("Unsupported order.");
-            if (side != unitSide || (message.kind!="commander" && !controllable)) throw new InvalidOperationException("You do not control this formation.");
+            if (message.kind != "move" && message.kind != "stop" && message.kind != "commander" && message.kind!="regroup") throw new InvalidOperationException("Unsupported order.");
+            if (side != unitSide || ((message.kind=="move" || message.kind=="stop") && !controllable)) throw new InvalidOperationException("You do not control this formation.");
             if (!Finite(message.x) || !Finite(message.z)) throw new InvalidOperationException("Invalid destination.");
         }
         public static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
