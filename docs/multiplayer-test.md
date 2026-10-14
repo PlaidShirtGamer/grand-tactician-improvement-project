@@ -1,3 +1,20 @@
+# GTIP MP Test v0.16 — live campaign records and lifecycle replication
+
+Both installs require v0.16 / protocol 10. This remains an incomplete co-op prototype; versus and tactical battles are not supported.
+
+The host sends campaign records in bounded, checksummed batches while the campaign stays loaded. Formation and officer creation/deletion no longer intentionally trigger a pause, reload or disconnect. The guest constructs native formation objects, updates parent and Army Group membership, and reconnects officer references. A full native checkpoint is still used at initial join/reconnect. Disconnecting after live data has been applied returns the guest to the main menu without saving.
+
+Current adapters include alliance/state scalar and numeric-array data (including treasury and recruitment pools), officer attributes and dates, unit strength/condition/supply fields, formation metadata and Army Group membership. The native support-history field can contain NaN; only that explicitly configured field permits it. All other numeric fields reject non-finite values.
+
+This is not complete economic or recruitment replication: nested industry, buildings, production queues, ships, perks, AI references, visual caches and other native data still need dedicated adapters and verification. Revisioned batches now send changed records and explicit deletions against the last acknowledged baseline. Each batch reconstructs a full state before native application; the guest reads registered scalar fields back before acknowledging. This verifies those adapters, not the whole game. Hashing and native application still process full registered state and need profiling. The clock is sent separately at up to 30 Hz. Network and frame time limit actual delivery rates.
+
+Guest requests currently cover movement, stopping and commander replacement. Other native guest mutations remain blocked. Host-side recruitment/creation adapters do not imply that guests can issue those commands yet. Saving and battle resolution remain host responsibilities; entering a tactical battle ends this prototype session.
+
+The guest presentation adapter adds native top-panel viewing, OOB refreshes, unit visual updates and delivered dispatch replication. Native mutation callbacks remain disabled; only explicitly supported viewing actions are dispatched. Non-formation dispatch object references are not yet synchronized. These presentation changes require live verification.
+
+Validation: revision/delta regressions extend the protocol, archive, lifecycle-model and loopback suite; 43 structural hooks. Automated checks do not prove correct native initialization or complete campaign equality. See [architecture and acceptance gates](multiplayer-architecture.md).
+
+## Earlier builds
 # GTIP MP Test v0.13 — host-supplied campaign loading
 
 This is an intermediate architecture build, **not complete campaign multiplayer**.

@@ -42,7 +42,8 @@ namespace GTIP
         public static void EditorBattleUI(BattleUI target)
         {
             MultiplayerCampaign.Observe(target);
-            if (MultiplayerCampaign.BlocksInput || MultiplayerCampaign.IsReplica) return;
+            if (MultiplayerCampaign.BlocksInput) return;
+            if (MultiplayerCampaign.IsReplica) { MultiplayerCampaign.ReplicaBattleUi(target); return; }
             if (instance != null) instance.InputTick(target);
             if (!BlocksInput) NativeAccess.Call(target, "GTIP_Original_EditorBattleUI");
         }

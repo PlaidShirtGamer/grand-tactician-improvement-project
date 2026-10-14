@@ -55,7 +55,7 @@ namespace GTIP
                 GUILayout.Label("IP address (host bind / guest destination). Use 0.0.0.0 to host on LAN; guests use the host's LAN IP."); address = GUILayout.TextField(address, 45);
                 GUILayout.Label("TCP port"); port = GUILayout.TextField(port, 5);
                 mode="coop";
-                GUILayout.Label("Co-op checkpoint and movement-order test. Economy, recruitment, battles and versus are not fully replicated yet.");
+                GUILayout.Label("Co-op replication test. Movement, stopping and commander requests are supported. Economy, recruitment, battles and versus remain incomplete.");
                 GUILayout.Label("Session key (guest)"); token = GUILayout.TextField(token, 32);
                 GUILayout.BeginHorizontal(); if (GUILayout.Button("Host campaign")) Try(BeginHost); if (GUILayout.Button("Join host")) Try(BeginJoin); GUILayout.EndHorizontal();
             } else if (host) {
@@ -67,7 +67,7 @@ namespace GTIP
             } else {
                 GUILayout.BeginHorizontal(); GUILayout.Label("Guest: " + SideName(guestSide) + " | " + mode + (snapshot == null ? " | connecting" : snapshot.paused ? " | HOST PAUSED" : " | running"));
                 if (GUILayout.Button("Disconnect", GUILayout.Width(130))) End("Disconnected."); GUILayout.EndHorizontal();
-                GUILayout.Label("Close F9 to view the native map. Camera movement remains local. Esc opens the session menu without disconnecting. Left-click selects a formation; right-click terrain requests movement from the host. Other native mutations remain blocked. Disconnect restores the original checkpoint positions; do not save the replica.");
+                GUILayout.Label("Close F9 to view the native map and supported panels. Camera movement remains local. Esc opens the session menu. Left-click selects a formation; right-click terrain requests movement from the host. Other native mutations remain blocked. Disconnect after synchronization returns to the main menu without saving.");
             }
             GUILayout.FlexibleSpace(); GUILayout.Label(message);
             GUILayout.EndArea(); GUI.color = oldColor; GUI.matrix = oldMatrix;

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -27,6 +28,7 @@ namespace GTIP
                 outgoingCheckpoint=MpCheckpoint.Pack(Path.Combine("Campaigns",scenario,folder));
             } finally { Saving.latestfolder=prior; }
             BuildManifest();
+            ClearData(false);
             checkpointHash=MpCheckpoint.Hash(outgoingCheckpoint);
             phase="sending"; bootstrapStarted=Time.realtimeSinceStartup;
             Send(new MpMessage {kind="checkpoint-offer",session=session,campaign=scenario,text=checkpointHash,unit=outgoingCheckpoint.Length,side=guestSide});
@@ -103,6 +105,8 @@ namespace GTIP
         }
         void BootstrapTick()
         {
+            // Waiting for a player is not a campaign transfer. Start the deadline on join.
+            if(host && phase=="waiting") return;
             if(Time.realtimeSinceStartup-bootstrapStarted>300) throw new TimeoutException("Campaign transfer/load timed out.");
             if(Time.realtimeSinceStartup-lastKeepAlive>1) { lastKeepAlive=Time.realtimeSinceStartup; Send(new MpMessage{kind="keepalive",session=session}); }
             if(!host && phase=="loading" && Ready && SceneManagement.batchoperation.Count==0) {

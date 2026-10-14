@@ -13,7 +13,8 @@ namespace GTIP
         readonly Dictionary<Regiment, Vector3> originalPositions = new Dictionary<Regiment, Vector3>();
         readonly Dictionary<Regiment, Quaternion> originalRotations = new Dictionary<Regiment, Quaternion>();
         readonly Dictionary<Regiment, bool> originalActive = new Dictionary<Regiment, bool>();
-        public static bool IsReplica => instance != null && instance.transport != null && !instance.host && instance.replicaReady;
+        bool leavingReplica;
+        public static bool IsReplica => instance != null && ((instance.transport != null && !instance.host && instance.replicaReady) || instance.leavingReplica);
         public static void ReplicaSpeed(float newspeed, bool overrideminmax, bool manualset)
         { if(!IsReplica && !(instance!=null && instance.transport!=null && instance.host && instance.phase=="sending" && newspeed>0)) NativeAccess.Call(typeof(GameVars), "GTIP_Original_ReplicaSpeed", newspeed, overrideminmax, manualset); }
         public static void ReplicaSave(bool saveunits, bool saveobjects, bool savecommanders, bool savecampaigndata, bool isautosave, string manualsavename)
@@ -25,12 +26,25 @@ namespace GTIP
         { if (!IsReplica) NativeAccess.Call(target, "GTIP_Original_ReplicaCampaign"); }
         public static void ReplicaUnits(BattleUnits target)
         { if (!IsReplica) NativeAccess.Call(target, "GTIP_Original_ReplicaUnits"); }
+        public static void ReplicaTown(Town target)
+        { if(!IsReplica || !NativeAccess.Get<bool>(target,"initialized"))NativeAccess.Call(target,"GTIP_Original_ReplicaTown"); }
+        public static void ReplicaIip(IIP target)
+        {
+            if(!IsReplica || !NativeAccess.Get<bool>(target,"initialized"))NativeAccess.Call(target,"GTIP_Original_ReplicaIip");
+            else if(Camera_Battlefield.IsCamUIUpdated())NativeAccess.Call(target,"UpdatePaperMapFacing");
+        }
+        public static void ReplicaBuilding(CBuilding target)
+        { if(!IsReplica || !NativeAccess.Get<bool>(target,"initialized"))NativeAccess.Call(target,"GTIP_Original_ReplicaBuilding"); }
+        public static void ReplicaGroupExperience(ArmyGroup target)
+        { if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaGroupExperience"); }
         public static void ReplicaRegiment(Regiment target)
         {
             if (!IsReplica) { NativeAccess.Call(target, "GTIP_Original_ReplicaRegiment"); return; }
             // Deliberately skip movement, supply, combat, recruitment and AI. Keep native rendering.
             NativeAccess.Call(target, "CheckRegimentVisibility");
             target.UpdateRegimentSpritePos(forceupdate: true);
+            NativeAccess.Call(target, "UpdateSpriteAnimatorAll", -1, false);
+            target.UpdateUnitVisuals();
         }
         string[] manifestKeys;
         float checkpointDate;
@@ -41,6 +55,7 @@ namespace GTIP
             var byKey = records.ToDictionary(p=>p.Key,p=>p.Unit,StringComparer.Ordinal);
             ids.Clear(); units.Clear(); nextId=0;
             foreach(var key in manifestKeys) Id(byKey[key]);
+            InitializeGroupIds();
             // Scene sibling indices and non-formation containers are not saved identities.
             manifest = MpIdentity.Hash(manifestKeys);
             checkpointDate = GameVars.GetCampaignFloatingDate();

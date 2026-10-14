@@ -66,9 +66,21 @@ namespace GTIP
         void End(string reason)
         {
             bool wasHost = transport != null && host;
+            bool exitReplica=transport!=null && !host && hasLiveData && root==BattleUnits.unitfolder;
             if (transport != null) { LogDiagnostic(reason); Application.runInBackground = previousBackground; }
             transport?.Dispose(); transport = null; authenticated = false; helloSent = false; snapshot = null;
-            RestoreReplicaState(); ClearBootstrap(); guestSelection=null; guestSequence=0; orderStatus=""; ClosePanel();
+            ClearData(false);
+            if(exitReplica) {
+                // Deleted native objects cannot be rolled back to the join checkpoint in place.
+                // Leave without saving; a reconnect obtains the current authoritative checkpoint.
+                originalPositions.Clear();originalRotations.Clear();originalActive.Clear();originalParents.Clear();originalSiblingIndices.Clear();restoreClock=null;hostClock=null;
+                SceneManagement.batchoperation.Add(new SceneManagement.BatchOperation(SceneManagement.bo_showblackscreen));
+                SceneManagement.batchoperation.Add(new SceneManagement.BatchOperation(SceneManagement.bo_exitcampaignscenario,1));
+                SceneManagement.batchoperation.Add(new SceneManagement.BatchOperation(SceneManagement.bo_rebuildscene,1));
+                SceneManagement.batchoperation.Add(new SceneManagement.BatchOperation(SceneManagement.bo_showmainmenu,2));
+                SceneManagement.batchoperation.Add(new SceneManagement.BatchOperation(SceneManagement.bo_hideblackscreen,2));
+            } else RestoreReplicaState();
+            ClearBootstrap();leavingReplica=exitReplica;hasLiveData=false;guestSelection=null;guestSequence=0;choosingCommander=false;orderStatus="";ClosePanel();
             ids.Clear(); units.Clear(); session = null; message = reason; rejection = null;
             if (wasHost && Ready) GameVars.SetGameSpeed(0, manualset: true);
         }
@@ -94,6 +106,7 @@ namespace GTIP
         void OnDestroy() { End("Disconnected."); RestoreInput(); if (white != null) Destroy(white); if (instance == this) instance = null; }
         void Update()
         {
+            if(leavingReplica && (root!=BattleUnits.unitfolder || (ui!=null && ui.IsMainMenu))){leavingReplica=false;RestoreInput();}
             if (Input.GetKeyDown(KeyCode.Escape) && (panel || IsReplica)) {
                 if(panel) ClosePanel();
                 else {
@@ -126,6 +139,7 @@ namespace GTIP
                     if (!host) Send(new MpMessage { kind = "join", token = token, text = MpBuild.Version });
                 }
                 if(phase!="live") { BootstrapTick(); return; }
+                DataTick();
                 if(!host) GuestMapInput();
                 if(authenticated && host && (Time.realtimeSinceStartup-lastClockSend>=1f/30f || lastHostPaused!=GameVars.gamepaused || lastHostSpeed!=GameVars.gamespeed)) {
                     lastClockSend=Time.realtimeSinceStartup; lastHostPaused=GameVars.gamepaused; lastHostSpeed=GameVars.gamespeed;
@@ -133,8 +147,8 @@ namespace GTIP
                 }
                 if (authenticated && Time.realtimeSinceStartup - lastSend > 1) {
                     lastSend = Time.realtimeSinceStartup;
-                    if(host) Send(new MpMessage { kind="hierarchy", session=session, units=HierarchyManifest() });
-                    Send(host ? Capture() : new MpMessage { kind = "ping", session = session });
+                    if(!host) Send(new MpMessage { kind = "ping", session = session });
+                    else if(outgoingData==null && !RosterChanged()) Send(Capture());
                 }
             } catch (Exception error) { Debug.LogWarning("[GTIP MP] " + error); End("Session stopped: " + error.Message); }
         }
@@ -174,6 +188,7 @@ namespace GTIP
                 return;
             }
             if (value.session != session) throw new InvalidOperationException("Session mismatch.");
+            if(DataMessage(value)) return;
             if (host) {
                 if (value.kind == "ping") return;
                 try { Execute(value); LogDiagnostic("Guest order "+value.sequence+" accepted: "+value.kind+" formation="+value.unit); Send(new MpMessage { kind = "result", session = session, sequence = value.sequence, text = "Order submitted to native campaign rules. Readiness, terrain and order delay still apply." }); }
@@ -183,6 +198,8 @@ namespace GTIP
             } else if (value.kind == "hierarchy") {
                 ApplyHierarchy(value.units);
             } else if (value.kind == "snapshot") {
+                if(value.sequence<incomingDataSerial)return;
+                if(value.sequence>incomingDataSerial)throw new InvalidOperationException("Position update precedes campaign data generation.");
                 MpRules.ValidateSnapshot(value);
                 if (!loggedSnapshot) { LogDiagnostic("First snapshot accepted: units=" + value.units.Length + ", towns=" + value.towns.Length); loggedSnapshot = true; }
                 snapshot = value;
@@ -229,7 +246,7 @@ namespace GTIP
                     x = pos.x, y=pos.y, z = pos.z, yaw=unit.transform.eulerAngles.y, targetX = target.x, targetZ = target.z,
                     controllable = Controllable(unit), moving = own && unit.regimentpaths > 0 });
             }
-            var result = new MpMessage { kind = "snapshot", session = session, side = guestSide, mode = mode, campaign=manifest,
+            var result = new MpMessage { kind = "snapshot", session = session, side = guestSide, mode = mode, campaign=manifest, sequence=dataSerial,
                 date = GameVars.GetCampaignFloatingDate(), paused = GameVars.gamepaused, clock=CaptureClock(), units = rows.ToArray(),
                 towns = (BattleUnits.towns ?? new List<Town>()).Where(t => t != null).Select(t => new MpTown { name = t.CityName, x = t.transform.position.x, z = t.transform.position.z })
                     .Where(t => MpRules.Finite(t.x) && MpRules.Finite(t.z)).ToArray() };
@@ -242,6 +259,11 @@ namespace GTIP
             if (!units.TryGetValue(value.unit, out var unit) || unit == null || !BattleUnits.completeunitlist.Contains(unit)) throw new InvalidOperationException("Formation no longer exists.");
             MpRules.Authorize(value, session, guestSide, unit.alliance, Controllable(unit), lastSequence);
             lastSequence = value.sequence;
+            if(value.kind=="commander") {
+                if(value.x<0 || value.x>=GameVars.commander.Count || value.x!=(int)value.x)throw new InvalidOperationException("Unknown officer.");
+                if(value.text!=OfficerCommandIdentity((int)value.x))throw new InvalidOperationException("Officer identity changed; reopen the commander list.");
+                EditorFormationOperations.ReplaceCommander(unit,(int)value.x);return;
+            }
             if (value.kind == "stop") { unit.StopRegiment(manualstop: true); return; }
             var terrain = Terrain.activeTerrain;
             if (terrain == null) throw new InvalidOperationException("Campaign terrain is unavailable.");

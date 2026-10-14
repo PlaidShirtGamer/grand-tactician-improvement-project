@@ -17,6 +17,7 @@ namespace GTIP
                 Write(writer, message.token); Write(writer, message.session); Write(writer, message.mode); Write(writer, message.text);
                 Write(writer, message.campaign);
                 writer.Write(message.side); writer.Write(message.sequence); writer.Write(message.unit);
+                writer.Write(message.baseRevision); Write(writer,message.stateHash);
                 writer.Write(message.x); writer.Write(message.z); writer.Write(message.date); writer.Write(message.paused);
                 var blob=message.blob??new byte[0];
                 Count(blob.Length,MpCheckpoint.ChunkBytes,"checkpoint chunk"); writer.Write(blob.Length); writer.Write(blob);
@@ -54,7 +55,7 @@ namespace GTIP
                 int protocol = reader.ReadInt32();
                 if (protocol != MpRules.Protocol) throw new InvalidDataException("Multiplayer protocol mismatch. Update both installs.");
                 var result = new MpMessage { protocol = protocol, kind = Read(reader), token = Read(reader), session = Read(reader), mode = Read(reader), text = Read(reader), campaign = Read(reader),
-                    side = reader.ReadInt32(), sequence = reader.ReadInt32(), unit = reader.ReadInt32(), x = reader.ReadSingle(), z = reader.ReadSingle(), date = reader.ReadSingle(), paused = reader.ReadBoolean() };
+                    side = reader.ReadInt32(), sequence = reader.ReadInt32(), unit = reader.ReadInt32(), baseRevision=reader.ReadInt32(), stateHash=Read(reader), x = reader.ReadSingle(), z = reader.ReadSingle(), date = reader.ReadSingle(), paused = reader.ReadBoolean() };
                 int blobSize=Count(reader.ReadInt32(),MpCheckpoint.ChunkBytes,"checkpoint chunk");
                 result.blob=reader.ReadBytes(blobSize);
                 if(result.blob.Length!=blobSize) throw new EndOfStreamException("Incomplete checkpoint chunk.");

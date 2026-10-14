@@ -10,6 +10,8 @@ namespace GTIP
         public int protocol = MpRules.Protocol, side, sequence;
         public string kind, token, session, mode, text, campaign;
         public int unit;
+        public int baseRevision;
+        public string stateHash;
         public float x, z, date;
         public bool paused;
         public byte[] blob;
@@ -40,7 +42,7 @@ namespace GTIP
 
     public static class MpRules
     {
-        public const int Protocol = 7, MaxBytes = 2 * 1024 * 1024;
+        public const int Protocol = 10, MaxBytes = 2 * 1024 * 1024;
         public static void ValidateSnapshot(MpMessage value)
         {
             if (value == null || value.kind != "snapshot") throw new InvalidDataException("Expected snapshot message.");
@@ -71,8 +73,8 @@ namespace GTIP
         {
             if (message.protocol != Protocol || message.session != session || message.sequence <= lastSequence || message.sequence <= 0)
                 throw new InvalidOperationException("Stale session, protocol or duplicate order.");
-            if (message.kind != "move" && message.kind != "stop") throw new InvalidOperationException("Unsupported order.");
-            if (side != unitSide || !controllable) throw new InvalidOperationException("You do not control this formation.");
+            if (message.kind != "move" && message.kind != "stop" && message.kind != "commander") throw new InvalidOperationException("Unsupported order.");
+            if (side != unitSide || (message.kind!="commander" && !controllable)) throw new InvalidOperationException("You do not control this formation.");
             if (!Finite(message.x) || !Finite(message.z)) throw new InvalidOperationException("Invalid destination.");
         }
         public static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);

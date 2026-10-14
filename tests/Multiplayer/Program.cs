@@ -4,6 +4,90 @@ using System.Net;
 int checks = 0;
 void Check(bool value, string name) { if (!value) throw new Exception(name); checks++; }
 void Reject(Action action, string name) { bool rejected = false; try { action(); } catch (Exception) { rejected = true; } Check(rejected, name); }
+var schema=MpStateSchema.Scalars(typeof(StateFixture));
+var schemas=new[]{schema};
+var sourceState=new StateFixture { Treasury=12345.5f, Officer=91, Name="Army of the Tennessee", Active=true,
+    Recruits=new[]{400,250}, Support=new float[,]{{10,20},{30,40}} };
+var dataRows=new[]{new MpStateRow{Kind=0,Id=7,Name="State",Values=schema.Capture(sourceState)}};
+var dataPacket=MpStateCodec.Encode(schemas,dataRows);
+var decodedRows=MpStateCodec.Decode(schemas,dataPacket);
+var targetState=new StateFixture();schema.Apply(targetState,decodedRows[0].Values);
+Check(targetState.Treasury==12345.5f && targetState.Officer==91 && targetState.Name==sourceState.Name && targetState.Active,"Campaign data scalar round trip");
+Check(targetState.Recruits.SequenceEqual(sourceState.Recruits) && targetState.Support[1,1]==40,"Recruit pools and rectangular support arrays round trip");
+targetState.Recruits[0]=999;schema.Apply(targetState,decodedRows[0].Values);
+Check(targetState.Recruits[0]==400,"Applying arrays cannot mutate rollback baseline");
+sourceState.Recruits[0]=555;schema.Apply(targetState,dataRows[0].Values);
+Check(targetState.Recruits[0]==400,"Capturing data isolates it from simulation writes");
+Reject(()=>MpStateCodec.Decode(new[]{new MpStateSchema(typeof(StateFixture),new[]{"Officer"})},dataPacket),"Different schema rejected");
+Reject(()=>MpStateCodec.Decode(schemas,dataPacket.Take(dataPacket.Length/2).ToArray()),"Truncated state rejected");
+Reject(()=>MpStateCodec.Decode(schemas,MpStateCodec.Encode(schemas,new[]{dataRows[0],dataRows[0]})),"Duplicate rows rejected");
+Reject(()=>new MpStateSchema(typeof(StateFixture),new[]{"Missing"}),"Missing native field fails schema construction");
+Reject(()=>new MpStateSchema(typeof(StateFixture),new[]{"Unsafe"}),"Arbitrary object graph rejected");
+sourceState.Treasury=float.NaN;dataRows[0].Values=schema.Capture(sourceState);
+Reject(()=>MpStateCodec.Encode(schemas,dataRows),"Nonfinite economy value rejected");
+var nativeSchema=MpStateSchema.Scalars(typeof(StateFixture),"Support");
+sourceState.Treasury=0;sourceState.Support[0,0]=float.NaN;
+var nativeRows=new[]{new MpStateRow{Values=nativeSchema.Capture(sourceState)}};
+var nativePacket=MpStateCodec.Encode(new[]{nativeSchema},nativeRows);
+nativeSchema.Apply(targetState,MpStateCodec.Decode(new[]{nativeSchema},nativePacket)[0].Values);
+Check(float.IsNaN(targetState.Support[0,0]),"Explicit native NaN history survives round trip");
+Reject(()=>MpStateCodec.Decode(schemas,nativePacket),"NaN policy participates in schema identity");
+sourceState.Support[0,0]=float.PositiveInfinity;nativeRows[0].Values=nativeSchema.Capture(sourceState);
+Reject(()=>MpStateCodec.Encode(new[]{nativeSchema},nativeRows),"Native NaN exception does not allow infinity");
+sourceState.Support[0,0]=0;sourceState.Treasury=float.NaN;nativeRows[0].Values=nativeSchema.Capture(sourceState);
+Reject(()=>MpStateCodec.Encode(new[]{nativeSchema},nativeRows),"Native NaN exception remains field specific");
+sourceState.Treasury=0;sourceState.Recruits=null;sourceState.Support=new float[0,2];sourceState.Name=null;
+dataRows[0].Values=schema.Capture(sourceState);
+schema.Apply(targetState,MpStateCodec.Decode(schemas,MpStateCodec.Encode(schemas,dataRows))[0].Values);
+Check(targetState.Name==null && targetState.Recruits==null && targetState.Support.Length==0,"Null and empty arrays preserved");
+sourceState.Recruits=new int[MpStateCodec.MaxArray+1];dataRows[0].Values=schema.Capture(sourceState);
+Reject(()=>MpStateCodec.Encode(schemas,dataRows),"Oversized array rejected");
+sourceState.Recruits=new[]{7,8};sourceState.Treasury=120;
+MpStateRow Record(int id)=>new MpStateRow{Kind=0,Id=id,Values=schema.Capture(sourceState)};
+var baseline=new MpStateBaseline(schemas);
+var first=baseline.Prepare(1,0,baseline.Changes(new[]{Record(1),Record(2)}));
+var firstHash=baseline.Fingerprint(first);
+Check(baseline.Revision==0,"Preparing a revision does not acknowledge application");
+baseline.Commit(1,first,firstHash);
+Check(baseline.Changes(new[]{Record(2),Record(1)}).Length==0,"Stable records omit transmission regardless of enumeration order");
+first[0].Values[0]=null;
+Check(baseline.Changes(new[]{Record(1),Record(2)}).Length==0,"Committed baseline owns its own record copies");
+sourceState.Treasury=121;
+var delta=baseline.Changes(new[]{Record(2),Record(3)});
+Check(delta.Length==3 && delta.Single(r=>r.Id==1).Deleted,"One transaction carries creation, modification and explicit deletion");
+var wireDelta=MpStateCodec.Decode(schemas,MpStateCodec.Encode(schemas,delta));
+var second=baseline.Prepare(2,1,wireDelta);
+Check(second.Select(r=>r.Id).SequenceEqual(new[]{2,3}),"Delta reconstructs complete authoritative roster");
+Reject(()=>baseline.Prepare(3,1,wireDelta),"Skipped revision rejected");
+Reject(()=>baseline.Prepare(2,0,wireDelta),"Wrong base revision rejected");
+Reject(()=>baseline.Prepare(2,1,wireDelta,"incorrect"),"Wrong final state checksum rejected before application");
+Reject(()=>baseline.Prepare(2,1,new[]{new MpStateRow{Kind=0,Id=99,Deleted=true}}),"Deletion of unknown identity rejected");
+Reject(()=>baseline.Prepare(2,1,new[]{Record(3),Record(3)}),"Duplicate transaction identities rejected");
+Check(baseline.Revision==1 && baseline.Hash==firstHash,"Rejected transactions leave baseline unchanged");
+baseline.Commit(2,second,baseline.Fingerprint(second));
+Reject(()=>baseline.Commit(2,second,baseline.Hash),"Duplicate application cannot advance state twice");
+Check(baseline.Changes(new[]{Record(3),Record(2)}).Length==0,"Acknowledged changes become next delta baseline");
+var revisionMessage=MpCodec.Decode(MpCodec.Encode(new MpMessage{kind="data-offer",sequence=2,baseRevision=1,stateHash=baseline.Hash}));
+Check(revisionMessage.baseRevision==1 && revisionMessage.stateHash==baseline.Hash,"Revision and application hash survive production wire codec");
+var expectedValues=schema.Capture(sourceState); sourceState.Treasury++;
+Check(MpStateBaseline.FirstDifference(schema,expectedValues,schema.Capture(sourceState))=="Treasury","Native readback identifies the divergent field");
+sourceState.Treasury--;sourceState.Recruits[0]++;
+Check(MpStateBaseline.FirstDifference(schema,expectedValues,schema.Capture(sourceState))=="Recruits","Native readback detects array element divergence");
+var stationaryIndependent=new MpMessage{kind="commander",session="commands",sequence=1};
+MpRules.Authorize(stationaryIndependent,"commands",0,0,false,0);checks++;
+Reject(()=>MpRules.Authorize(stationaryIndependent,"commands",0,1,false,0),"Commander assignment never bypasses faction ownership");
+stationaryIndependent.kind="move";
+Reject(()=>MpRules.Authorize(stationaryIndependent,"commands",0,0,false,0),"Movement still requires movement eligibility");
+MpFormationState Formation(int parent=0)=>new MpFormationState{Parent=parent,Side=0,Tier=16,Commander=0,Garrison=-1,Colors=new float[8],Contract=new float[6]};
+var roster=new Dictionary<int,MpFormationState>{{1,Formation()},{2,Formation(1)}};
+MpLifecycle.Validate(roster,1,0);checks++;
+roster.Remove(2);roster[3]=Formation(1);MpLifecycle.Validate(roster,1,0);checks++;
+Check(!roster.ContainsKey(2),"New lifecycle identity does not reuse deleted unit ID");
+roster[1].Parent=3;Reject(()=>MpLifecycle.Validate(roster,1,0),"Lifecycle cycles rejected before native creation");
+roster[1].Parent=0;roster[3].Parent=99;Reject(()=>MpLifecycle.Validate(roster,1,0),"Missing lifecycle parent rejected");
+roster[3].Parent=1;roster[3].Commander=1;Reject(()=>MpLifecycle.Validate(roster,1,0),"Unknown lifecycle officer rejected");
+roster[3].Commander=0;roster[3].X=float.NaN;Reject(()=>MpLifecycle.Validate(roster,1,0),"Nonfinite birth position rejected");
+roster[3].X=0;roster[3].ParentRegiment=99;Reject(()=>MpLifecycle.Validate(roster,1,0),"Missing detached-unit parent rejected");
 void Wait(Func<bool> ready, string name) { var end = DateTime.UtcNow.AddSeconds(5); while (!ready() && DateTime.UtcNow < end) Thread.Sleep(10); Check(ready(), name); }
 string Receive(MpTransport peer) { string value; var end=DateTime.UtcNow.AddSeconds(5); while (!peer.Receive(out value) && DateTime.UtcNow<end) Thread.Sleep(10); return value ?? throw new Exception("Receive timeout"); }
 var identities = new[]{MpIdentity.Segment(0,18,15,"Army"),MpIdentity.Segment(0,16,16,"Corps")};
@@ -63,7 +147,7 @@ order.x=10; order.protocol=MpRules.Protocol+1; Reject(()=>MpRules.Authorize(orde
 var empty = MpCodec.Decode(MpCodec.Encode(new MpMessage { kind="snapshot" }));
 MpRules.ValidateSnapshot(empty); Check(empty.units.Length==0 && empty.towns.Length==0,"Empty arrays survive production codec");
 var fixture = new MpMessage { kind="snapshot", session="test", side=1, mode="versus", date=1863.125f, paused=true,
-    units=new[]{new MpUnit{id=42,side=1,tier=18,name="Armée of the Tennessee",commander="MG. Test",men=28988,x=1024.25f,z=-500.125f,targetX=2000,targetZ=-600,controllable=true,moving=true}},
+    units=new[]{new MpUnit{id=42,side=1,tier=18,name="ArmÃ©e of the Tennessee",commander="MG. Test",men=28988,x=1024.25f,z=-500.125f,targetX=2000,targetZ=-600,controllable=true,moving=true}},
     towns=new[]{new MpTown{name="St. Louis",x=2100.25f,z=-800}} };
 var encoded=MpCodec.Encode(fixture); var decoded=MpCodec.Decode(encoded); MpRules.ValidateSnapshot(decoded);
 fixture.campaign="checkpoint-manifest"; fixture.units[0].y=488.125f; fixture.units[0].yaw=270.5f;
@@ -88,8 +172,8 @@ Reject(()=>MpCodec.Decode(Convert.ToBase64String(bytes)),"Trailing payload rejec
 Reject(()=>MpCodec.Encode(new MpMessage{kind=new string('x',4097)}),"Oversized string rejected");
 Reject(()=>MpCodec.Encode(new MpMessage{units=new MpUnit[20001]}),"Oversized collection rejected");
 using(var memory=new MemoryStream()) {
-    MpRules.WriteFrame(memory,"Unicode: armée / Tennessee"); memory.Position=0;
-    Check(MpRules.ReadFrame(new FragmentedStream(memory))=="Unicode: armée / Tennessee","Fragmented Unicode frame");
+    MpRules.WriteFrame(memory,"Unicode: armÃ©e / Tennessee"); memory.Position=0;
+    Check(MpRules.ReadFrame(new FragmentedStream(memory))=="Unicode: armÃ©e / Tennessee","Fragmented Unicode frame");
 }
 Reject(()=>MpRules.ReadFrame(new MemoryStream(new byte[]{127,255,255,255})),"Excessive length rejected before allocation");
 Reject(()=>MpRules.ReadFrame(new MemoryStream(new byte[]{0,0,0,0})),"Empty frame rejected");
@@ -101,7 +185,7 @@ string checkpointRoot=Path.Combine(Path.GetTempPath(),"gtip-checkpoint-"+Guid.Ne
 Directory.CreateDirectory(checkpointRoot);
 string source=Path.Combine(checkpointRoot,"source"); Directory.CreateDirectory(source);
 foreach(var name in new[]{"scenario.dat","groups.dat","regiments.dat","commanders.txt","nations.dat","AICampaign.dat","version.dat"})
-    File.WriteAllText(Path.Combine(source,name),"fixture "+name+" �");
+    File.WriteAllText(Path.Combine(source,name),"fixture "+name+" é");
 byte[] checkpoint=MpCheckpoint.Pack(source);
 string checkpointHash=MpCheckpoint.Hash(checkpoint);
 string unpacked=Path.Combine(checkpointRoot,"unpacked");
@@ -157,4 +241,15 @@ sealed class FragmentedStream(Stream source) : Stream
     public override long Length=>throw new NotSupportedException(); public override long Position{get=>throw new NotSupportedException();set=>throw new NotSupportedException();}
     public override void Flush()=>throw new NotSupportedException(); public override long Seek(long o,SeekOrigin s)=>throw new NotSupportedException();
     public override void SetLength(long n)=>throw new NotSupportedException(); public override void Write(byte[] b,int o,int n)=>throw new NotSupportedException();
+}
+
+sealed class StateFixture
+{
+    public float Treasury;
+    public int Officer;
+    public string Name;
+    public bool Active;
+    public int[] Recruits;
+    public float[,] Support;
+    public object Unsafe=new object();
 }
