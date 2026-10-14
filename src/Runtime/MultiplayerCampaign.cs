@@ -140,7 +140,7 @@ namespace GTIP
                 }
                 if(phase!="live") { BootstrapTick(); return; }
                 DataTick();
-                if(!host) GuestMapInput();
+                if(!host) {GuestMapInput();GuestTimeKeys();}
                 if(authenticated && host && (Time.realtimeSinceStartup-lastClockSend>=1f/30f || lastHostPaused!=GameVars.gamepaused || lastHostSpeed!=GameVars.gamespeed)) {
                     lastClockSend=Time.realtimeSinceStartup; lastHostPaused=GameVars.gamepaused; lastHostSpeed=GameVars.gamespeed;
                     Send(new MpMessage { kind="clock", session=session, clock=CaptureClock() });
@@ -148,7 +148,7 @@ namespace GTIP
                 if (authenticated && Time.realtimeSinceStartup - lastSend > 1) {
                     lastSend = Time.realtimeSinceStartup;
                     if(!host) Send(new MpMessage { kind = "ping", session = session });
-                    else if(outgoingData==null && !RosterChanged()) Send(Capture());
+                    else if(outgoingData==null && prepareTask==null && commitTask==null && !RosterChanged()) Send(Capture());
                 }
             } catch (Exception error) { Debug.LogWarning("[GTIP MP] " + error); End("Session stopped: " + error.Message); }
         }
@@ -256,6 +256,7 @@ namespace GTIP
         void Execute(MpMessage value)
         {
             if (!Ready || panel || CampaignEditor.BlocksInput) throw new InvalidOperationException("Host is editing the campaign or session is not ready.");
+            if(ExecuteGlobal(value))return;
             if (!units.TryGetValue(value.unit, out var unit) || unit == null || !BattleUnits.completeunitlist.Contains(unit)) throw new InvalidOperationException("Formation no longer exists.");
             MpRules.Authorize(value, session, guestSide, unit.alliance, Controllable(unit), lastSequence);
             lastSequence = value.sequence;

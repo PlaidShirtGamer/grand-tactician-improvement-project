@@ -47,7 +47,7 @@ namespace GTIP
         static readonly Encoding Utf8=new UTF8Encoding(false,true);
         public static string SchemaHash(MpStateSchema[] schemas)
         { using(var h=SHA256.Create()) return Convert.ToBase64String(h.ComputeHash(Utf8.GetBytes(string.Join("\n",schemas.Select(s=>s.Signature))))); }
-        public static byte[] Encode(MpStateSchema[] schemas,MpStateRow[] rows)
+        public static byte[] Encode(MpStateSchema[] schemas,MpStateRow[] rows,bool compress=true)
         {
             if(rows.Length>MaxRows) throw new InvalidDataException("Too many state rows.");
             using(var raw=new MemoryStream()) {
@@ -67,6 +67,7 @@ namespace GTIP
                         if(raw.Length>MaxBytes) throw new InvalidDataException("State exceeds byte limit.");
                     }
                 }
+                if(!compress)return raw.ToArray();
                 using(var packed=new MemoryStream()) {
                     using(var gzip=new GZipStream(packed,CompressionLevel.Fastest,true)) { raw.Position=0; raw.CopyTo(gzip); }
                     if(packed.Length>MaxBytes) throw new InvalidDataException("Compressed state exceeds byte limit.");

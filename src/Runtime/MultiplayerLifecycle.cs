@@ -144,6 +144,9 @@ namespace GTIP
                 foreach(var a in GameVars.alliance)if(a!=null){a.unitlist.RemoveAll(u=>u==null || !ids.ContainsKey(u));a.lastmonthunitsformed?.RemoveAll(u=>u==null || !ids.ContainsKey(u));}
                 LogDiagnostic("Live lifecycle applied: "+created.Count+" created, "+removed.Length+" removed; formations="+units.Count+", officers="+officerRows.Count);
             }
+            // Structural/UI refreshes recompute group caches. Install the authoritative values
+            // after those callbacks, before readback; do not suppress divergence verification.
+            if(changed)foreach(var row in unitRows.Values)DataSchemas[3].Apply(units[row.Id],row.Values);
         }
     }
 }

@@ -42,7 +42,7 @@ namespace GTIP
 
     public static class MpRules
     {
-        public const int Protocol = 10, MaxBytes = 2 * 1024 * 1024;
+        public const int Protocol = 11, MaxBytes = 2 * 1024 * 1024;
         public static void ValidateSnapshot(MpMessage value)
         {
             if (value == null || value.kind != "snapshot") throw new InvalidDataException("Expected snapshot message.");

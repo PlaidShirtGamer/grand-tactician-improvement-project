@@ -36,13 +36,16 @@ namespace GTIP
             bool allowed=button!=null && ReplicaNavigation.Contains(button.name);
             foreach(var p in handler.panel.Concat(handler.symbol).Concat(handler.multiplepanel))
                 if(p.buttons!=null)foreach(var b in p.buttons)if(b!=null) {
-                    b.mouseonobject=allowed && b==button;
-                    b.mouseonobject2=false;
+                    if(b==button) { if(!b.mouseonobject || !b.mouseonobject2)b.ActivateMouseOnObject(); }
+                    else if(b.mouseonobject || b.mouseonobject2)b.DeactivateMouseOnObject();
                 }
             bool left=allowed && Input.GetMouseButtonDown(0), right=false, twice=false;
             handler.UpdatePanel(ref left,ref right,ref twice);
             handler.ClearDragAndDrop();
             target.UpdateUnitPanelCampaign();
+            var selected=target.selectedunitreg;
+            if(selected!=null && selected.alliance==instance.guestSide && instance.ids.ContainsKey(selected))instance.guestSelection=selected;
+            if(EventSystem.current==null || EventSystem.current.currentSelectedGameObject==null)GameVars.deactivateshortcuts=false;
         }
         void OpenReplicaTab(PanelHandler h,string name)
         {
@@ -75,7 +78,8 @@ namespace GTIP
             if(EventSystem.current==null)return false;
             var hits=new List<RaycastResult>();
             EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current){position=Input.mousePosition},hits);
-            return hits.Count>0;
+            // Physics raycasters also return terrain and units. Those are the map, not blocking UI.
+            return hits.Any(h=>h.module is UnityEngine.UI.GraphicRaycaster);
         }
         void RefreshReplicaRosterUi()
         {

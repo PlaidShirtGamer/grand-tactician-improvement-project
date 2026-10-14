@@ -47,6 +47,18 @@ MpStateRow Record(int id)=>new MpStateRow{Kind=0,Id=id,Values=schema.Capture(sou
 var baseline=new MpStateBaseline(schemas);
 var first=baseline.Prepare(1,0,baseline.Changes(new[]{Record(1),Record(2)}));
 var firstHash=baseline.Fingerprint(first);
+using(var packed=new MemoryStream(MpStateCodec.Encode(schemas,first)))
+using(var gzip=new System.IO.Compression.GZipStream(packed,System.IO.Compression.CompressionMode.Decompress))
+using(var raw=new MemoryStream()) {
+    gzip.CopyTo(raw);
+    Check(MpCheckpoint.Hash(raw.ToArray())==firstHash,"Canonical checksum matches uncompressed wire data without performing compression");
+}
+Check(baseline.Fingerprint(first.Reverse().ToArray())==firstHash,"Canonical checksum does not depend on enumeration order");
+var workerCapture=new[]{Record(10)};
+var capturedHash=baseline.Fingerprint(workerCapture);
+sourceState.Recruits[0]=999;
+Check(System.Threading.Tasks.Task.Run(()=>baseline.Fingerprint(workerCapture)).GetAwaiter().GetResult()==capturedHash,"Worker checksum uses captured arrays despite later simulation changes");
+sourceState.Recruits[0]=7;
 Check(baseline.Revision==0,"Preparing a revision does not acknowledge application");
 baseline.Commit(1,first,firstHash);
 Check(baseline.Changes(new[]{Record(2),Record(1)}).Length==0,"Stable records omit transmission regardless of enumeration order");

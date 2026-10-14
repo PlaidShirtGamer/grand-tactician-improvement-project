@@ -17,7 +17,9 @@ namespace GTIP
         {
             if(panel || choosingCommander || BlocksInput || CampaignEditor.BlocksInput || !authenticated || snapshot==null) return;
             if(PointerOverReplicaUi())return;
-            if(Input.mousePosition.y>Screen.height-210 || Input.mousePosition.y<80) return;
+            var mouse=new Vector2(Input.mousePosition.x,Screen.height-Input.mousePosition.y);
+            if(new Rect(8,116,Math.Min(Screen.width-16,950),54).Contains(mouse) ||
+                (guestSelection!=null && new Rect(8,174,326,28).Contains(mouse)))return;
             if(Input.GetMouseButtonDown(0)) {
                 var camera=Camera.main;
                 if(camera==null) return;

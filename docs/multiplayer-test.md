@@ -1,6 +1,6 @@
-# GTIP MP Test v0.16 — live campaign records and lifecycle replication
+# GTIP MP Test v0.17 — live campaign records and lifecycle replication
 
-Both installs require v0.16 / protocol 10. This remains an incomplete co-op prototype; versus and tactical battles are not supported.
+Both installs require v0.17 / protocol 11. This remains an incomplete co-op prototype; versus and tactical battles are not supported.
 
 The host sends campaign records in bounded, checksummed batches while the campaign stays loaded. Formation and officer creation/deletion no longer intentionally trigger a pause, reload or disconnect. The guest constructs native formation objects, updates parent and Army Group membership, and reconnects officer references. A full native checkpoint is still used at initial join/reconnect. Disconnecting after live data has been applied returns the guest to the main menu without saving.
 
@@ -8,11 +8,17 @@ Current adapters include alliance/state scalar and numeric-array data (including
 
 This is not complete economic or recruitment replication: nested industry, buildings, production queues, ships, perks, AI references, visual caches and other native data still need dedicated adapters and verification. Revisioned batches now send changed records and explicit deletions against the last acknowledged baseline. Each batch reconstructs a full state before native application; the guest reads registered scalar fields back before acknowledging. This verifies those adapters, not the whole game. Hashing and native application still process full registered state and need profiling. The clock is sent separately at up to 30 Hz. Network and frame time limit actual delivery rates.
 
-Guest requests currently cover movement, stopping and commander replacement. Other native guest mutations remain blocked. Host-side recruitment/creation adapters do not imply that guests can issue those commands yet. Saving and battle resolution remain host responsibilities; entering a tactical battle ends this prototype session.
+Guest requests currently cover movement, stopping, commander replacement, policy research selection, and pause/speed hotkeys. Policy selection is validated and executed on the host; policy progress and membership replicate back. Policy cancellation, native recruitment and hierarchy reordering are not implemented as guest commands. Host-side recruitment/creation adapters do not imply that guests can issue those commands yet. Saving and battle resolution remain host responsibilities; entering a tactical battle ends this prototype session.
+
+v0.17 moves host delta preparation, compression, checksum calculation and baseline commit to a single background worker pipeline. Unity data capture remains on the game thread; workers receive cloned records only. Canonical checksums no longer compress full state. Diagnostics report `captureMs`, `workerMs`, receipt latency and guest apply time at revision 1 and every 30 revisions. These changes target host frame stalls; no frame-rate improvement has yet been measured in a live campaign.
+
+The guest now invokes native hover enter/leave artwork updates, shares native UI formation selection with movement requests, and excludes only graphic UI raycasts from map input (physics hits are map objects). Pause, speed selection/increase/decrease and stop hotkeys send host requests. Escape still opens the multiplayer session menu. Native hotkey coverage is not complete. Cohesion is captured alongside group cohesion, and authoritative formation fields are restored after structural/UI initialization callbacks before the readback audit.
 
 The guest presentation adapter adds native top-panel viewing, OOB refreshes, unit visual updates and delivered dispatch replication. Native mutation callbacks remain disabled; only explicitly supported viewing actions are dispatched. Non-formation dispatch object references are not yet synchronized. These presentation changes require live verification.
 
-Validation: revision/delta regressions extend the protocol, archive, lifecycle-model and loopback suite; 43 structural hooks. Automated checks do not prove correct native initialization or complete campaign equality. See [architecture and acceptance gates](multiplayer-architecture.md).
+Validation: 144 multiplayer checks, including canonical checksum and captured-array isolation checks, plus existing regression suites; 44 structural hooks. Automated checks do not prove correct native initialization or complete campaign equality. See [architecture and acceptance gates](multiplayer-architecture.md).
+
+Next live check: join from the guest main menu, select a native map formation and request movement, select a policy, exercise pause/speed keys, and create a formation on the host. Check guest policy progress, both clocks, commander/parent links and hover reset. Keep both logs to compare the replication timing lines against the reported host slowdown. Do not treat this candidate as complete multiplayer.
 
 ## Earlier builds
 # GTIP MP Test v0.13 — host-supplied campaign loading

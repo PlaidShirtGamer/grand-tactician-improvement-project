@@ -16,7 +16,7 @@ namespace GTIP
             MpStateSchema.Scalars(typeof(GameVars.Commander)),
             new MpStateSchema(typeof(Regiment),new[] {
                 "commander","strength","sick","losses","morale","training","experience","fatigue","ammo","weapon","nation","overridesymbol","uniformset","servicehistory","abrvname","battleflag",
-                "conditionmen","conditionhorses","conditionguns","readiness","intel","fightingspirit",
+                "conditionmen","conditionhorses","conditionguns","readiness","intel","fightingspirit","cohesion",
                 "reinforcementpriority","reinforcementtype","reformtime","finishedrecruitment","recruitingtype",
                 "latestreinforcements","reinforcementsneeded","contractlength","state","numberofbattles",
                 "campaignstance","campaignstanceordered","cavalryorders","cavalryordersordered","fleetorders",
@@ -27,7 +27,7 @@ namespace GTIP
                 "groupmissing","groupcaptured","groupsick","groupammo","groupcohesion","grouptraining",
                 "groupstate","groupexperience","groupcondition","groupfatigue","groupsupplystate" }),
             MpStateSchema.Scalars(typeof(MpFormationState)),MpStateSchema.Scalars(typeof(MpOfficerDates)),MpStateSchema.Scalars(typeof(MpArmyGroupState)),
-            MpStateSchema.Scalars(typeof(Messages.Message)),MpStateSchema.Scalars(typeof(MpDispatchReferences))
+            MpStateSchema.Scalars(typeof(Messages.Message)),MpStateSchema.Scalars(typeof(MpDispatchReferences)),MpStateSchema.Scalars(typeof(MpPolicyState))
         });
         byte[] outgoingData;
         MemoryStream incomingData;
@@ -39,6 +39,10 @@ namespace GTIP
         string pendingStateHash;
         int incomingBaseRevision;
         string incomingStateHash;
+        double lastCaptureMs,lastPrepareMs;
+        sealed class PreparedData {public MpStateRow[] Rows;public byte[] Bytes;public string Hash;public int Revision,BaseRevision,Changed;public double Milliseconds;}
+        System.Threading.Tasks.Task<PreparedData> prepareTask;
+        System.Threading.Tasks.Task commitTask;
         MpStateBaseline Baseline => dataBaseline ?? (dataBaseline=new MpStateBaseline(DataSchemas));
 
         int ReferenceId(Regiment unit)
@@ -60,6 +64,7 @@ namespace GTIP
                 var row=DataRow(6,pair.Key,state);row.Name=g.name;rows.Add(row);
             }
             CaptureDispatches(rows);
+            CapturePolicies(rows);
             return rows.ToArray();
         }
         static MpStateRow DataRow(int kind,int id,object target) => new MpStateRow {Kind=kind,Id=id,Values=DataSchemas[kind].Capture(target)};
@@ -76,25 +81,46 @@ namespace GTIP
         void DataTick()
         {
             if((outgoingData!=null || incomingData!=null) && Time.realtimeSinceStartup-dataStarted>30)throw new TimeoutException("Campaign data synchronization timed out.");
+            if(host && commitTask!=null) {
+                if(!commitTask.IsCompleted)return;
+                commitTask.GetAwaiter().GetResult();commitTask=null;
+                outgoingData=null;pendingDataRows=null;pendingStateHash=null;
+                if(!RosterChanged())Send(Capture());
+            }
+            if(host && prepareTask!=null) {
+                if(!prepareTask.IsCompleted)return;
+                var prepared=prepareTask.GetAwaiter().GetResult();prepareTask=null;
+                if(prepared==null)return;
+                dataSerial=prepared.Revision;pendingDataRows=prepared.Rows;pendingStateHash=prepared.Hash;
+                outgoingData=prepared.Bytes;dataOffset=0;lastPrepareMs=prepared.Milliseconds;dataStarted=Time.realtimeSinceStartup;
+                if(dataSerial==1 || dataSerial%30==0)LogDiagnostic("Replication prepare: revision="+dataSerial+", records="+pendingDataRows.Length+", changed="+prepared.Changed+", bytes="+outgoingData.Length+", captureMs="+lastCaptureMs.ToString("F1")+", workerMs="+lastPrepareMs.ToString("F1"));
+                Send(new MpMessage{kind="data-offer",session=session,sequence=dataSerial,baseRevision=prepared.BaseRevision,stateHash=pendingStateHash,unit=outgoingData.Length,text=MpCheckpoint.Hash(outgoingData)});
+                return;
+            }
             if(!host || outgoingData!=null || Time.realtimeSinceStartup-lastDataSend<0.25f)return;
             lastDataSend=Time.realtimeSinceStartup;dataStarted=lastDataSend;
-            var changes=Baseline.Changes(CaptureData());
-            if(changes.Length==0)return;
-            dataSerial=checked(Baseline.Revision+1);
-            pendingDataRows=Baseline.Prepare(dataSerial,Baseline.Revision,changes);
-            pendingStateHash=Baseline.Fingerprint(pendingDataRows);
-            outgoingData=MpStateCodec.Encode(DataSchemas,changes);dataOffset=0;
-            Send(new MpMessage {kind="data-offer",session=session,sequence=dataSerial,baseRevision=Baseline.Revision,stateHash=pendingStateHash,unit=outgoingData.Length,text=MpCheckpoint.Hash(outgoingData)});
+            var timer=System.Diagnostics.Stopwatch.StartNew();
+            var captured=CaptureData();lastCaptureMs=timer.Elapsed.TotalMilliseconds;
+            var baseline=Baseline;var schemas=DataSchemas;
+            // Capture owns cloned arrays. This worker sees DTOs only, never Unity objects.
+            // One preparation/commit may run at a time; no capture races a baseline mutation.
+            prepareTask=System.Threading.Tasks.Task.Run(()=> {
+                var work=System.Diagnostics.Stopwatch.StartNew();
+                var changes=baseline.Changes(captured);if(changes.Length==0)return null;
+                int revision=checked(baseline.Revision+1);
+                var rows=baseline.Prepare(revision,baseline.Revision,changes);
+                return new PreparedData{Rows=rows,Hash=baseline.Fingerprint(rows),Bytes=MpStateCodec.Encode(schemas,changes),Revision=revision,BaseRevision=baseline.Revision,Changed=changes.Length,Milliseconds=work.Elapsed.TotalMilliseconds};
+            });
         }
         bool DataMessage(MpMessage value)
         {
             if(value.kind=="data-applied") {
-                if(!host || outgoingData==null || dataOffset!=outgoingData.Length || value.sequence!=dataSerial || value.stateHash!=pendingStateHash)
+                if(!host || commitTask!=null || outgoingData==null || dataOffset!=outgoingData.Length || value.sequence!=dataSerial || value.stateHash!=pendingStateHash)
                     throw new InvalidDataException("Invalid campaign application receipt.");
-                Baseline.Commit(dataSerial,pendingDataRows,pendingStateHash);
-                outgoingData=null;pendingDataRows=null;pendingStateHash=null;
-                if(dataSerial==1 || dataSerial%100==0)LogDiagnostic("Guest acknowledged campaign revision "+dataSerial+" hash="+Baseline.Hash);
-                if(!RosterChanged())Send(Capture());return true;
+                if(dataSerial==1 || dataSerial%30==0)LogDiagnostic("Replication receipt: revision="+dataSerial+", elapsedMs="+((Time.realtimeSinceStartup-dataStarted)*1000).ToString("F1"));
+                var baseline=Baseline;var rows=pendingDataRows;var hash=pendingStateHash;int revision=dataSerial;
+                commitTask=System.Threading.Tasks.Task.Run(()=>baseline.Commit(revision,rows,hash));
+                return true;
             }
             if(value.kind=="data-next") {
                 if(!host || outgoingData==null || value.sequence!=dataSerial || value.unit!=dataOffset)throw new InvalidDataException("Unexpected campaign data acknowledgement.");
@@ -115,13 +141,16 @@ namespace GTIP
                 incomingData.Write(value.blob,0,value.blob.Length);
                 int received=(int)incomingData.Length;
                 if(received==dataLength) {
+                    var applyTimer=System.Diagnostics.Stopwatch.StartNew();
                     var bytes=incomingData.ToArray();if(MpCheckpoint.Hash(bytes)!=dataHash)throw new InvalidDataException("Campaign data checksum mismatch.");
                     var changes=MpStateCodec.Decode(DataSchemas,bytes);
                     var rows=Baseline.Prepare(incomingDataSerial,incomingBaseRevision,changes,incomingStateHash);
+                    ApplyPolicies(rows);
                     ApplyLifecycleData(rows);
                     ApplyDispatches(rows);
                     VerifyAppliedScalars(rows);
                     Baseline.Commit(incomingDataSerial,rows,incomingStateHash);
+                    if(incomingDataSerial==1 || incomingDataSerial%30==0)LogDiagnostic("Replication apply: revision="+incomingDataSerial+", totalMs="+applyTimer.Elapsed.TotalMilliseconds.ToString("F1"));
                     incomingData.Dispose();incomingData=null;
                     if(incomingDataSerial==1)LogDiagnostic("Campaign data applied: "+rows.Length+" records, "+bytes.Length+" compressed bytes; schema="+MpStateCodec.SchemaHash(DataSchemas));
                     Send(new MpMessage{kind="data-applied",session=session,sequence=incomingDataSerial,stateHash=Baseline.Hash});
@@ -135,6 +164,7 @@ namespace GTIP
         {
             outgoingData=null;incomingData?.Dispose();incomingData=null;dataSerial=0;incomingDataSerial=0;lastDataSend=0;
             dataBaseline=null;pendingDataRows=null;pendingStateHash=null;incomingStateHash=null;incomingBaseRevision=0;
+            prepareTask=null;commitTask=null;
         }
         void VerifyAppliedScalars(MpStateRow[] rows)
         {

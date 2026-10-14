@@ -66,7 +66,7 @@ namespace GTIP
             if(expectedHash!=null && Fingerprint(rows)!=expectedHash)throw new InvalidDataException("Campaign revision checksum mismatch.");
             return rows;
         }
-        public string Fingerprint(MpStateRow[] rows)=>MpCheckpoint.Hash(MpStateCodec.Encode(schemas,rows.OrderBy(Key).ToArray()));
+        public string Fingerprint(MpStateRow[] rows)=>MpCheckpoint.Hash(MpStateCodec.Encode(schemas,rows.OrderBy(Key).ToArray(),false));
         public void Commit(int revision,MpStateRow[] rows,string expectedHash)
         {
             if(revision!=checked(Revision+1))throw new InvalidDataException("Cannot commit a stale campaign revision.");
