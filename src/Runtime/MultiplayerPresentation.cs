@@ -16,11 +16,14 @@ namespace GTIP
             "099_MenuButton", "159_ContinueGame", "210_ContinueGame", "097_CToolsButton", "098_ZoomInOut", "094_GameGuide",
             "860_Units", "899_Garrisons", "861_Fleets", "862_Map", "095_CHide", "096_CShow",
             "100_ToolsCommandControl", "101_ToolsMovementArrows", "102_ToolsAllTelegraphs", "103_ToolsMilitaryIcons",
-            "104_ToolsMapIcons", "105_MapBorders", "106_MapText", "107_SupplyLines", "120_BattleMonuments"
+            "104_ToolsMapIcons", "105_MapBorders", "106_MapText", "107_SupplyLines", "120_BattleMonuments",
+            "034_OptionsC","034_OptionsB","211_OptionsB","297_Accept","298_Cancel","176_OOBSymbolP",
+            "362_EconomyReport","363_IntelligenceReport"
         };
+        ButtonTooltip replicaHover;
         public static void ReplicaBattleUi(BattleUI target)
         {
-            if(instance==null || BlocksInput || CampaignEditor.BlocksInput || !NativeAccess.Get<bool>(target,"initiated"))return;
+            if(instance==null || BlocksInput || CampaignEditor.BlocksInput || instance.GuestDialogOpen || !NativeAccess.Get<bool>(target,"initiated"))return;
             var handler=GameObject.Find("UI")?.GetComponent<PanelHandler>();
             if(handler==null)return;
             RepairShortcutFocus();
@@ -30,6 +33,16 @@ namespace GTIP
             // Raycasting doesn't require an enabled input module. Keep automatic Unity click
             // callbacks disabled: many of those callbacks execute unreplicated mutations.
             var button=hits.Select(h=>h.gameObject.GetComponentInParent<ButtonTooltip>()).FirstOrDefault(b=>b!=null);
+            // Dynamically created project/policy buttons are not necessarily in panel.buttons.
+            if(instance.replicaHover!=button) {
+                if(instance.replicaHover!=null)instance.replicaHover.DeactivateMouseOnObject();
+                instance.replicaHover=button;
+            }
+            if(button!=null && (!button.mouseonobject || !button.mouseonobject2))button.ActivateMouseOnObject();
+            bool clicked=Input.GetMouseButtonDown(0);
+            if(clicked && button!=null) {
+                if(button.name=="169_SaveGame" || button.name=="213_SaveGameB" || button.name=="160_Quit" || button.name=="212_Quit")instance.guestFileMenu=true;
+            }
             if(Input.GetMouseButtonDown(0) && button!=null)instance.OpenReplicaTab(handler,button.name);
             if(Input.GetMouseButtonDown(0) && button!=null && button.name.Length>=10 && button.name.Substring(3,7)=="_Symbol") {
                 var p=handler.multiplepanel.FirstOrDefault(x=>x.buttons!=null && x.buttons.Contains(button));
@@ -40,7 +53,8 @@ namespace GTIP
                 }
             }
             if(Input.GetMouseButtonDown(0) && button!=null)instance.RequestTimeButton(button.name);
-            bool allowed=button!=null && ReplicaNavigation.Contains(button.name);
+            bool logEntry=button!=null && button.name.Length>=14 && button.name.Substring(3,9)=="_LogEntry";
+            bool allowed=button!=null && (ReplicaNavigation.Contains(button.name) || logEntry || button.GetComponentInParent<Options>()!=null);
             foreach(var p in handler.panel.Concat(handler.symbol).Concat(handler.multiplepanel))
                 if(p.buttons!=null)foreach(var b in p.buttons)if(b!=null) {
                     if(b==button) { if(!b.mouseonobject || !b.mouseonobject2)b.ActivateMouseOnObject(); }
@@ -48,10 +62,35 @@ namespace GTIP
                 }
             bool left=allowed && Input.GetMouseButtonDown(0), right=false, twice=false;
             handler.UpdatePanel(ref left,ref right,ref twice);
+            if(clicked)instance.ReplicaLocalClose(hits,handler);
+            instance.OptionsInput(handler);
             target.UpdateUnitPanelCampaign();
             var selected=target.selectedunitreg;
             if(selected!=null && selected.alliance==instance.guestSide && instance.ids.ContainsKey(selected))instance.guestSelection=selected;
             if(EventSystem.current==null || EventSystem.current.currentSelectedGameObject==null)GameVars.deactivateshortcuts=false;
+        }
+        void ReplicaLocalClose(List<RaycastResult> hits,PanelHandler handler)
+        {
+            // Native X buttons use Unity onClick. Invoke only known local close actions.
+            var control=hits.Select(h=>h.gameObject.GetComponentInParent<UnityEngine.UI.Button>()).FirstOrDefault(b=>b!=null);
+            if(control==null)return;
+            for(int i=0;i<control.onClick.GetPersistentEventCount();i++) {
+                var receiver=control.onClick.GetPersistentTarget(i);
+                string method=control.onClick.GetPersistentMethodName(i);
+                if(receiver is Newspaper paper && method=="Close"){paper.Close();return;}
+                if(method=="ClosePanel" && receiver is ModularUIFunctions) {
+                    var containing=handler.panel.FirstOrDefault(p=>p.go!=null && control.transform.IsChildOf(p.go.transform) && p.state>0);
+                    if(containing!=null && containing.go.GetComponent<Options>()==null) {handler.HidePanel(containing);return;}
+                }
+                if(receiver is Messages messages && method=="CloseMessage"){messages.CloseMessage();return;}
+            }
+        }
+        void OptionsInput(PanelHandler handler)
+        {
+            bool open=handler.panel[handler.cpanel_optionspanel].state>0;
+            // Local Options needs Unity's sliders, input fields and drop-downs.
+            // Gameplay dispatch remains filtered while this modal is open.
+            foreach(var module in blockedModules)if(module!=null)module.enabled=open;
         }
         void OpenReplicaTab(PanelHandler h,string name)
         {
@@ -88,6 +127,7 @@ namespace GTIP
         public static void RepairShortcutFocus()
         {
             if(instance==null || instance.transport==null || instance.phase!="live" || BlocksInput || CampaignEditor.BlocksInput)return;
+            if(instance.GuestDialogOpen){GameVars.deactivateshortcuts=true;return;}
             var selected=EventSystem.current==null?null:EventSystem.current.currentSelectedGameObject;
             var input=selected==null?null:selected.GetComponent<TMPro.TMP_InputField>();
             var legacy=selected==null?null:selected.GetComponent<UnityEngine.UI.InputField>();

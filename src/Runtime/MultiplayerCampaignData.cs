@@ -27,7 +27,8 @@ namespace GTIP
                 "groupmissing","groupcaptured","groupsick","groupammo","groupcohesion","grouptraining",
                 "groupstate","groupexperience","groupcondition","groupfatigue","groupsupplystate" }),
             MpStateSchema.Scalars(typeof(MpFormationState)),MpStateSchema.Scalars(typeof(MpOfficerDates)),MpStateSchema.Scalars(typeof(MpArmyGroupState)),
-            MpStateSchema.Scalars(typeof(Messages.Message)),MpStateSchema.Scalars(typeof(MpDispatchReferences)),MpStateSchema.Scalars(typeof(MpPolicyState))
+            MpStateSchema.Scalars(typeof(Messages.Message)),MpStateSchema.Scalars(typeof(MpDispatchReferences)),MpStateSchema.Scalars(typeof(MpPolicyState)),
+            MpStateSchema.Scalars(typeof(MpProjectState)),MpStateSchema.Scalars(typeof(MpNewspaperState))
         });
         byte[] outgoingData;
         MemoryStream incomingData;
@@ -67,6 +68,8 @@ namespace GTIP
             }
             CaptureDispatches(rows);
             CapturePolicies(rows);
+            CaptureProjects(rows);
+            rows.Add(DataRow(11,0,newspaperState));
             return rows.ToArray();
         }
         static MpStateRow DataRow(int kind,int id,object target) => new MpStateRow {Kind=kind,Id=id,Values=DataSchemas[kind].Capture(target)};
@@ -93,7 +96,9 @@ namespace GTIP
                 var received=receiveTask.GetAwaiter().GetResult();receiveTask=null;
                 var applyTimer=System.Diagnostics.Stopwatch.StartNew();
                 bool incremental=TryApplyScalarDelta(received.Changes);
-                if(!incremental) {ApplyPolicies(received.Rows);ApplyLifecycleData(received.Rows);}
+                if(!incremental) ApplyLifecycleData(received.Rows);
+                ApplyPolicies(received.Changes);ApplyProjects(received.Rows);
+                ApplyNewspaper(received.Changes);
                 if(received.Changes.Any(r=>r.Kind==7 || r.Kind==8))ApplyDispatches(received.Rows);
                 VerifyAppliedScalars(incremental?received.Changes:received.Rows);
                 if(incomingDataSerial==1 || incomingDataSerial%30==0)LogDiagnostic("Replication apply: revision="+incomingDataSerial+", changed="+received.Changes.Length+", incremental="+incremental+", mainThreadMs="+applyTimer.Elapsed.TotalMilliseconds.ToString("F1"));
@@ -185,21 +190,36 @@ namespace GTIP
         {
             // Structural transactions still use the full validated lifecycle adapter. Ordinary
             // scalar updates must not reparent every unit or rebuild all officer dates/groups.
-            if(!hasLiveData || changes.Any(r=>r.Deleted || r.Kind==4 || r.Kind==6 || r.Kind==9 ||
+            if(!hasLiveData || changes.Any(r=>r.Deleted || r.Kind==6 ||
                 (r.Kind<=3 && DataTarget(r)==null) || (r.Kind==5 && r.Id>=GameVars.commander.Count)))return false;
+            var formationChanges=changes.Where(r=>r.Kind==4).ToDictionary(r=>r.Id,r=>ReadData<MpFormationState>(r));
+            foreach(var pair in formationChanges) {
+                var s=pair.Value;
+                if(!units.TryGetValue(pair.Key,out var u) || u==null || u.unittyp!=s.Tier || u.alliance!=s.Side || u.ishorseartillery!=s.Horse || ParentId(u)!=s.Parent ||
+                    (u.parentregiment==null?0:ReferenceId(u.parentregiment.GetComponent<Regiment>()))!=s.ParentRegiment ||
+                    (u.garrisonreference==null?-1:BattleUnits.cbuildings.IndexOf(u.garrisonreference))!=s.Garrison)return false;
+                if(s.Colors==null || s.Colors.Length!=8 || s.Contract==null || s.Contract.Length!=6)throw new InvalidDataException("Invalid formation presentation record.");
+            }
             foreach(var row in changes.Where(r=>r.Kind==2))
                 if((row.Current!=0 && !units.ContainsKey(row.Current)) || (row.Last!=0 && !units.ContainsKey(row.Last)))throw new InvalidDataException("Unknown officer command reference.");
             foreach(var row in changes.Where(r=>r.Kind==5)) {
                 var dates=ReadData<MpOfficerDates>(row);
                 if(dates.Promotions<0 || dates.Promotions>32 || dates.Dates==null || dates.Dates.Length!=(4+dates.Promotions)*6)throw new InvalidDataException("Invalid officer dates.");
             }
-            ApplyPolicies(changes);
             foreach(var row in changes.Where(r=>r.Kind<=3)) {
                 var target=DataTarget(row);DataSchemas[row.Kind].Apply(target,row.Values);
                 if(row.Kind==2){var c=(GameVars.Commander)target;c.currentcommand=row.Current==0?null:units[row.Current];c.lastcommand=row.Last==0?null:units[row.Last];}
                 if(row.Kind==3)((Regiment)target).name=row.Name;
             }
             foreach(var row in changes.Where(r=>r.Kind==5))ApplyOfficerDates(GameVars.commander[row.Id],ReadData<MpOfficerDates>(row));
+            foreach(var pair in formationChanges.OrderBy(p=>Depth(units[p.Key]))) {
+                var u=units[pair.Key];var s=pair.Value;
+                u.istopunit=s.Top;u.permanentlydetached=s.Detached;u.contractdate=FromDate(s.Contract);
+                if(u.componentcolor==null || u.componentcolor.Length<2 || u.componentcolor[1]!=FromColor(s.Colors) || u.componentcolor[0]!=FromColor(s.Colors,4))
+                    u.SetUniformColors(FromColor(s.Colors),FromColor(s.Colors,4));
+                ApplyPose(u,new Vector3(s.X,s.Y,s.Z),Quaternion.Euler(0,s.Yaw,0));
+                originalActive[u]=s.Active;u.gameObject.SetActive(s.Active && s.Visible);
+            }
             return true;
         }
         void VerifyAppliedScalars(MpStateRow[] rows)

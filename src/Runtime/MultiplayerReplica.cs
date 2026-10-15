@@ -16,7 +16,7 @@ namespace GTIP
         bool leavingReplica;
         public static bool IsReplica => instance != null && ((instance.transport != null && !instance.host && instance.replicaReady) || instance.leavingReplica);
         public static void ReplicaSpeed(float newspeed, bool overrideminmax, bool manualset)
-        { if(!IsReplica && !(instance!=null && instance.transport!=null && instance.host && instance.phase=="sending" && newspeed>0)) NativeAccess.Call(typeof(GameVars), "GTIP_Original_ReplicaSpeed", newspeed, overrideminmax, manualset); }
+        { if(!IsReplica && !(instance!=null && instance.transport!=null && instance.host && ((instance.phase=="sending" && newspeed>0) || (instance.newsBarrier.Waiting && newspeed!=0)))) NativeAccess.Call(typeof(GameVars), "GTIP_Original_ReplicaSpeed", newspeed, overrideminmax, manualset); }
         public static void ReplicaSave(bool saveunits, bool saveobjects, bool savecommanders, bool savecampaigndata, bool isautosave, string manualsavename)
         {
             // Saving belongs to the host; a guest has only partially replicated campaign data.

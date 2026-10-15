@@ -1,3 +1,29 @@
+# GTIP MP Test v0.19 — campaign actions and notifications
+
+Both installs require v0.19 / protocol 13. This remains an incomplete co-op prototype. Versus and tactical battles are not supported.
+
+The v0.18 guest log identified the policy disconnect in `Policies.UpdateActivations`: that native routine searches for the active Policies title even when the panel is closed. State application now refreshes policy artwork only when that panel is visible. Policy-only updates also no longer force a full hierarchy application.
+
+Projects now have an explicit list adapter, including repeated IDs for multiple levels and the monthly report list. Guest project appointments use native host funding/availability checks. The guest installs the resulting lists, derived unlock caches and authoritative scalar balances; it does not replay one-time project payments or effects.
+
+Newspaper content, artwork ID and event date replicate as a numbered issue. Both players must dismiss that issue before the host can resume. Duplicate, stale or future acknowledgements cannot release the current barrier. The native host newspaper queue is held while waiting. After both dismiss, the host resumes only if the native notification would have resumed. Disconnect leaves the host paused. A newspaper already open before the session starts is not yet imported into this barrier.
+
+Guest native OOB **Add new unit** opens an MP recruitment form for infantry, cavalry, artillery or horse artillery, three native sizes, recruiting state, and volunteers/draftees. The host rechecks the parent, state, recruit pool, debt rating and horse-artillery availability, then uses native creation, recruitment costs and transfer rules. This initial form uses native default name, commander, weapon and uniform selection. It does not provide the complete native recruiting dialog or independent command creation.
+
+Native guest dispatch-log rows and Options actions are permitted. Options temporarily enables Unity input for its local controls. Load/Save and Exit open a session file dialog: the guest can request a fresh checkpoint on the host or disconnect to select another campaign. Local replica saving/loading is not enabled. Requested checkpoints use a fresh GUID folder and restore the host's previous save target.
+
+Both current test-install hotkey files had reverted to 100 `None` entries. The existing desktop backup contains WASD, Esc, P, keypad speed controls and number-row speed selection. The new loader consumes every file row independently of which native Options panel supplies a corresponding UI object; native panels share the global key table. Session logs now record the relevant resolved mappings. The repair preserves hotkeys as user configuration rather than packaging them in releases.
+
+Position/visibility-only formation updates now use the incremental path instead of the full lifecycle rebuild. Structural parent/type changes and initial sync still use the full adapter. Host capture and baseline work still need further profiling.
+
+Validation: 169 multiplayer protocol/model/loopback checks, 42 editor presentation checks, existing regression suites, and 51 verified hooks. Connected gameplay verification is pending; compilation and model tests do not establish native feature parity or a measured performance improvement.
+
+The candidate is installed in both test copies with byte-identical assemblies. Both hotkey files have 19 configured bindings after restoration; the pre-repair files are preserved as `Config/hotkeys.before-mp019.dat`. The user is performing the connected gameplay test.
+
+Test a fresh connection, then: (1) Esc/WASD/P and number-row 1–5 on each client; (2) guest Options/dispatch rows; (3) host policy selection while the guest policy panel is closed, then guest policy selection; (4) funded project purchases from each side, checking level and one payment; (5) guest Add new unit, checking native host recruitment and guest creation; (6) a newspaper dismissed in each order, verifying time stays paused until both acknowledge; (7) guest checkpoint request, then paused/running stutter observations. Retain both per-install logs if any step fails.
+
+## Earlier build: v0.18
+
 # GTIP MP Test v0.18 — live campaign records and lifecycle replication
 
 Both installs require v0.18 / protocol 12. This remains an incomplete co-op prototype; versus and tactical battles are not supported.

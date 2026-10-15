@@ -31,16 +31,37 @@ namespace GTIP
         }
         bool ExecuteGlobal(MpMessage request)
         {
-            if(request.kind!="policy" && request.kind!="speed")return false;
+            if(request.kind!="policy" && request.kind!="policy-cancel" && request.kind!="speed" && request.kind!="project" && request.kind!="recruit" && request.kind!="save-checkpoint")return false;
             if(mode!="coop" || guestSide!=hostSide || request.sequence<=lastSequence || request.sequence<=0 || !MpRules.Finite(request.x))
                 throw new InvalidOperationException("Invalid co-op request.");
             lastSequence=request.sequence;
+            if(request.kind=="recruit") { ExecuteRecruit(request);return true; }
+            if(request.kind=="save-checkpoint") {
+                if(SceneManagement.currentoperation!=2)throw new InvalidOperationException("Wait for the host's current load/save to finish.");
+                string prior=Saving.latestfolder;
+                try {
+                    Saving.latestfolder="SaveGTIPRequested"+Guid.NewGuid().ToString("N");
+                    SceneManagement.SaveAll(manualsavename:"GTIP MP guest checkpoint "+DateTime.Now.ToString("yyyyMMdd HHmmss"));
+                } finally {Saving.latestfolder=prior;}
+                return true;
+            }
             if(request.kind=="speed") {
+                if(newsBarrier.Waiting && request.x>0)throw new InvalidOperationException("Both players must dismiss the newspaper before resuming.");
                 if(request.x!=0 && !GameVars.gamespeedcampaigns.Contains(request.x))throw new InvalidOperationException("Unsupported campaign speed.");
                 GameVars.SetGameSpeed(request.x,manualset:true);return true;
             }
+            if(request.kind=="project") {
+                if(request.x!=(int)request.x)throw new InvalidOperationException("Invalid project ID.");
+                var project=Projects.LoadedProjects.GetLoadedProjectFromID((int)request.x);
+                if(project==null || !project.alliances.Contains(guestSide) || !Projects.IsAppointable(project,guestSide))throw new InvalidOperationException("Project is no longer available or funded.");
+                Projects.AppointProject(project,guestSide,manualappointment:true);RefreshProjectsView();return true;
+            }
             if(request.x!=(int)request.x)throw new InvalidOperationException("Invalid policy ID.");
             var p=Policy.GetPolicyFromID((int)request.x);
+            if(request.kind=="policy-cancel") {
+                if(p==null || Policy.GetAllianceFromPolicy(p)!=guestSide || !GameVars.alliance[guestSide].activatedpolicies.Contains(p) || (p.IsAct && p.researchprogress>=1))throw new InvalidOperationException("Policy is no longer cancellable.");
+                Policies.RemoveResearch(guestSide,p);return true;
+            }
             if(p==null || Policy.GetAllianceFromPolicy(p)!=guestSide || p.markedasgrandpolicy || !p.IsAvailableInScenario() ||
                 p.ReferedChapter>Policy.CurrentChapter || !p.HasPrePolicies() || p.blocked ||
                 (bool)NativeAccess.Call(typeof(Policies),"IsDeactivated",p) || !Policies.CanBeActivated(guestSide,p))
@@ -69,14 +90,54 @@ namespace GTIP
                 p.researchprogress=s.Progress;
                 SetPolicyMembership(a.activatedpolicies,p,s.Researching);SetPolicyMembership(a.activatedacts,p,s.Enacted);SetPolicyMembership(a.alreadyactivatedacts,p,s.Applied);
             }
-            if(changed)Policies.UpdateActivations();
+            // UpdateActivations finds the active Policies/Title object. It throws when the
+            // panel is closed, and also mutates subsidy effects. Refresh only the visible UI.
+            if(changed)RefreshPoliciesView();
+        }
+        static void RefreshPoliciesView()
+        {
+            var view=GameObject.Find("UI/Policies");
+            if(view==null || !view.activeInHierarchy)return;
+            Policies.UpdateActivations();Policies.UpdateAllTooltips();Policies.UpdateCounter(GameVars.playeralliance);
+        }
+        public static void ReplicaProject(Projects.LoadedProjects project,int alliance,bool manualappointment)
+        {
+            if(!IsReplica){NativeAccess.Call(typeof(Projects),"GTIP_Original_ReplicaProject",project,alliance,manualappointment);return;}
+            if(instance!=null && instance.authenticated && project!=null && alliance==instance.guestSide && !BlocksInput)
+                instance.SubmitGlobal("project",project.projectid);
+        }
+        void CaptureProjects(List<MpStateRow> rows)
+        {
+            for(int i=0;i<GameVars.alliance.Length;i++)if(GameVars.alliance[i]!=null)
+                rows.Add(DataRow(10,i,new MpProjectState{Projects=GameVars.alliance[i].projects.ToArray(),LastMonth=GameVars.alliance[i].lastmonthprojectsresearched.ToArray()}));
+        }
+        void ApplyProjects(MpStateRow[] rows)
+        {
+            bool changed=false;
+            foreach(var row in rows.Where(r=>r.Kind==10)) {
+                var s=ReadData<MpProjectState>(row);
+                if(row.Id>=GameVars.alliance.Length || s.Projects==null || s.LastMonth==null || s.Projects.Any(id=>Projects.LoadedProjects.GetLoadedProjectFromID(id)==null))throw new InvalidDataException("Invalid project state.");
+                var a=GameVars.alliance[row.Id];changed|=!a.projects.SequenceEqual(s.Projects);
+                a.projects.Clear();a.projects.AddRange(s.Projects);a.lastmonthprojectsresearched.Clear();a.lastmonthprojectsresearched.AddRange(s.LastMonth);
+            }
+            if(changed) {
+                // Unlock caches are derived; one-time project spending/effects run only on host.
+                Projects.UpdateProjectEffects();
+                foreach(var row in rows.Where(r=>r.Kind==0))DataSchemas[0].Apply(DataTarget(row),row.Values);
+                RefreshProjectsView();RefreshPoliciesView();
+            }
+        }
+        static void RefreshProjectsView()
+        {
+            var view=UnityEngine.Object.FindObjectOfType<Projects>();
+            if(view!=null && view.isActiveAndEnabled){view.UpdateProjects();NativeAccess.Call(view,"UpdateAllProjectEffects");}
         }
         static void SetPolicyMembership(List<Policy> list,Policy p,bool present)
         {if(present){if(!list.Contains(p))list.Add(p);}else list.Remove(p);}
         void GuestTimeKeys()
         {
             RepairShortcutFocus();
-            if(host || !authenticated || panel || choosingCommander || GameVars.deactivateshortcuts)return;
+            if(host || !authenticated || panel || choosingCommander || GuestDialogOpen || GameVars.deactivateshortcuts)return;
             if(Input.GetKeyDown(GameVars.keycodes[GameVars.key_showmenu].keycode) && ui!=null && ui.panelhandler!=null) {
                 var h=ui.panelhandler;
                 if(h.panel[h.panel_mainmenusmall].state<=0)h.ShowPanel(h.panel_mainmenusmall);

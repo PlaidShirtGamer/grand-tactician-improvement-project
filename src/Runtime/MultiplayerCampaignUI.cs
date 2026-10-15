@@ -33,6 +33,7 @@ namespace GTIP
         {
             if (!panel) {
                 DrawGuestCommands();
+                DrawGuestDialogs();
                 if (transport != null) GUI.Box(new Rect(8, 85, 700, 28), "MP " + mode + (authenticated ? " | connected" : " | waiting") + (hostClock==null?"":" | "+hostClock.year+"-"+hostClock.month.ToString("00")+"-"+hostClock.day.ToString("00")+" "+Tools.ConvertFloatToTimestamp(hostClock.hour)+(hostClock.paused?" | PAUSED":" | "+hostClock.speed+"x"))+ " | F9");
                 else if(!string.IsNullOrEmpty(message)) GUI.Box(new Rect(8,85,Math.Min(Screen.width-16,950),65), message+" | F9 for details");
                 return;
@@ -55,7 +56,7 @@ namespace GTIP
                 GUILayout.Label("IP address (host bind / guest destination). Use 0.0.0.0 to host on LAN; guests use the host's LAN IP."); address = GUILayout.TextField(address, 45);
                 GUILayout.Label("TCP port"); port = GUILayout.TextField(port, 5);
                 mode="coop";
-                GUILayout.Label("Co-op replication test. Movement, stopping and commander requests are supported. Economy, recruitment, battles and versus remain incomplete.");
+                GUILayout.Label("Co-op replication test. Movement, HQ regrouping, recruitment, policies, projects and time requests are supported. Complete economy, battles and versus remain incomplete.");
                 GUILayout.Label("Session key (guest)"); token = GUILayout.TextField(token, 32);
                 GUILayout.BeginHorizontal(); if (GUILayout.Button("Host campaign")) Try(BeginHost); if (GUILayout.Button("Join host")) Try(BeginJoin); GUILayout.EndHorizontal();
             } else if (host) {

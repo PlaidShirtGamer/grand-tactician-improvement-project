@@ -12,7 +12,7 @@ namespace GTIP
     {
         static MultiplayerCampaign instance;
         static int suppressInputUntilFrame = -1;
-        public static bool BlocksInput => (instance != null && instance.panel) || Time.frameCount <= suppressInputUntilFrame;
+        public static bool BlocksInput => (instance != null && (instance.panel || instance.GuestDialogOpen)) || Time.frameCount <= suppressInputUntilFrame;
         public static bool HoldsCampaignAi => instance != null && instance.transport != null && instance.host && (instance.mode == "versus" || instance.phase == "sending");
         MpTransport transport;
         BattleUI ui;
@@ -70,6 +70,7 @@ namespace GTIP
             if (transport != null) { LogDiagnostic(reason); Application.runInBackground = previousBackground; }
             transport?.Dispose(); transport = null; authenticated = false; helloSent = false; snapshot = null;
             ClearData(false);
+            newsBarrier.Clear();newspaperState=new MpNewspaperState();guestNewsSerial=0;guestNewsClosed=false;recruitDraft=null;guestFileMenu=false;
             if(exitReplica) {
                 // Deleted native objects cannot be rolled back to the join checkpoint in place.
                 // Leave without saving; a reconnect obtains the current authoritative checkpoint.
@@ -92,6 +93,7 @@ namespace GTIP
                 string folder = Path.Combine(Path.GetDirectoryName(Application.dataPath), "GTIP-Logs"); Directory.CreateDirectory(folder);
                 diagnosticPath = Path.Combine(folder, "mp-" + (host ? "host-" : "guest-") + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff") + ".log");
                 LogDiagnostic(MpBuild.Label + " protocol " + MpRules.Protocol + "; background updates enabled.");
+                LogHotkeys();
                 LogDiagnostic("Checkpoint: faction="+GameVars.playeralliance+", date="+checkpointDate.ToString("R",System.Globalization.CultureInfo.InvariantCulture)+", formations="+(manifestKeys==null?0:manifestKeys.Length)+", identity hash="+manifest);
                 if(diagnosticPath!=null && manifestKeys!=null) File.WriteAllLines(diagnosticPath+".formations.txt",manifestKeys);
             } catch (Exception error) { Debug.LogWarning("[GTIP MP] Could not create diagnostic log: " + error.Message); }
@@ -189,6 +191,7 @@ namespace GTIP
             }
             if (value.session != session) throw new InvalidOperationException("Session mismatch.");
             if(DataMessage(value)) return;
+            if(NewspaperMessage(value))return;
             if (host) {
                 if (value.kind == "ping") return;
                 try { Execute(value); LogDiagnostic("Guest order "+value.sequence+" accepted: "+value.kind+" formation="+value.unit); Send(new MpMessage { kind = "result", session = session, sequence = value.sequence, text = "Order submitted to native campaign rules. Readiness, terrain and order delay still apply." }); }
