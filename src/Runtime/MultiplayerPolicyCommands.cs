@@ -20,7 +20,7 @@ namespace GTIP
             if(instance==null || BlocksInput || !instance.authenticated || target.ButtonTooltipRef==null)return;
             var handler=GameObject.Find("UI")?.GetComponent<PanelHandler>();
             if(handler==null || handler.panel[handler.cpanel_policies].state!=2)return;
-            if(Input.GetMouseButtonDown(0) && target.ButtonTooltipRef.mouseonobject && target.ButtonTooltipRef.state!=2)
+            if(Input.GetMouseButtonDown(0) && ReplicaHitButton()==target.ButtonTooltipRef && target.ButtonTooltipRef.state!=2)
                 instance.SubmitGlobal("policy",target.UniquePolicyID);
         }
         void SubmitGlobal(string kind,float value)
@@ -31,10 +31,11 @@ namespace GTIP
         }
         bool ExecuteGlobal(MpMessage request)
         {
-            if(request.kind!="policy" && request.kind!="policy-cancel" && request.kind!="speed" && request.kind!="project" && request.kind!="recruit" && request.kind!="save-checkpoint")return false;
+            if(request.kind!="policy" && request.kind!="policy-cancel" && request.kind!="speed" && request.kind!="project" && request.kind!="recruit" && request.kind!="save-checkpoint" && request.kind!="finance")return false;
             if(mode!="coop" || guestSide!=hostSide || request.sequence<=lastSequence || request.sequence<=0 || !MpRules.Finite(request.x))
                 throw new InvalidOperationException("Invalid co-op request.");
             lastSequence=request.sequence;
+            if(request.kind=="finance") {ExecuteFinance(request);return true;}
             if(request.kind=="recruit") { ExecuteRecruit(request);return true; }
             if(request.kind=="save-checkpoint") {
                 if(SceneManagement.currentoperation!=2)throw new InvalidOperationException("Wait for the host's current load/save to finish.");

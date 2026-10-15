@@ -68,9 +68,12 @@ namespace GTIP
             bool wasHost = transport != null && host;
             bool exitReplica=transport!=null && !host && hasLiveData && root==BattleUnits.unitfolder;
             if (transport != null) { LogDiagnostic(reason); Application.runInBackground = previousBackground; }
+            DestroyRecruitPreview();previewPanel=null;previewCommander=-1;
             transport?.Dispose(); transport = null; authenticated = false; helloSent = false; snapshot = null;
             ClearData(false);
-            newsBarrier.Clear();newspaperState=new MpNewspaperState();guestNewsSerial=0;guestNewsClosed=false;recruitDraft=null;guestFileMenu=false;
+            newsBarrier.Clear();newspaperState=new MpNewspaperState();guestNewsSerial=0;guestNewsClosed=false;guestFileMenu=false;
+            financeViews.Clear();replicaAlerts.Clear();alertPositions.Clear();
+            clockSequence=receivedClockSequence=0;
             if(exitReplica) {
                 // Deleted native objects cannot be rolled back to the join checkpoint in place.
                 // Leave without saving; a reconnect obtains the current authoritative checkpoint.
@@ -143,10 +146,6 @@ namespace GTIP
                 if(phase!="live") { BootstrapTick(); return; }
                 DataTick();
                 if(!host) {GuestMapInput();GuestTimeKeys();}
-                if(authenticated && host && (Time.realtimeSinceStartup-lastClockSend>=1f/30f || lastHostPaused!=GameVars.gamepaused || lastHostSpeed!=GameVars.gamespeed)) {
-                    lastClockSend=Time.realtimeSinceStartup; lastHostPaused=GameVars.gamepaused; lastHostSpeed=GameVars.gamespeed;
-                    Send(new MpMessage { kind="clock", session=session, clock=CaptureClock() });
-                }
                 if (authenticated && Time.realtimeSinceStartup - lastSend > 1) {
                     lastSend = Time.realtimeSinceStartup;
                     if(!host) Send(new MpMessage { kind = "ping", session = session });
@@ -197,6 +196,8 @@ namespace GTIP
                 try { Execute(value); LogDiagnostic("Guest order "+value.sequence+" accepted: "+value.kind+" formation="+value.unit); Send(new MpMessage { kind = "result", session = session, sequence = value.sequence, text = "Order submitted to native campaign rules. Readiness, terrain and order delay still apply." }); }
                 catch (Exception error) { LogDiagnostic("Guest order "+value.sequence+" rejected: "+error.Message); Send(new MpMessage { kind = "result", session = session, sequence = value.sequence, text = "Order rejected: " + error.Message }); }
             } else if(value.kind=="clock") {
+                if(!MpRules.NewClock(value.sequence,receivedClockSequence))return;
+                receivedClockSequence=value.sequence;
                 ApplyClock(value.clock);
             } else if (value.kind == "hierarchy") {
                 ApplyHierarchy(value.units);
@@ -206,7 +207,7 @@ namespace GTIP
                 MpRules.ValidateSnapshot(value);
                 if (!loggedSnapshot) { LogDiagnostic("First snapshot accepted: units=" + value.units.Length + ", towns=" + value.towns.Length); loggedSnapshot = true; }
                 snapshot = value;
-                ApplyClock(value.clock);
+                if(hostClock==null)ApplyClock(value.clock); // only the sequenced clock stream advances time
                 ApplyReplica(value);
             } else if (value.kind == "result") { orderStatus = "Order " + value.sequence + ": " + value.text; LogDiagnostic(orderStatus); }
             else throw new InvalidOperationException("Unexpected message.");

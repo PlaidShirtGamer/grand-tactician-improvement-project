@@ -15,6 +15,7 @@ namespace GTIP
         TextMeshProUGUI[] campaignClockLabels;
         float lastClockSend, lastHostSpeed;
         bool lastHostPaused;
+        int clockSequence,receivedClockSequence;
         MpClock CaptureClock()
         {
             var controller=GameObject.Find("GameController").GetComponent<BattleUnits>();
@@ -90,7 +91,16 @@ namespace GTIP
         }
         void LateUpdate()
         {
-            if(IsReplica && hostClock!=null) RenderClock(hostClock);
+            if(transport==null || !authenticated || phase!="live")return;
+            if(host) {
+                // Sample after native simulation/UI Update. A pause must publish the final
+                // clock, and the host's throttled native label must show that same sample.
+                hostClock=CaptureClock();RenderClock(hostClock);
+                if(Time.realtimeSinceStartup-lastClockSend>=1f/30f || lastHostPaused!=hostClock.paused || lastHostSpeed!=hostClock.speed) {
+                    lastClockSend=Time.realtimeSinceStartup;lastHostPaused=hostClock.paused;lastHostSpeed=hostClock.speed;
+                    Send(new MpMessage{kind="clock",session=session,sequence=++clockSequence,clock=hostClock});
+                }
+            } else if(IsReplica && hostClock!=null) {SetClockFields(EditorFormationOperations.Engine,EditorFormationOperations.Engine.uniStormSystem,hostClock);RenderClock(hostClock);}
         }
         void RestoreClock()
         {

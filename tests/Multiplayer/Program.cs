@@ -5,6 +5,28 @@ int checks = 0;
 void Check(bool value, string name) { if (!value) throw new Exception(name); checks++; }
 void Reject(Action action, string name) { bool rejected = false; try { action(); } catch (Exception) { rejected = true; } Check(rejected, name); }
 var schema=MpStateSchema.Scalars(typeof(StateFixture));
+Check(MpRules.NewClock(2,1),"Newer authoritative clock accepted");
+Check(!MpRules.NewClock(1,2) && !MpRules.NewClock(2,2),"Delayed or duplicate clock cannot rewind pause state");
+Check(!MpRules.NewClock(0,0) && !MpRules.NewClock(-1,0),"Invalid clock serial rejected");
+Check(!MpRules.NativeSelectionCollider("Army","CommandRange",true),"Army range collider is not a selection target");
+Check(!MpRules.NativeSelectionCollider("Corps","Range",false),"Corps root is not a selection target");
+Check(MpRules.NativeSelectionCollider("RegBlock","Coy",false),"Native unit block remains selectable");
+Check(MpRules.NativeSelectionCollider("Untagged","UnitNameText",false),"Native unit name remains selectable");
+Check(MpRules.NativeSelectionCollider("Untagged","UnitSymbol",true) && !MpRules.NativeSelectionCollider("Untagged","UnitSymbol",false),"Native symbol selection follows paper-map mode");
+Check(MpFinanceRules.Normalize(0,1,.4f,5,8,10,20)==.4f,"Valid native tax slider value retained");
+Check(Math.Abs(MpFinanceRules.Normalize(1,0,.26f,5,8,10,20)-.3f)<.00001f,"Political subsidy snaps to native policy capacity steps");
+Check(MpFinanceRules.Normalize(2,0,1,5,8,10,20)==1,"Finance automation checkbox accepted");
+foreach(float bad in new[]{float.NaN,float.PositiveInfinity,-.1f,1.1f})Reject(()=>MpFinanceRules.Normalize(0,0,bad,5,8,10,20),"Invalid financial value rejected: "+bad);
+Reject(()=>MpFinanceRules.Normalize(0,5,0,5,8,10,20),"Out-of-range tax index rejected");
+Reject(()=>MpFinanceRules.Normalize(1,8,0,5,8,10,20),"Out-of-range subsidy index rejected");
+Reject(()=>MpFinanceRules.Normalize(2,0,.5f,5,8,10,20),"Automation requires a boolean choice");
+Reject(()=>MpFinanceRules.Normalize(3,0,0,5,8,10,20),"Unregistered finance field rejected");
+var alertSchema=MpStateSchema.Scalars(typeof(MpAlertState));
+var alert=new MpAlertState{Count=9,Blink=true,Headline="Supply Alert: 9",Tooltip="Nine host alerts",Positions=Enumerable.Range(0,27).Select(i=>(float)i).ToArray()};
+var alertRows=MpStateCodec.Decode(new[]{alertSchema},MpStateCodec.Encode(new[]{alertSchema},new[]{new MpStateRow{Id=849,Values=alertSchema.Capture(alert)}}));
+var alertCopy=new MpAlertState();alertSchema.Apply(alertCopy,alertRows[0].Values);
+Check(alertCopy.Count==9 && alertCopy.Blink && alertCopy.Positions.SequenceEqual(alert.Positions),"Authoritative supply alert count and navigation targets round trip");
+Check(alertCopy.Headline==alert.Headline && alertCopy.Tooltip==alert.Tooltip,"Native alert tooltip content round trip");
 var managementSchemas=new[]{MpStateSchema.Scalars(typeof(MpProjectState)),MpStateSchema.Scalars(typeof(MpNewspaperState))};
 var projects=new MpProjectState{Projects=new[]{95,95,103},LastMonth=new[]{95,103}};
 var issue=new MpNewspaperState{Serial=7,Active=true,HostClosed=true,Headlines=new[]{"News from the front","Policy ratified"},Prosa="Line one\nLine two",Image=4,ImageHeadline="Dispatch",Location="Washington",Day=8,Month=2,Year=1863};

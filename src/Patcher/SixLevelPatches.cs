@@ -8,7 +8,7 @@ internal static class SixLevelPatches
         var module = game.MainModule;
         var hooks = new List<string>();
         MethodReference Helper(string type, string name) => module.ImportReference(helper.MainModule.Types.Single(t => t.Name == type).Methods.Single(m => m.Name == name));
-        MethodDefinition Method(string type, string name, string? first = null) => module.Types.Single(t => t.Name == type).Methods.Single(m => m.Name == name && (first == null || m.Parameters[0].ParameterType.Name == first));
+        MethodDefinition Method(string type, string name, string? first = null) => Types(module.Types).Single(t => t.Name == type).Methods.Single(m => m.Name == name && (first == null || m.Parameters[0].ParameterType.Name == first));
         void Wrap(string type, string name, string target, string helperType = "SixLevelRuntime", string? first = null)
         {
             var original = Method(type, name, first);
@@ -73,6 +73,18 @@ internal static class SixLevelPatches
         Wrap("Newspaper", "UpdateNewspaperQueue", "ReplicaNewspaperQueue", "MultiplayerCampaign");
         Wrap("CampaignMainPanel", "RecruitSingleBrigade", "ReplicaRecruitDialog", "MultiplayerCampaign");
         Wrap("GameVars", "LoadKeyCodes", "LoadHotkeys", "MultiplayerCampaign");
+        Wrap("Finances", "UpdateInitialSliderValues", "FinanceInitial", "MultiplayerCampaign");
+        Wrap("Finances", "UpdateSliders", "FinanceSliders", "MultiplayerCampaign");
+        Wrap("Finances", "CheckCheckBoxes", "FinanceCheckbox", "MultiplayerCampaign");
+        Wrap("AlarmInfo", "UpdateButtons", "ReplicaAlertButtons", "MultiplayerCampaign");
+        Wrap("AlarmInfo", "MoveToPosition", "ReplicaAlertPosition", "MultiplayerCampaign");
+        Wrap("CampaignMainPanel", "UpdateRegimentDummy", "ReplicaRecruitPreview", "MultiplayerCampaign");
+        Wrap("CampaignMainPanel", "Recruit", "ReplicaRecruitCommit", "MultiplayerCampaign");
+        Wrap("CampaignMainPanel", "CancelRecruiting", "ReplicaRecruitCancel", "MultiplayerCampaign");
+        Wrap("CampaignMainPanel", "ChangeSelection", "ReplicaMainSelection", "MultiplayerCampaign");
+        Wrap("CampaignMainPanel", "OnDisable", "ReplicaMainPanelClose", "MultiplayerCampaign");
+        Wrap("CommandersList", "AssignCommander", "ReplicaCommanderAssign", "MultiplayerCampaign");
+        Wrap("CampaignMainPanel", "UpdateCommanderData", "ReplicaCommanderPreview", "MultiplayerCampaign");
         Wrap("AICampaign", "ZoneRecruiting", "Recruit", "AiOrganizationDiagnostics");
         Wrap("AICampaign", "CheckCombinationOfUnits", "Combine", "AiOrganizationDiagnostics");
         Wrap("AICampaign", "CheckTransferOfUnits", "Transfer", "AiOrganizationDiagnostics");
@@ -170,7 +182,7 @@ internal static class SixLevelPatches
                 throw new InvalidOperationException("Serialized hook failed verification: " + original.FullName);
             originals++;
         }
-        if (originals != 45) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
+        if (originals != 57) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
         var suitability = game.MainModule.Types.Single(t => t.Name == "GameVars").NestedTypes.Single(t => t.Name == "Commander")
             .Methods.Single(m => m.Name == "CheckSuitableRank" && m.Parameters[0].ParameterType.FullName == "System.Int32");
         if (suitability.Body.Instructions.Count(i => i.Operand is MethodReference r &&

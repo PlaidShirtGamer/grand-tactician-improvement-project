@@ -1,3 +1,25 @@
+# GTIP MP Test v0.20 — native recruitment, finance controls and campaign presentation
+
+Both installs require v0.20 / protocol 14. This remains an incomplete co-op prototype. Versus, tactical battles, full economy objects and complete UI command coverage remain unfinished.
+
+The host now samples and sends a sequenced clock in LateUpdate, after native simulation updates, and forces its native time label to match that sample. This addresses the native timer panel's throttled display remaining behind the actual paused time. Guests reject stale/duplicate clock messages, and position snapshots no longer overwrite a newer clock. The host/guest stream still has network latency; the candidate needs an in-game paused-clock check.
+
+The selection/Stop/Replace commander overlay has been removed. A small status strip seeks an unoccupied screen edge and hides if native panels cover the available locations. Commander replacement now uses the native officer list and a validated host request. Map selection accepts the same Coy blocks, UnitNameText and paper-map UnitSymbol categories as the native selector, excluding command-range/root colliders.
+
+Guest Add new unit now opens the native recruitment screen. Its normal state, branch, size, recruit-type and uniform controls edit a temporary native preview. Registered alliance/nation/officer/unit values, roster lists, officer references and dates are preserved around native preview creation. The preview is detached from the campaign roster, its world renderers/colliders stay disabled, and it is destroyed on cancel/disconnect. Confirmation sends the draft to the host, which revalidates and performs native paid recruitment. This preview isolation and native UI flow have not yet passed live validation. Independent command creation and ship recruitment are not added here.
+
+Finances tax/subsidy sliders now distinguish user edits from incoming authoritative data. Guest changes and the finance automation checkbox go to the host; incoming values update an open finance view without being written back as stale local edits. Political subsidies retain native capacity-step rounding. Native calculation/formatting still has unreplicated nested dependencies, so this is financial-control synchronization, not complete economic equality.
+
+Campaign alerts now carry the host's per-button counts, tooltip text, blink state and navigation positions. The guest renders that data instead of independently pruning/creating alerts from its incomplete local simulation. Clicking an alert cycles its host-supplied positions. Tactical battle panels/resolution remain unsupported.
+
+Policy correction: the native `Policies.AddResearch` / `CanBeActivated` code permits multiple available policies to be researched at once. `UpdatePolicyResearch` divides research speed by the number of unfinished policies. This build retains those rules. Guest clicks are matched against the current UI raycast to prevent stale hover flags submitting more than one policy for one click. Chapter changes now replicate explicitly along with policy progress/membership; prerequisites and capacity remain host-validated.
+
+Verification: 190 multiplayer model/protocol/TCP checks, 42 editor presentation checks, existing regression suites, and 63 verified hooks. The automated checks do not exercise Unity's full native recruitment/finance UI. The user will perform the next connected test after installing both copies.
+
+The v0.20 candidate is installed in both test copies. Installed runtime and patched game assemblies match between copies. No connected UI, paused-clock, finance or recruitment fix is claimed live-verified yet. Retest with a fresh connection: repeated pauses at different speeds, native guest recruitment/cancellation, native commander replacement, finances edited from both clients while both panels remain open, single policy clicks, and alert counts after updates settle.
+
+## Earlier build: v0.19
+
 # GTIP MP Test v0.19 — campaign actions and notifications
 
 Both installs require v0.19 / protocol 13. This remains an incomplete co-op prototype. Versus and tactical battles are not supported.

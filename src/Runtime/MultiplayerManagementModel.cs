@@ -3,6 +3,18 @@ using System.IO;
 
 namespace GTIP
 {
+    public sealed class MpCampaignControls {public bool AutoFinances;public int Chapter;}
+    public sealed class MpAlertState {public int Count;public bool Blink;public string Headline,Tooltip;public float[] Positions;}
+    public static class MpFinanceRules
+    {
+        public static float Normalize(int category,int index,float value,int taxes,int subsidies,int minPolicies,int maxPolicies)
+        {
+            if(!MpRules.Finite(value) || value<0 || value>1 || category<0 || category>2 || index<0 ||
+                (category==0 && index>=taxes) || (category==1 && index>=subsidies) || (category==2 && (index!=0 || (value!=0 && value!=1))))throw new InvalidDataException("Invalid financial setting.");
+            if(category==1 && index==0){int steps=Math.Max(1,maxPolicies-minPolicies);return (float)Math.Round(value*steps)/steps;}
+            return value;
+        }
+    }
     public sealed class MpProjectState { public int[] Projects,LastMonth; }
     public sealed class MpNewspaperState
     {
@@ -25,10 +37,13 @@ namespace GTIP
     public sealed class MpRecruitDraft
     {
         public int Parent,State,Type,SizeLevel,RecruitType;
+        public int Commander=-1,Uniform;
+        public string Name="";
+        public float[] Colors;
         public bool Horse;
         public void Validate()
         {
-            if(Parent<=0 || State<0 || State>1000 || Type<0 || Type>2 || SizeLevel<0 || SizeLevel>2 || RecruitType<0 || RecruitType>1 || (Horse && Type!=2))
+            if(Parent<=0 || State<0 || State>1000 || Type<0 || Type>2 || SizeLevel<0 || SizeLevel>2 || RecruitType<0 || RecruitType>1 || (Horse && Type!=2) || Commander< -1 || Uniform<0 || Uniform>20 || Name==null || Name.Length>100 || Name.IndexOfAny(new[]{'\r','\n','\0'})>=0 || (Colors!=null && (Colors.Length!=8 || Array.Exists(Colors,c=>!MpRules.Finite(c)||c<0||c>1))))
                 throw new InvalidDataException("Invalid recruitment draft.");
         }
     }

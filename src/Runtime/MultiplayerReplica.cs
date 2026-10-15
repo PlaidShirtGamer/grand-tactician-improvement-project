@@ -40,6 +40,7 @@ namespace GTIP
         public static void ReplicaRegiment(Regiment target)
         {
             if (!IsReplica) { NativeAccess.Call(target, "GTIP_Original_ReplicaRegiment"); return; }
+            if(IsRecruitPreview(target))return;
             // Deliberately skip movement, supply, combat, recruitment and AI. Keep native rendering.
             NativeAccess.Call(target, "CheckRegimentVisibility");
             target.UpdateRegimentSpritePos();

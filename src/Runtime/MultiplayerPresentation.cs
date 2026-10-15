@@ -19,6 +19,7 @@ namespace GTIP
             "104_ToolsMapIcons", "105_MapBorders", "106_MapText", "107_SupplyLines", "120_BattleMonuments",
             "034_OptionsC","034_OptionsB","211_OptionsB","297_Accept","298_Cancel","176_OOBSymbolP",
             "362_EconomyReport","363_IntelligenceReport"
+            ,"385_Replace","487_ScrollLeft","488_ScrollRight","084_Commander","490_Assign","491_Cancel","910_ScrollUp","911_ScrollDn"
         };
         ButtonTooltip replicaHover;
         public static void ReplicaBattleUi(BattleUI target)
@@ -54,7 +55,10 @@ namespace GTIP
             }
             if(Input.GetMouseButtonDown(0) && button!=null)instance.RequestTimeButton(button.name);
             bool logEntry=button!=null && button.name.Length>=14 && button.name.Substring(3,9)=="_LogEntry";
-            bool allowed=button!=null && (ReplicaNavigation.Contains(button.name) || logEntry || button.GetComponentInParent<Options>()!=null);
+            bool recruitment=button!=null && instance.NativeRecruitOpen && (button.name.StartsWith("474_RecruitingRow") || button.name.StartsWith("480_Color") ||
+                new[]{"475_SwitchRecruitType","476_PrevSoldier","477_NextSoldier","478_Left","479_Right","590_RecruitInfantry","591_RecruitCavalry","592_RecruitArtillery","593_RecruitHorseArtillery","481_Recruit","482_Cancel","514_Cancel","575_InitialBrigadeSize","947_RecolorUniform"}.Contains(button.name));
+            bool alert=button!=null && int.TryParse(button.name.Substring(0,Mathf.Min(3,button.name.Length)),out int alarm) && alarm>=841 && alarm<=851;
+            bool allowed=button!=null && (ReplicaNavigation.Contains(button.name) || recruitment || alert || logEntry || button.GetComponentInParent<Options>()!=null);
             foreach(var p in handler.panel.Concat(handler.symbol).Concat(handler.multiplepanel))
                 if(p.buttons!=null)foreach(var b in p.buttons)if(b!=null) {
                     if(b==button) { if(!b.mouseonobject || !b.mouseonobject2)b.ActivateMouseOnObject(); }
@@ -87,10 +91,16 @@ namespace GTIP
         }
         void OptionsInput(PanelHandler handler)
         {
-            bool open=handler.panel[handler.cpanel_optionspanel].state>0;
+            bool open=handler.panel[handler.cpanel_optionspanel].state>0 || handler.panel[handler.cpanel_finances].state>0 || NativeRecruitOpen;
             // Local Options needs Unity's sliders, input fields and drop-downs.
             // Gameplay dispatch remains filtered while this modal is open.
             foreach(var module in blockedModules)if(module!=null)module.enabled=open;
+        }
+        static ButtonTooltip ReplicaHitButton()
+        {
+            if(EventSystem.current==null)return null;
+            var hits=new List<RaycastResult>();EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current){position=Input.mousePosition},hits);
+            return hits.Select(h=>h.gameObject.GetComponentInParent<ButtonTooltip>()).FirstOrDefault(b=>b!=null);
         }
         void OpenReplicaTab(PanelHandler h,string name)
         {

@@ -28,7 +28,8 @@ namespace GTIP
                 "groupstate","groupexperience","groupcondition","groupfatigue","groupsupplystate" }),
             MpStateSchema.Scalars(typeof(MpFormationState)),MpStateSchema.Scalars(typeof(MpOfficerDates)),MpStateSchema.Scalars(typeof(MpArmyGroupState)),
             MpStateSchema.Scalars(typeof(Messages.Message)),MpStateSchema.Scalars(typeof(MpDispatchReferences)),MpStateSchema.Scalars(typeof(MpPolicyState)),
-            MpStateSchema.Scalars(typeof(MpProjectState)),MpStateSchema.Scalars(typeof(MpNewspaperState))
+            MpStateSchema.Scalars(typeof(MpProjectState)),MpStateSchema.Scalars(typeof(MpNewspaperState)),
+            MpStateSchema.Scalars(typeof(MpCampaignControls)),MpStateSchema.Scalars(typeof(MpAlertState))
         });
         byte[] outgoingData;
         MemoryStream incomingData;
@@ -70,6 +71,7 @@ namespace GTIP
             CapturePolicies(rows);
             CaptureProjects(rows);
             rows.Add(DataRow(11,0,newspaperState));
+            CaptureControls(rows);CaptureAlerts(rows);
             return rows.ToArray();
         }
         static MpStateRow DataRow(int kind,int id,object target) => new MpStateRow {Kind=kind,Id=id,Values=DataSchemas[kind].Capture(target)};
@@ -97,7 +99,7 @@ namespace GTIP
                 var applyTimer=System.Diagnostics.Stopwatch.StartNew();
                 bool incremental=TryApplyScalarDelta(received.Changes);
                 if(!incremental) ApplyLifecycleData(received.Rows);
-                ApplyPolicies(received.Changes);ApplyProjects(received.Rows);
+                ApplyControls(received.Changes);ApplyPolicies(received.Changes);ApplyProjects(received.Rows);ApplyAlerts(received.Changes);
                 ApplyNewspaper(received.Changes);
                 if(received.Changes.Any(r=>r.Kind==7 || r.Kind==8))ApplyDispatches(received.Rows);
                 VerifyAppliedScalars(incremental?received.Changes:received.Rows);

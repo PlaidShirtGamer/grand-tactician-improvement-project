@@ -10,25 +10,26 @@ namespace GTIP
         int guestSequence;
         string orderStatus = "";
         bool choosingCommander;
-        Vector2 commanderScroll;
 
         // Selection uses native colliders and highlighting. Orders never mutate the guest simulation.
         void GuestMapInput()
         {
-            if(panel || choosingCommander || GuestDialogOpen || BlocksInput || CampaignEditor.BlocksInput || !authenticated || snapshot==null) return;
+            if(panel || choosingCommander || GuestDialogOpen || NativeRecruitOpen || BlocksInput || CampaignEditor.BlocksInput || !authenticated || snapshot==null) return;
             if(PointerOverReplicaUi())return;
-            var mouse=new Vector2(Input.mousePosition.x,Screen.height-Input.mousePosition.y);
-            if(new Rect(8,116,Math.Min(Screen.width-16,950),54).Contains(mouse) ||
-                (guestSelection!=null && new Rect(8,174,326,28).Contains(mouse)))return;
             if(Input.GetMouseButtonDown(0)) {
                 var camera=Camera.main;
                 if(camera==null) return;
                 Regiment unit=null;
                 foreach(var hit in Physics.RaycastAll(camera.ScreenPointToRay(Input.mousePosition),100000f).OrderBy(h=>h.distance)) {
                     if(hit.collider==null)continue;
-                    var candidate=hit.collider.GetComponentInParent<Regiment>();
-                    var coy=hit.collider.GetComponentInParent<Coy>();
-                    if(candidate==null && coy!=null)candidate=coy.assignedparentreg;
+                    var go=hit.collider.gameObject;
+                    if(!MpRules.NativeSelectionCollider(go.tag,go.name,GameVars.papermapvisible))continue;
+                    // Native selection accepts Coy blocks, UnitSymbol and UnitNameText;
+                    // a formation's root/range collider is deliberately excluded.
+                    Regiment candidate=null;
+                    if(go.CompareTag("RegBlock"))candidate=go.GetComponent<Coy>()?.assignedparentreg;
+                    else if(go.name=="UnitNameText" || (go.name=="UnitSymbol" && GameVars.papermapvisible))
+                        candidate=go.transform.parent==null?null:go.transform.parent.GetComponent<Regiment>();
                     if(candidate!=null && candidate.alliance==guestSide && ids.ContainsKey(candidate) && candidate.gameObject.activeInHierarchy) { unit=candidate; break; }
                 }
                 LogDiagnostic("Guest selection hit: "+(unit==null?"none":Id(unit)+" / "+unit.name));
@@ -78,24 +79,7 @@ namespace GTIP
 
         void DrawGuestCommands()
         {
-            if(!IsReplica || !authenticated) return;
-            GUI.Box(new Rect(8,116,Math.Min(Screen.width-16,950),54),
-                (guestSelection==null?"Select a formation on the native map.":guestSelection.name+" | Right-click terrain to request movement.")+"\n"+(string.IsNullOrEmpty(orderStatus)?message:orderStatus));
-            if(guestSelection!=null && GUI.Button(new Rect(8,174,140,28),"Stop formation")) SubmitGuestOrder("stop",Vector3.zero);
-            if(guestSelection!=null && GUI.Button(new Rect(154,174,180,28),"Replace commander"))choosingCommander=!choosingCommander;
-            if(choosingCommander && guestSelection!=null) {
-                GUILayout.BeginArea(new Rect(8,208,520,Math.Min(440,Screen.height-240)),GUI.skin.box);
-                GUILayout.Label("Request a commander — host validates availability and rank");
-                if(GUILayout.Button("Cancel"))choosingCommander=false;
-                commanderScroll=GUILayout.BeginScrollView(commanderScroll);
-                foreach(int id in EditorFormationOperations.Commanders(guestSide,guestSelection.unittyp,guestSelection)) {
-                    var c=GameVars.commander[id];
-                    if(GUILayout.Button(CampaignEditorData.OfficerName(id)+" | Experience "+c.exp.ToString("0.0"))) {
-                        SubmitGuestOrder("commander",new Vector3(id,0,0));choosingCommander=false;
-                    }
-                }
-                GUILayout.EndScrollView();GUILayout.EndArea();
-            }
+            // Selection, stop and commander controls belong to native game panels.
         }
     }
 }

@@ -34,8 +34,7 @@ namespace GTIP
             if (!panel) {
                 DrawGuestCommands();
                 DrawGuestDialogs();
-                if (transport != null) GUI.Box(new Rect(8, 85, 700, 28), "MP " + mode + (authenticated ? " | connected" : " | waiting") + (hostClock==null?"":" | "+hostClock.year+"-"+hostClock.month.ToString("00")+"-"+hostClock.day.ToString("00")+" "+Tools.ConvertFloatToTimestamp(hostClock.hour)+(hostClock.paused?" | PAUSED":" | "+hostClock.speed+"x"))+ " | F9");
-                else if(!string.IsNullOrEmpty(message)) GUI.Box(new Rect(8,85,Math.Min(Screen.width-16,950),65), message+" | F9 for details");
+                if (transport != null) DrawCompactStatus();
                 return;
             }
             var oldMatrix = GUI.matrix; var oldColor = GUI.color;
@@ -72,6 +71,36 @@ namespace GTIP
             }
             GUILayout.FlexibleSpace(); GUILayout.Label(message);
             GUILayout.EndArea(); GUI.color = oldColor; GUI.matrix = oldMatrix;
+        }
+        void DrawCompactStatus()
+        {
+            if(Event.current.type!=EventType.Repaint)return;
+            var style=new GUIStyle(GUI.skin.label){fontSize=11,alignment=TextAnchor.MiddleLeft,wordWrap=false};
+            string text="MP "+mode+(authenticated?" connected":" waiting")+(hostClock==null?"":" | "+hostClock.year+"-"+hostClock.month.ToString("00")+"-"+hostClock.day.ToString("00")+" "+Tools.ConvertFloatToTimestamp(hostClock.hour)+(hostClock.paused?" paused":" "+hostClock.speed+"x"))+" | F9";
+            float width=Math.Min(Screen.width-16,style.CalcSize(new GUIContent(text)).x+12);
+            var candidates=new[]{new Rect(8,Screen.height-24,width,18),new Rect((Screen.width-width)/2,Screen.height-24,width,18),new Rect(8,175,width,18)};
+            // Hide the small strip if native panels cover every available position.
+            foreach(var rect in candidates)if(StatusSpaceFree(rect)) {GUI.Box(rect,"");GUI.Label(rect,text,style);break;}
+        }
+        bool StatusSpaceFree(Rect area)
+        {
+            if(ui==null || ui.panelhandler==null)return true;
+            var corners=new Vector3[4];
+            foreach(var p in ui.panelhandler.panel.Where(p=>p.state>0 && p.go!=null && p.go.activeInHierarchy)) {
+                if(p.recttf!=null) {
+                    p.recttf.GetWorldCorners(corners);
+                    var lo=RectTransformUtility.WorldToScreenPoint(null,corners[0]);var hi=RectTransformUtility.WorldToScreenPoint(null,corners[2]);
+                    var bounds=new Rect(lo.x,Screen.height-hi.y,hi.x-lo.x,hi.y-lo.y);
+                    if((bounds.width<Screen.width*.98f || bounds.height<Screen.height*.98f) && area.Overlaps(bounds))return false;
+                }
+                if(p.buttons==null)continue;
+                foreach(var b in p.buttons)if(b!=null && b.gameObject.activeInHierarchy && b.transform is RectTransform r) {
+                    r.GetWorldCorners(corners);
+                    var min=RectTransformUtility.WorldToScreenPoint(null,corners[0]);var max=RectTransformUtility.WorldToScreenPoint(null,corners[2]);
+                    if(area.Overlaps(new Rect(min.x,Screen.height-max.y,max.x-min.x,max.y-min.y)))return false;
+                }
+            }
+            return true;
         }
     }
 }
