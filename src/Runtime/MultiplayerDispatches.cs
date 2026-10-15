@@ -14,20 +14,34 @@ namespace GTIP
 
     public sealed partial class MultiplayerCampaign
     {
+        readonly Dictionary<int,MpStateRow[]> dispatchArchive=new Dictionary<int,MpStateRow[]>();
+        readonly HashSet<int> hiddenDispatches=new HashSet<int>();
+        void ClearDispatchState(){dispatchArchive.Clear();hiddenDispatches.Clear();}
         static Messages Dispatches => GameObject.Find("UI")?.GetComponent<Messages>();
         int DispatchReference(Regiment unit) => unit != null && ids.TryGetValue(unit, out var id) ? id : 0;
         void CaptureDispatches(List<MpStateRow> rows)
         {
             var messages = Dispatches;
             if (messages == null) return;
-            foreach (var m in messages.message) {
-                rows.Add(DataRow(7, m.number, m));
-                rows.Add(DataRow(8, m.number, new MpDispatchReferences {
+            foreach (var m in messages.message)ArchiveDispatch(m);
+            foreach(var pair in dispatchArchive.OrderBy(p=>p.Key))rows.AddRange(pair.Value);
+        }
+        void ArchiveDispatch(Messages.Message m)
+        {
+                dispatchArchive[m.number]=new[]{DataRow(7,m.number,m),DataRow(8, m.number, new MpDispatchReferences {
                     Regiment=DispatchReference(m.regref), Sender=DispatchReference(m.sender),
                     ObjectRegiment=DispatchReference(m.objref == null ? null : m.objref.GetComponent<Regiment>()),
                     X=m.targetdestination.x, Y=m.targetdestination.y, Z=m.targetdestination.z
-                }));
+                })};
+        }
+        public static void ReplicaRemoveDispatch(Messages target,int index)
+        {
+            var mp=instance;
+            if(mp!=null && mp.transport!=null && index>=0 && index<target.message.Count) {
+                if(mp.host)mp.ArchiveDispatch(target.message[index]);
+                else mp.hiddenDispatches.Add(target.message[index].number);
             }
+            NativeAccess.Call(target,"GTIP_Original_ReplicaRemoveDispatch",index);
         }
         void ApplyDispatches(MpStateRow[] rows)
         {
@@ -44,10 +58,12 @@ namespace GTIP
                 if(!keep.Contains(messages.message[i].number)) messages.RemoveMessage(i);
             int added=0;
             foreach(var row in incoming) {
+                if(hiddenDispatches.Contains(row.Id))continue;
                 bool isNew=!existing.TryGetValue(row.Id,out var m);
                 if(isNew) m=new Messages.Message();
-                bool shown=m.wasshownonscreen;
+                bool shown=m.wasshownonscreen,read=m.read;
                 DataSchemas[7].Apply(m,row.Values);
+                m.read=isNew?false:read;
                 if(m.number!=row.Id)throw new InvalidDataException("Dispatch identity mismatch.");
                 var refs=new MpDispatchReferences(); DataSchemas[8].Apply(refs,references[row.Id].Values);
                 m.regref=units.TryGetValue(refs.Regiment,out var regiment)?regiment:null;

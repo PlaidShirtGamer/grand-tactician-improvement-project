@@ -16,6 +16,12 @@ namespace GTIP
         {
             if(panel || choosingCommander || GuestDialogOpen || NativeRecruitOpen || BlocksInput || CampaignEditor.BlocksInput || !authenticated || snapshot==null) return;
             if(PointerOverReplicaUi() || NativeModalOpen())return;
+            if(CBuilding.manualplacedbuilding!=null) {
+                if(Input.GetMouseButtonDown(1)){CBuilding.ActivateManualBuildingPlacement(false);return;}
+                var c=Camera.main;var t=Terrain.activeTerrain;var tc=t==null?null:t.GetComponent<TerrainCollider>();
+                if(c!=null && tc!=null && tc.Raycast(c.ScreenPointToRay(Input.mousePosition),out var placement,100000f))CBuilding.UpdateManualBuildingPlacement(placement.point,Input.GetMouseButtonDown(0));
+                return;
+            }
             if(Input.GetMouseButtonDown(0)) {
                 var camera=Camera.main;
                 if(camera==null) return;

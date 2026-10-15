@@ -17,6 +17,12 @@ namespace GTIP
             new MpStateSchema(typeof(Regiment),new[] {
                 "commander","strength","sick","losses","morale","training","experience","fatigue","ammo","weapon","nation","overridesymbol","uniformset","servicehistory","abrvname","battleflag",
                 "conditionmen","conditionhorses","conditionguns","readiness","intel","fightingspirit","cohesion",
+                "inbattle","inbattleuntil","participatinginbattle","isbattlecallingunit","isbattlestartunit","onretreat","lastretreatiswithdrawal",
+                "unitstatus","pathinterrupted","movementmode","timedmovement","ordertypeactive","userails",
+                "isrouted","surrenderstate","combatbehavior","combatbehaviorordered","running","doublequick","onfriendlyterrain",
+                "inmelee","embarkmentstarttime","embarkmentduration","timeofnotmoving","usedtransportcapacity","speedadjustmentduetotransportcap",
+                "groupstrengthvisible","groupgunsvisible","groupstrengthcavvisible","groupstatsgunsactive","grouproutedratio",
+                "timeofarrival","pathdistance","totaltimeoforderdelay","groupintelligencegathering","groupraidingefficiency","groupguardefficiency","groupenemiesinrange","groupowninrange","riverclose","seaclose",
                 "reinforcementpriority","reinforcementtype","reformtime","finishedrecruitment","recruitingtype",
                 "latestreinforcements","reinforcementsneeded","contractlength","state","numberofbattles",
                 "campaignstance","campaignstanceordered","cavalryorders","cavalryordersordered","fleetorders",
@@ -31,7 +37,14 @@ namespace GTIP
             MpStateSchema.Scalars(typeof(MpProjectState)),MpStateSchema.Scalars(typeof(MpNewspaperState)),
             MpStateSchema.Scalars(typeof(MpCampaignControls)),MpStateSchema.Scalars(typeof(MpAlertState)),
             new MpStateSchema(typeof(Economy.Resource.ProductAllianceData),new[]{"averageprice","lastaverageprice","demandpa","lastdemandpa","productionpa","lastproductionpa","stockiniips","laststockiniips","stockindepots","laststockindepots","totaltradevolume","excisetax","tariffs","value","relativestock","maxprice"}),
-            MpStateSchema.Scalars(typeof(MpMapNotice)),MpStateSchema.Scalars(typeof(MpChartPoints))
+            MpStateSchema.Scalars(typeof(MpMapNotice)),MpStateSchema.Scalars(typeof(MpChartPoints)),
+            MpStateSchema.Scalars(typeof(MpBuildingRecord)),
+            new MpStateSchema(typeof(CBuilding),new[]{"BuildingName","Owner","Condition","stock","productionefficiency","production","avgprodefficiency","cumulativeprofit","cumulativevolumesold","fillratiotarget","automanagesupplies","hasdummygarrison","isconnected","constructiontimer","upgradetimer","constructiondaysleft","relativeworkforce","absoluteworkforce","availablecapital","marketcapacity","slaveratio","latestunitsupply","prisoners"}),
+            MpStateSchema.Scalars(typeof(MpRailroadRecord)),MpStateSchema.Scalars(typeof(MpVesselRecord)),MpStateSchema.Scalars(typeof(Vessel)),MpStateSchema.Scalars(typeof(Fleet)),
+            MpStateSchema.Scalars(typeof(GameVars.Alliance.WeaponOrder)),MpStateSchema.Scalars(typeof(MpEngagement)),MpStateSchema.Scalars(typeof(MpEngagementUnit)),
+            new MpStateSchema(typeof(IIP),new[]{"allianceowner","BuildingLevel","blocked","stock","relprice","price","condition","continuousprofit","lossestradewarfare","producedpcspa","economyalerttooltip"}),
+            new MpStateSchema(typeof(Town),new[]{"Owner","newownership","occupationpoints","representingpopulation","citysize","weightedcitysize","availableworkforcelevel","privatewealth","incometax"}),
+            MpStateSchema.Scalars(typeof(MpPathState)),MpStateSchema.Scalars(typeof(MpSpottedState)),MpStateSchema.Scalars(typeof(MpConstructionSites))
         });
         byte[] outgoingData;
         MemoryStream incomingData;
@@ -49,6 +62,7 @@ namespace GTIP
         System.Threading.Tasks.Task commitTask;
         sealed class ReceivedData {public MpStateRow[] Rows,Changes;public int Bytes;}
         System.Threading.Tasks.Task<ReceivedData> receiveTask;
+        bool replicaMutated;
         MpStateBaseline Baseline => dataBaseline ?? (dataBaseline=new MpStateBaseline(DataSchemas));
 
         int ReferenceId(Regiment unit)
@@ -57,6 +71,7 @@ namespace GTIP
         {
             if(host)RefreshHostIds();
             var rows=new List<MpStateRow>();
+            CaptureWorld(rows);
             for(int i=0;i<GameVars.alliance.Length;i++) if(GameVars.alliance[i]!=null) rows.Add(DataRow(0,i,GameVars.alliance[i]));
             for(int i=0;i<GameVars.nation.Length;i++) if(GameVars.nation[i]!=null) rows.Add(DataRow(1,i,GameVars.nation[i]));
             for(int i=0;i<GameVars.commander.Count;i++) if(GameVars.commander[i]!=null) {
@@ -75,6 +90,9 @@ namespace GTIP
             rows.Add(DataRow(11,0,newspaperState));
             CaptureControls(rows);CaptureAlerts(rows);
             CaptureGoods(rows);CaptureMapNotices(rows);
+            CaptureEngagement(rows);
+            CaptureMapPaths(rows);
+            CaptureSightings(rows);
             return rows.ToArray();
         }
         static MpStateRow DataRow(int kind,int id,object target) => new MpStateRow {Kind=kind,Id=id,Values=DataSchemas[kind].Capture(target)};
@@ -99,14 +117,22 @@ namespace GTIP
             if(!host && receiveTask!=null) {
                 if(!receiveTask.IsCompleted)return;
                 var received=receiveTask.GetAwaiter().GetResult();receiveTask=null;
+                replicaMutated=true;
                 var applyTimer=System.Diagnostics.Stopwatch.StartNew();
+                ApplyWorldBuildings(received.Rows,received.Changes);
                 bool incremental=TryApplyScalarDelta(received.Changes);
                 if(!incremental) ApplyLifecycleData(received.Rows);
+                ApplyWorldAfterUnits(received.Rows,received.Changes);
+                ApplyMapPaths(received.Changes);
+                ApplySightings(received.Changes);
+                if(received.Changes.Any(r=>r.Kind==4))ApplyMapPoses(received.Rows);
                 ApplyControls(received.Changes);ApplyPolicies(received.Changes);ApplyProjects(received.Rows);ApplyAlerts(received.Changes);
                 ApplyNewspaper(received.Changes);
                 ApplyGoods(received.Changes);ApplyMapNotices(received.Changes);
+                ApplyEngagement(received.Rows,received.Changes);
                 if(received.Changes.Any(r=>r.Kind==7 || r.Kind==8))ApplyDispatches(received.Rows);
                 VerifyAppliedScalars(incremental?received.Changes:received.Rows);
+                AuditNativeMap(received.Rows,incomingDataSerial,true);
                 if(incomingDataSerial==1 || incomingDataSerial%30==0)LogDiagnostic("Replication apply: revision="+incomingDataSerial+", changed="+received.Changes.Length+", incremental="+incremental+", mainThreadMs="+applyTimer.Elapsed.TotalMilliseconds.ToString("F1"));
                 var appliedBaseline=Baseline;var rows=received.Rows;int revision=incomingDataSerial;string hash=incomingStateHash;
                 commitTask=System.Threading.Tasks.Task.Run(()=>appliedBaseline.Commit(revision,rows,hash));
@@ -123,6 +149,7 @@ namespace GTIP
                 if(prepared==null)return;
                 dataSerial=prepared.Revision;pendingDataRows=prepared.Rows;pendingStateHash=prepared.Hash;
                 outgoingData=prepared.Bytes;dataOffset=0;lastPrepareMs=prepared.Milliseconds;dataStarted=Time.realtimeSinceStartup;
+                AuditNativeMap(prepared.Rows,dataSerial,false);
                 if(dataSerial==1 || dataSerial%30==0)LogDiagnostic("Replication prepare: revision="+dataSerial+", records="+pendingDataRows.Length+", changed="+prepared.Changed+", bytes="+outgoingData.Length+", captureMs="+lastCaptureMs.ToString("F1")+", workerMs="+lastPrepareMs.ToString("F1"));
                 Send(new MpMessage{kind="data-offer",session=session,sequence=dataSerial,baseRevision=prepared.BaseRevision,stateHash=pendingStateHash,unit=outgoingData.Length,text=MpCheckpoint.Hash(outgoingData)});
                 return;
@@ -224,7 +251,7 @@ namespace GTIP
                 if(u.componentcolor==null || u.componentcolor.Length<2 || u.componentcolor[1]!=FromColor(s.Colors) || u.componentcolor[0]!=FromColor(s.Colors,4))
                     u.SetUniformColors(FromColor(s.Colors),FromColor(s.Colors,4));
                 ApplyPose(u,new Vector3(s.X,s.Y,s.Z),Quaternion.Euler(0,s.Yaw,0));
-                originalActive[u]=s.Active;u.gameObject.SetActive(s.Active && s.Visible);
+                originalActive[u]=s.Active;replicaVisibility[u]=s.Visible;u.gameObject.SetActive(s.Active);
             }
             return true;
         }

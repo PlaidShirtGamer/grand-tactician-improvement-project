@@ -66,14 +66,15 @@ namespace GTIP
         void End(string reason)
         {
             bool wasHost = transport != null && host;
-            bool exitReplica=transport!=null && !host && hasLiveData && root==BattleUnits.unitfolder;
+            bool exitReplica=transport!=null && !host && (hasLiveData || replicaMutated) && root==BattleUnits.unitfolder;
             if (transport != null) { LogDiagnostic(reason); Application.runInBackground = previousBackground; }
             DestroyRecruitPreview();previewPanel=null;previewCommander=-1;
             transport?.Dispose(); transport = null; authenticated = false; helloSent = false; snapshot = null;
             ClearData(false);
             newsBarrier.Clear();newspaperState=new MpNewspaperState();guestNewsSerial=0;guestNewsClosed=false;guestFileMenu=false;
-            financeViews.Clear();replicaAlerts.Clear();alertPositions.Clear();lastAlertCounts="";ClearMapNotices();
+            financeViews.Clear();replicaAlerts.Clear();alertPositions.Clear();lastAlertCounts="";ClearMapNotices();replicaVisibility.Clear();ClearDispatchState();ClearWorld();
             clockSequence=receivedClockSequence=0;
+            replicaMutated=false;
             if(exitReplica) {
                 // Deleted native objects cannot be rolled back to the join checkpoint in place.
                 // Leave without saving; a reconnect obtains the current authoritative checkpoint.
@@ -193,8 +194,10 @@ namespace GTIP
             if(NewspaperMessage(value))return;
             if (host) {
                 if (value.kind == "ping") return;
-                try { Execute(value); LogDiagnostic("Guest order "+value.sequence+" accepted: "+value.kind+" formation="+value.unit); Send(new MpMessage { kind = "result", session = session, sequence = value.sequence, text = "Order submitted to native campaign rules. Readiness, terrain and order delay still apply." }); }
-                catch (Exception error) { LogDiagnostic("Guest order "+value.sequence+" rejected: "+error.Message); Send(new MpMessage { kind = "result", session = session, sequence = value.sequence, text = "Order rejected: " + error.Message }); }
+                string label=value.kind=="native-action"?value.kind+"/"+(value.text??"").Split('|')[0]:value.kind;
+                try { remoteIntent=true;Execute(value); LogDiagnostic("Guest order "+value.sequence+" accepted: "+label+" target="+value.unit); Send(new MpMessage { kind = "result", session = session, sequence = value.sequence, text = "Order submitted to native campaign rules. Readiness, terrain and order delay still apply." }); }
+                catch (Exception error) { LogDiagnostic("Guest order "+value.sequence+" rejected: "+label+": "+error.Message); Send(new MpMessage { kind = "result", session = session, sequence = value.sequence, text = "Order rejected: " + error.Message }); }
+                finally {remoteIntent=false;}
             } else if(value.kind=="clock") {
                 if(!MpRules.NewClock(value.sequence,receivedClockSequence))return;
                 receivedClockSequence=value.sequence;
@@ -219,11 +222,12 @@ namespace GTIP
             return value;
         }
         bool Controllable(Regiment unit) => unit != null && unit.alliance == guestSide && unit.gameObject.activeInHierarchy &&
-            BattleUnits.GetUnitVisibilityStateOnCampaignMap(unit) > 0 && unit.unittyp != 17 && unit.garrisonreference == null && !unit.inbattle && !unit.onretreat && !unit.isrouted;
+            BattleUnits.GetUnitVisibilityStateOnCampaignMap(unit) > 0 && unit.garrisonreference == null && !unit.inbattle && !unit.onretreat && !unit.isrouted;
         bool Visible(Regiment unit)
         {
             if (unit.alliance == guestSide) return true;
             if (!GameVars.usefow) return true;
+            if(mode=="coop" && guestSide==hostSide)return !unit.iswithinfog;
             // iswithinfog is relative to the host. Query the observer's FOW explicitly for versus.
             try {
                 var fog = unit.fows == null || unit.fows.Length < 2 ? null : unit.fows[guestSide == hostSide ? 0 : 1];
@@ -260,6 +264,7 @@ namespace GTIP
         void Execute(MpMessage value)
         {
             if (!Ready || panel || CampaignEditor.BlocksInput) throw new InvalidOperationException("Host is editing the campaign or session is not ready.");
+            if(ExecuteNative(value))return;
             if(ExecuteGlobal(value))return;
             if (!units.TryGetValue(value.unit, out var unit) || unit == null || !BattleUnits.completeunitlist.Contains(unit)) throw new InvalidOperationException("Formation no longer exists.");
             MpRules.Authorize(value, session, guestSide, unit.alliance, Controllable(unit), lastSequence);

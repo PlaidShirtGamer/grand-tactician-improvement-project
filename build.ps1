@@ -7,6 +7,8 @@ dotnet build (Join-Path $PSScriptRoot 'src/Patcher/Patcher.csproj') -c Release -
 if ($LASTEXITCODE -ne 0) { throw 'Patcher build failed' }
 dotnet build (Join-Path $PSScriptRoot 'src/Runtime/Runtime.csproj') -c Release "-p:GameManagedDir=$managed" "-p:OriginalAssembly=$OriginalAssembly" -p:UseSharedCompilation=false
 if ($LASTEXITCODE -ne 0) { throw 'Runtime build failed' }
+dotnet run --project (Join-Path $PSScriptRoot 'tests/NativeSchemas/NativeSchemas.csproj') -c Release -p:UseSharedCompilation=false -- (Join-Path $PSScriptRoot 'src/Runtime/bin/Release/netstandard2.0/GTIP.Runtime.dll') $OriginalAssembly $managed
+if ($LASTEXITCODE -ne 0) { throw 'Native schema ABI checks failed' }
 dotnet run --project (Join-Path $PSScriptRoot 'tests/Traversal/Traversal.csproj') -c Release -p:UseSharedCompilation=false
 if ($LASTEXITCODE -ne 0) { throw 'Traversal tests failed' }
 dotnet run --project (Join-Path $PSScriptRoot 'tests/Formation/Formation.csproj') -c Release -p:UseSharedCompilation=false

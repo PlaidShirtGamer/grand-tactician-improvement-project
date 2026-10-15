@@ -7,7 +7,7 @@ namespace GTIP
 {
     public sealed class MpFormationState
     {
-        public int Parent, Side, Tier, Commander, Garrison, ParentRegiment;
+        public int Parent, Side, Tier, Commander, Garrison, ParentRegiment,Camp,Entrenchment,Fort,SupplyIip,Telegraph;
         public bool Active, Visible, Horse, Top, Detached;
         public float X,Y,Z,Yaw;
         public float[] Colors, Contract;

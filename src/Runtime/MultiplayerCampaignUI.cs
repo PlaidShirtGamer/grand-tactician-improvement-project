@@ -62,7 +62,7 @@ namespace GTIP
                 GUILayout.Label("Hosting " + mode + " | Host: " + SideName(hostSide) + " | Guest: " + SideName(guestSide));
                 GUILayout.Label("Session key (share with your guest)"); GUILayout.TextField(token);
                 GUILayout.Label("Listening address: " + address + ":" + port);
-                GUILayout.Label("Close F9 and resume the campaign manually. Host controls time, saving and battle resolution. Guest can select formations and request movement on the native map. Closing a connection pauses the host campaign.");
+                GUILayout.Label("Close F9 to use the native campaign. Both players can request time changes, campaign orders, construction and engagement choices; the host validates and executes them. Saving belongs to the host. Tactical battle synchronization remains unfinished. Closing a connection pauses the host campaign.");
                 if (GUILayout.Button("End session and pause campaign")) End("Session ended. Campaign paused.");
             } else {
                 GUILayout.BeginHorizontal(); GUILayout.Label("Guest: " + SideName(guestSide) + " | " + mode + (snapshot == null ? " | connecting" : snapshot.paused ? " | HOST PAUSED" : " | running"));
@@ -78,9 +78,9 @@ namespace GTIP
             var style=new GUIStyle(GUI.skin.label){fontSize=11,alignment=TextAnchor.MiddleLeft,wordWrap=false};
             string text="MP "+mode+(authenticated?" connected":" waiting")+(hostClock==null?"":" | "+hostClock.year+"-"+hostClock.month.ToString("00")+"-"+hostClock.day.ToString("00")+" "+Tools.ConvertFloatToTimestamp(hostClock.hour)+(hostClock.paused?" paused":" "+hostClock.speed+"x"))+" | F9";
             float width=Math.Min(Screen.width-16,style.CalcSize(new GUIContent(text)).x+12);
-            var candidates=new[]{new Rect(8,Screen.height-24,width,18),new Rect((Screen.width-width)/2,Screen.height-24,width,18),new Rect(8,175,width,18)};
-            // Hide the small strip if native panels cover every available position.
-            foreach(var rect in candidates)if(StatusSpaceFree(rect)) {GUI.Box(rect,"");GUI.Label(rect,text,style);break;}
+            float scale=PanelHandler.GetUIScale();
+            var rect=new Rect(Mathf.Max(8,Screen.width-260*scale-width),42*scale,width,18);
+            GUI.Box(rect,"");GUI.Label(rect,text,style);
         }
         bool StatusSpaceFree(Rect area)
         {

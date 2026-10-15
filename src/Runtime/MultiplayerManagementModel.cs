@@ -22,7 +22,7 @@ namespace GTIP
         public bool Icon;
     }
     public sealed class MpChartPoints {public float[] Time,Value;}
-    public sealed class MpCampaignControls {public bool AutoFinances;public int Chapter;}
+    public sealed class MpCampaignControls {public bool AutoFinances,AutoGovernment,AutoCompanies,AutoRailroads,AutoPlace,AutoWeapons,UseFog;public int Chapter;}
     public sealed class MpAlertState {public int Count;public bool Blink;public string Headline,Tooltip;public float[] Positions;}
     public static class MpFinanceRules
     {

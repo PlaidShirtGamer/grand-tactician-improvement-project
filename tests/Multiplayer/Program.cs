@@ -5,6 +5,34 @@ int checks = 0;
 void Check(bool value, string name) { if (!value) throw new Exception(name); checks++; }
 void Reject(Action action, string name) { bool rejected = false; try { action(); } catch (Exception) { rejected = true; } Check(rejected, name); }
 var schema=MpStateSchema.Scalars(typeof(StateFixture));
+var firstDecision=new MpFirstDecision();
+Check(!firstDecision.Claim(0),"Engagement choice requires an open issue");firstDecision.Begin(1);
+Check(firstDecision.Claim(1) && !firstDecision.Claim(1),"First accepted co-op engagement choice wins exactly once");firstDecision.Begin(2);
+Check(!firstDecision.Claim(1) && !firstDecision.Resolved,"Delayed decision cannot resolve a newer engagement");
+Check(firstDecision.Claim(2),"Next engagement can choose independently");Reject(()=>firstDecision.Begin(2),"Engagement identities cannot be reused");
+firstDecision.Clear();Check(!firstDecision.Resolved && firstDecision.Serial==0,"Disconnect clears engagement arbitration");
+var nativePath=new MpPathState{Lengths=new[]{2,1},Status=new[]{2,1},Corners=new[]{1f,2f,3f,4f,5f,6f,7f,8f,9f},BlockPath=new[]{0},BlockCorner=new[]{1}};
+MpWorldRules.Path(nativePath);Check(true,"Multi-segment native path accepted without client pathfinding");
+var pathSchema=MpStateSchema.Scalars(typeof(MpPathState));
+var pathCopy=new MpPathState();pathSchema.Apply(pathCopy,MpStateCodec.Decode(new[]{pathSchema},MpStateCodec.Encode(new[]{pathSchema},new[]{new MpStateRow{Values=pathSchema.Capture(nativePath)}}))[0].Values);
+Check(pathCopy.Lengths.SequenceEqual(nativePath.Lengths) && pathCopy.Status.SequenceEqual(nativePath.Status) && pathCopy.Corners.SequenceEqual(nativePath.Corners),"Native path shape, order-delay status and coordinates round trip");
+Reject(()=>MpWorldRules.Path(new MpPathState{Lengths=new[]{3},Status=new[]{2},Corners=new float[3],BlockPath=new int[0],BlockCorner=new int[0]}),"Truncated native path cannot be installed");
+Reject(()=>MpWorldRules.Path(new MpPathState{Lengths=new[]{1},Status=new[]{2},Corners=new[]{float.NaN,1f,2f},BlockPath=new int[0],BlockCorner=new int[0]}),"Non-finite path cannot be installed");
+var buildingRecord=new MpBuildingRecord{Type=22,Owner=0,Level=1,NativeIndex=3,X=500,Y=2,Z=800,Condition=1,Name="Washington Depot",Active=true,Garrison=25};
+MpWorldRules.Building(buildingRecord,28,6);Check(true,"Native building and garrison identity accepted");
+var buildingSchema=MpStateSchema.Scalars(typeof(MpBuildingRecord));var buildingCopy=new MpBuildingRecord();
+buildingSchema.Apply(buildingCopy,MpStateCodec.Decode(new[]{buildingSchema},MpStateCodec.Encode(new[]{buildingSchema},new[]{new MpStateRow{Id=17,Values=buildingSchema.Capture(buildingRecord)}}))[0].Values);
+Check(buildingCopy.Garrison==25 && buildingCopy.NativeIndex==3 && buildingCopy.Name==buildingRecord.Name && buildingCopy.X==500,"Building identity and host list index survive replication");
+buildingCopy.Owner=9;Reject(()=>MpWorldRules.Building(buildingCopy,28,6),"Unknown building owner rejected");buildingCopy.Owner=0;
+buildingCopy.Condition=float.PositiveInfinity;Reject(()=>MpWorldRules.Building(buildingCopy,28,6),"Invalid building condition rejected");
+foreach(float code in new[]{100f,101f,120f,121f,122f,123f}){MpWorldRules.UnitOrder("campaign-order",code,16,4,false);Check(true,"Registered native army order accepted: "+code);}
+Reject(()=>MpWorldRules.UnitOrder("campaign-order",100,16,0,false),"Unready formation cannot request offensive stance");
+Reject(()=>MpWorldRules.UnitOrder("campaign-order",121,16,1,false),"Unready formation cannot scout");
+Reject(()=>MpWorldRules.UnitOrder("campaign-order",101,16,4,true),"Pending native order cannot be bypassed");
+Reject(()=>MpWorldRules.UnitOrder("forced-march",1,16,2,false),"Forced march respects host readiness");
+Reject(()=>MpWorldRules.UnitOrder("fleet-order",1,16,4,false),"Land formation cannot receive naval orders");
+Reject(()=>MpWorldRules.UnitOrder("fleet-order",4,17,4,false),"Unknown naval order rejected");
+Reject(()=>MpWorldRules.UnitOrder("arbitrary-method",0,16,4,false),"Peer cannot name arbitrary native methods");
 Check(MpRules.NewClock(2,1),"Newer authoritative clock accepted");
 Check(!MpRules.NewClock(1,2) && !MpRules.NewClock(2,2),"Delayed or duplicate clock cannot rewind pause state");
 Check(!MpRules.NewClock(0,0) && !MpRules.NewClock(-1,0),"Invalid clock serial rejected");

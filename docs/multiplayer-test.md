@@ -1,3 +1,38 @@
+# GTIP MP Test v0.22 — world objects, native controls and map-state audit
+
+Both installs require **v0.22 / protocol 16** and must be restarted. This is an experimental co-op candidate. Full native parity, versus and tactical battle synchronization remain unfinished. The checks below are required live tests, not recorded passes.
+
+The small status strip is fixed near the top-right, left of the compass. It stays in that location when selecting units or opening panels. Native popups may overlap it. The guest map unit card is suppressed while the Military management window is open. Fleets, Officers, Weapons and the bottom construction/order submenus now use their native viewing controls; their registered mutations are sent as host-validated requests.
+
+Formation replication now includes native `inbattle`, retreat/participation flags, the cached `unitstatus`, order-delay paths and additional group/transport values. Co-op visibility comes from the host's rendered fog state rather than guest fog calculations. Remembered enemy sightings have a separate adapter for their observed positions, timestamps and native icons; the guest no longer creates its own sightings. Visible child units are not hidden by deactivating a fogged parent object. Absolute poses are restored parent-first to prevent parent movement displacing unchanged children.
+
+Buildings have stable session IDs, native list ordering, lifecycle/level/condition/stock/construction fields and garrison links. Town/IIP ownership and selected economy fields, railroad construction, ship lifecycle/assignments, fleet fields and weapon-order records have explicit adapters. Guest manual/automatic construction, depot stock/upgrade, railroad construction, fleet/ship creation and transfer/deletion, weapon assignments/orders, officer promotion, army stance/orders, forced march, stopping and unit/ship names use host validation and native execution. These adapters do not establish complete nested economy, logistics or battle-state coverage. Native placement/pathfinding and costs require live verification.
+
+Dispatch delivery is shared, while log visibility and read/remove choices are local. The host retains delivery records for the session even after locally removing a message; guest removals are remembered so incoming state does not restore them. Non-formation dispatch object references remain incomplete.
+
+The native engagement window receives the host's text, totals, reinforcement entries and enabled choices. In co-op, the first valid choice accepted on the host resolves that engagement; delayed requests cannot choose for a later engagement. Reinforcement selection is host-validated. Auto-resolve, defend, withdraw and retreat remain native host operations whose registered results replicate. **Play Battle still transitions the host into a tactical battle and ends this campaign multiplayer session. It does not start a synchronized tactical battle.** Versus decision rules are not implemented.
+
+Unit position readback runs after every applied revision. At revision 1 and every 30 revisions, each log's companion `.state.csv` records the revision, unit identity/parent, visibility, active flag, battle/retreat/routed/stance/status and map coordinates. Compare matching revisions, not simultaneous file timestamps. This provides evidence for missing/misplaced icons; scalar equality alone cannot prove rendering parity. Existing capture/worker/apply timing diagnostics remain available. No performance improvement is claimed without a connected measurement.
+
+Verification: 230 multiplayer model/protocol/TCP checks; 31 native schemas with 591 fields and private field/path-cache ABI checks against the original game assembly; 42 editor presentation checks; hierarchy/editor/AI regression suites; 95 structurally verified hooks/changes with 88 preserved methods. These do not exercise Unity gameplay or prove the native UI fixes.
+
+The candidate is installed in both desktop test copies with matching patched-game/runtime hashes and installer backups. Connected gameplay verification is pending.
+
+## Connected test for v0.22
+
+Use a separate copy of **GT MP Test** (originally Regi Test 3). Host the loaded campaign, join the guest from the main menu, and keep it paused for the first comparisons.
+
+1. Select/deselect units and open Military on each copy. The status strip should stay fixed; the guest map unit card should not overlap Military. Open Fleets, Officers and Weapons, then return to Armies.
+2. Compare the same camera area/zoom around Washington, Alexandria and the resting formations in your report. Check Keitt's/Miller's divisions, visible versus remembered sightings, names, coordinates, stance and battle status. Repeat after running briefly and pausing. Retain both `.log` and `.log.state.csv` files if they differ.
+3. On the guest, change stance, scouting/raiding/guarding orders where eligible, forced march and stop. Check the host accepts the request and both show native order delay/readiness. Test Manage Army and an OOB transfer without an overlapping map card.
+4. Open Federal Buildings, Company Applications and Railroads. Place an eligible building from each player, check one payment and one object on each map, and test upgrade/depot storage. Start a permitted railroad and verify its progress/completion. Record any rejected action and the native tooltip explaining eligibility.
+5. Test one fleet/ship creation, ship transfer to/from a pool, renaming/deletion, officer promotion and weapon assignment/order. Check costs, counts and results on both copies; creating/deleting a native object should not require a campaign reload.
+6. Open/read/mark/remove/hide dispatches separately. The other player's delivered log should stay intact and retain its own read state; new messages should reach both.
+7. At an engagement, compare text, totals, choices and reinforcement lists. Select a valid non-tactical choice on the guest, then repeat with the host choosing first. Each engagement should resolve once, and resulting unit status should agree. Do not use Play Battle to test campaign continuity.
+8. Run for several campaign days with pause/speed changes, construction, recruitment, policies and projects. Note host/guest stutters and any disconnect; keep both session logs. Rejoin from a fresh host checkpoint after a failure rather than continuing a disconnected replica.
+
+## Earlier build: v0.21
+
 # GTIP MP Test v0.21 — host-owned campaign presentation and Goods & Trade
 
 Both installs require v0.21 / protocol 15. This remains an incomplete co-op prototype. Versus, tactical battles, full building/economic-object replication and complete native command coverage remain unfinished.

@@ -16,12 +16,14 @@ Target: host-authoritative campaign and standalone-battle co-op/versus using nat
 | Domain | Current implementation | Remaining requirements |
 |---|---|---|
 | Clock | Host clock/pause stream | Long-running pacing and panel behavior tests |
-| Formations | Monotonic session IDs, lifecycle, parent graph, Army Groups, selected scalar fields | Complete reference audit, caches, perks, detached objects, rendering tests |
+| Formations | Monotonic session IDs, lifecycle, parent graph, Army Groups, native status/retreat/battle flags and paths; absolute pose readback | Complete reference audit, perks, detached objects, rendering and long-running tests |
+| Map visibility | Host fog result and remembered sighting records; guest presentation only | Live same-area comparisons across zoom/FOW changes, hidden-information design for versus |
 | Officers | Attributes, dates, command references; command identity precondition | Stable IDs beyond native indices, creation/deletion edge cases |
-| Economy | Alliance/state scalar and numeric-array fields | Nested industry, production queues, transport, buildings, native commands |
-| Recruitment | Pools and existing unit data | Full queue lifecycle and guest recruitment commands |
-| Dispatches | Delivered records, formation references, native notifications | Non-formation references, local read state policy, guest interaction tests |
-| Guest commands | Movement, stop, commander replacement | Structural, recruitment, economic and all other native UI intents |
+| Economy/world | Alliance/state/resource/chart fields; selected building/Town/IIP data, building lifecycle, railroad progress, weapon orders | Full nested industry/transport/queues, native derived caches and command coverage audit |
+| Recruitment | Native guest recruiting dialog and host-validated unit creation/cancellation; ship/fleet lifecycle | Full queue/return-cost coverage and live recruiting/shipyard tests |
+| Dispatches | Delivered records, formation references, native notifications; local read/remove/view state | Non-formation references, session archive retention bounds, guest interaction tests |
+| Guest commands | Movement, hierarchy/recruitment, policies/projects/finances, commanders, construction/railroads, army orders, ships/weapons | Remaining native actions and derived effects; live validation for every command boundary |
+| Engagements | Native host prompt text/choices/rows, reinforcement selection, first accepted co-op decision | Live simultaneous-input tests; tactical transition still ends session; versus rules |
 | Versus | Disabled | Per-side simulation control, filtered initial checkpoint and state, hidden-information policy |
 | Tactical battles | Disabled; session ends at transition | Entity/weapon/projectile state, order routing, visibility, resolution, campaign handoff |
 

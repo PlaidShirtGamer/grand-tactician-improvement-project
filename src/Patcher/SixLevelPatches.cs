@@ -8,15 +8,15 @@ internal static class SixLevelPatches
         var module = game.MainModule;
         var hooks = new List<string>();
         MethodReference Helper(string type, string name) => module.ImportReference(helper.MainModule.Types.Single(t => t.Name == type).Methods.Single(m => m.Name == name));
-        MethodDefinition Method(string type, string name, string? first = null) => Types(module.Types).Single(t => t.Name == type).Methods.Single(m => m.Name == name && (first == null || m.Parameters[0].ParameterType.Name == first));
-        void Wrap(string type, string name, string target, string helperType = "SixLevelRuntime", string? first = null)
+        MethodDefinition Method(string type, string name, string? first = null,string? last=null) => Types(module.Types).Single(t => t.Name == type).Methods.Single(m => m.Name == name && (first == null || m.Parameters[0].ParameterType.Name == first) && (last==null || m.Parameters.Last().ParameterType.Name==last));
+        void Wrap(string type, string name, string target, string helperType = "SixLevelRuntime", string? first = null,string? last=null)
         {
-            var original = Method(type, name, first);
+            var original = Method(type, name, first,last);
             var hook = Helper(helperType, target);
             var expected = original.Parameters.Select(p => p.ParameterType.FullName).ToList();
             if (!original.IsStatic) expected.Insert(0, original.DeclaringType.FullName);
             if (expected.Count != hook.Parameters.Count || expected.Where((name, i) => name != hook.Parameters[i].ParameterType.FullName &&
-                    !(hook.Parameters[i].ParameterType.FullName == "System.Object" && name == "AICampaign/AIFaction")).Any() || original.ReturnType.FullName != hook.ReturnType.FullName)
+                    !(hook.Parameters[i].ParameterType.FullName == "System.Object" && (name == "AICampaign/AIFaction" || name=="BuildingList/BuildingLine"))).Any() || original.ReturnType.FullName != hook.ReturnType.FullName)
                 throw new InvalidOperationException("Hook signature mismatch: " + original.FullName);
             original.Name = "GTIP_Original_" + target;
             var wrapper = new MethodDefinition(name, original.Attributes, original.ReturnType);
@@ -65,6 +65,7 @@ internal static class SixLevelPatches
         Wrap("Autocalc", "Update", "ReplicaAutocalc", "MultiplayerCampaign");
         Wrap("ArmyGroup", "IncreaseCommanderExperience", "ReplicaGroupExperience", "MultiplayerCampaign");
         Wrap("Messages", "Update", "ReplicaMessages", "MultiplayerCampaign");
+        Wrap("Messages", "RemoveMessage", "ReplicaRemoveDispatch", "MultiplayerCampaign");
         Wrap("Policy", "CheckSelections", "ReplicaPolicySelection", "MultiplayerCampaign");
         Wrap("BattleUI", "LateUpdate", "ReplicaUiLate", "MultiplayerCampaign");
         Wrap("BattleUnits", "MoveUnit", "ReplicaMoveUnit", "MultiplayerCampaign");
@@ -86,6 +87,35 @@ internal static class SixLevelPatches
         Wrap("CampaignMainPanel", "OnDisable", "ReplicaMainPanelClose", "MultiplayerCampaign");
         Wrap("CommandersList", "AssignCommander", "ReplicaCommanderAssign", "MultiplayerCampaign");
         Wrap("CampaignMainPanel", "UpdateCommanderData", "ReplicaCommanderPreview", "MultiplayerCampaign");
+        Wrap("WeaponList","AssignWeapon","ReplicaAssignWeapon","MultiplayerCampaign");
+        Wrap("WeaponList","PlaceWeaponOrder","ReplicaWeaponOrder","MultiplayerCampaign");
+        Wrap("CampaignMainPanel","Promote","ReplicaPromote","MultiplayerCampaign");
+        Wrap("CBuilding","UpdateManualBuildingPlacement","ReplicaBuildingPlacement","MultiplayerCampaign");
+        Wrap("CBuildingIcon","Upgrade","ReplicaBuildingUpgrade","MultiplayerCampaign");
+        Wrap("CBuildingIcon","SwitchStorageLevelTarget","ReplicaBuildingStock","MultiplayerCampaign");
+        Wrap("RailroadList","StartConstruction","ReplicaRailroadConstruction","MultiplayerCampaign");
+        Wrap("BuildingList","StartAutoConstruction","ReplicaAutoBuilding","MultiplayerCampaign");
+        Wrap("BuildingList","UpdateCheckBox","ReplicaConstructionOptions","MultiplayerCampaign");
+        Wrap("RailroadList","UpdateCheckBox","ReplicaRailroadOptions","MultiplayerCampaign");
+        Wrap("BattleUnits","CreateGarrisonDummy","ReplicaGarrison","MultiplayerCampaign");
+        Wrap("Vessel","UpdateConsumation","ReplicaVesselConsumption","MultiplayerCampaign");
+        Wrap("CampaignMainPanel","CreateFleet","ReplicaCreateFleet","MultiplayerCampaign");
+        Wrap("CampaignMainPanel","CreateShip","ReplicaCreateShip","MultiplayerCampaign");
+        Wrap("BattleUnits","DeleteShip","ReplicaDeleteShip","MultiplayerCampaign");
+        Wrap("BattleUnits","MoveShip","ReplicaShipToFleet","MultiplayerCampaign",last:"Regiment");
+        Wrap("BattleUnits","MoveShip","ReplicaShipToPool","MultiplayerCampaign",last:"Int32");
+        Wrap("BattleUI","SetBattlePanelShownState","ReplicaBattleDecision","MultiplayerCampaign");
+        Wrap("BattlePanel","Update","ReplicaBattlePanelUpdate","MultiplayerCampaign");
+        Wrap("BuildingList","Update","ReplicaBuildingList","MultiplayerCampaign");
+        Wrap("RailroadList","Update","ReplicaRailroadList","MultiplayerCampaign");
+        Wrap("WeaponList","Update","ReplicaWeaponList","MultiplayerCampaign");
+        Wrap("WeaponList","UpdateCheckBox","ReplicaWeaponOptions","MultiplayerCampaign");
+        Wrap("SpottedEnemy","Update","ReplicaSightings","MultiplayerCampaign");
+        Wrap("CBuilding","UpdateBuildingLists","ReplicaBuildingLists","MultiplayerCampaign");
+        Wrap("Fleet","Update","ReplicaFleetUpdate","MultiplayerCampaign");
+        Wrap("CampaignMainPanel","UpdateUnitNameInputs","ReplicaUnitName","MultiplayerCampaign");
+        Wrap("FleetInfoPanel","UpdateFleetNameInputs","ReplicaFleetName","MultiplayerCampaign");
+        Wrap("FleetInfoPanel","UpdateShipNameInputs","ReplicaShipName","MultiplayerCampaign");
         Wrap("AICampaign", "ZoneRecruiting", "Recruit", "AiOrganizationDiagnostics");
         Wrap("AICampaign", "CheckCombinationOfUnits", "Combine", "AiOrganizationDiagnostics");
         Wrap("AICampaign", "CheckTransferOfUnits", "Transfer", "AiOrganizationDiagnostics");
@@ -94,6 +124,16 @@ internal static class SixLevelPatches
         Wrap("OOB", "UpdateOOB", "Update", "HierarchyOob");
         Wrap("OOB", "AddPlusIcon", "PlusIcon", "HierarchyOob");
         Wrap("BattleUnits", "SetGroupFormation", "Formation", "HierarchyFormation", "Regiment");
+
+        var visibility=Method("Regiment","CheckRegimentVisibility");
+        var hiddenCalls=visibility.Body.Instructions.Where(i=>i.Operand is MethodReference r && r.Name=="UnitIsHidden").ToArray();
+        if(hiddenCalls.Length!=2)throw new InvalidOperationException("Unexpected native fog checks.");
+        var vil=visibility.Body.GetILProcessor();
+        foreach(var call in hiddenCalls) {
+            var unit=vil.Create(OpCodes.Ldarg_0);vil.InsertAfter(call,unit);
+            vil.InsertAfter(unit,vil.Create(OpCodes.Call,Helper("MultiplayerCampaign","ReplicaHidden")));
+        }
+        hooks.Add("Regiment.HostFogVisibility");
 
         // The first read diagnoses garrison placeholders; preserve it. The
         // second read removes unassigned dummy officers from the native list.
@@ -183,7 +223,7 @@ internal static class SixLevelPatches
                 throw new InvalidOperationException("Serialized hook failed verification: " + original.FullName);
             originals++;
         }
-        if (originals != 58) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
+        if (originals != 88) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
         var suitability = game.MainModule.Types.Single(t => t.Name == "GameVars").NestedTypes.Single(t => t.Name == "Commander")
             .Methods.Single(m => m.Name == "CheckSuitableRank" && m.Parameters[0].ParameterType.FullName == "System.Int32");
         if (suitability.Body.Instructions.Count(i => i.Operand is MethodReference r &&

@@ -65,6 +65,7 @@ namespace GTIP
         }
         public static void ReplicaMainSelection(CampaignMainPanel target,int selection,bool reset,GameObject unit)
         {
+            if(instance!=null && instance.host && instance.remoteIntent)return;
             if(IsReplica && instance!=null && instance.nativePreview!=null && target==instance.previewPanel && selection==0)selection=10;
             NativeAccess.Call(target,"GTIP_Original_ReplicaMainSelection",selection,reset,unit);
         }

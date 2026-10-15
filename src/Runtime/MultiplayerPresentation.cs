@@ -20,7 +20,16 @@ namespace GTIP
             "034_OptionsC","034_OptionsB","211_OptionsB","297_Accept","298_Cancel","176_OOBSymbolP",
             "362_EconomyReport","363_IntelligenceReport"
             ,"385_Replace","487_ScrollLeft","488_ScrollRight","084_Commander","490_Assign","491_Cancel","910_ScrollUp","911_ScrollDn",
-            "755_RingBackground","881_List","885_AveragePrice","886_Demand","887_Production","888_InStock"
+            "755_RingBackground","881_List","885_AveragePrice","886_Demand","887_Production","888_InStock",
+            "187_RemoveDispatches","250_RemoveDispatches","188_MarkAllAsRead","251_MarkAllAsRead",
+            "493_Armies","494_Fleets","495_Commanders","496_Weapons","497_Logistics",
+            "499_SelectedFleet","500_AllFleets","382_PrevFleet","383_NextFleet","604_MANAGEMENT","653_ADMINISTRATION",
+            "600_STANCE","601_CAVALRY","602_CONSTRUCT","603_MOVEMENT","650_STANCE","651_ORDERS","652_MOVEMENT",
+            "890_FederalBuildings","891_CompanyApplications","892_Railroads","630_FORT","631_DEPOT","632_TELEGRAPH",
+            "090_ChangeWeapon","485_Cancel","484_Upgrade","384_Promote","757_Upgrade",
+            "505_CreateShip","505_CreateShipPool","507_Cancel","927_IncBuilt","928_DecBuilt","502_ShipImage","502_ImageLarge","506_Build",
+            "512_NewFleet","511_Cancel","510_Build","513_DeleteShip",
+            "411_C_PlayBattle","412_C_Autoresolve","413_C_Defend","414_C_Withdraw","415_C_Retreat","416_C_GoToLocation"
         };
         ButtonTooltip replicaHover;
         public static void ReplicaBattleUi(BattleUI target)
@@ -52,6 +61,10 @@ namespace GTIP
             }
             if(button!=null && (!button.mouseonobject || !button.mouseonobject2))button.ActivateMouseOnObject();
             bool clicked=Input.GetMouseButtonDown(0);
+            if(clicked) {
+                var field=hits.Select(h=>h.gameObject.GetComponentInParent<TMPro.TMP_InputField>()).FirstOrDefault(f=>f!=null && f.interactable);
+                if(field!=null){field.Select();field.ActivateInputField();}
+            }
             if(clicked && button!=null) {
                 if(button.name=="169_SaveGame" || button.name=="213_SaveGameB" || button.name=="160_Quit" || button.name=="212_Quit")instance.guestFileMenu=true;
             }
@@ -65,11 +78,13 @@ namespace GTIP
                 }
             }
             if(Input.GetMouseButtonDown(0) && button!=null)instance.RequestTimeButton(button.name);
+            if(clicked && button!=null && button.state!=2)instance.GuestUnitAction(button.name);
             bool logEntry=button!=null && button.name.Length>=14 && button.name.Substring(3,9)=="_LogEntry";
             bool recruitment=button!=null && instance.NativeRecruitOpen && (button.name.StartsWith("474_RecruitingRow") || button.name.StartsWith("480_Color") ||
                 new[]{"475_SwitchRecruitType","476_PrevSoldier","477_NextSoldier","478_Left","479_Right","590_RecruitInfantry","591_RecruitCavalry","592_RecruitArtillery","593_RecruitHorseArtillery","481_Recruit","482_Cancel","514_Cancel","575_InitialBrigadeSize","947_RecolorUniform"}.Contains(button.name));
             bool alert=button!=null && int.TryParse(button.name.Substring(0,Mathf.Min(3,button.name.Length)),out int alarm) && alarm>=841 && alarm<=851;
-            bool allowed=button!=null && (ReplicaNavigation.Contains(button.name) || recruitment || alert || logEntry || button.GetComponentInParent<Options>()!=null);
+            bool nativeList=button!=null && (button.name.StartsWith("486_WeaponList") || button.name.StartsWith("508_BuildLine") || button.name.StartsWith("509_BuildLine"));
+            bool allowed=button!=null && (ReplicaNavigation.Contains(button.name) || nativeList || recruitment || alert || logEntry || button.GetComponentInParent<Options>()!=null);
             foreach(var p in handler.panel.Concat(handler.symbol).Concat(handler.multiplepanel))
                 if(p.buttons!=null)foreach(var b in p.buttons)if(b!=null) {
                     if(b==button && b.isActiveAndEnabled) { if(!b.mouseonobject || !b.mouseonobject2)b.ActivateMouseOnObject(); }
@@ -79,13 +94,20 @@ namespace GTIP
             handler.UpdatePanel(ref left,ref right,ref twice);
             if(clicked)instance.ReplicaLocalClose(hits,handler);
             instance.OptionsInput(handler);
-            target.UpdateUnitPanelCampaign();
+            instance.DriveGuestNativeViews();
+            instance.GuestEngagementChecks();
+            target.UpdateUnitPanelCampaign(forceotherpanelopen:handler.panel[handler.cpanel_mainpanel].state>0);
+            instance.RefreshGuestBottomPanel(target,handler);
             var selected=target.selectedunitreg;
             if(selected!=null && selected.alliance==instance.guestSide && instance.ids.ContainsKey(selected))instance.guestSelection=selected;
             if(EventSystem.current==null || EventSystem.current.currentSelectedGameObject==null)GameVars.deactivateshortcuts=false;
         }
         void ReplicaLocalClose(List<RaycastResult> hits,PanelHandler handler)
         {
+            var tooltip=HitReplicaButton(hits);
+            if(tooltip!=null && tooltip.CloseThisPanelIfPressed!=null) {
+                ModularUIFunctions.OpenClosePanelStatic(tooltip.CloseThisPanelIfPressed,false,true);return;
+            }
             // Native X buttons use Unity onClick. Invoke only known local close actions.
             var control=hits.Select(h=>h.gameObject.GetComponentInParent<UnityEngine.UI.Button>()).FirstOrDefault(b=>b!=null);
             if(control==null)return;
@@ -93,7 +115,7 @@ namespace GTIP
                 var receiver=control.onClick.GetPersistentTarget(i);
                 string method=control.onClick.GetPersistentMethodName(i);
                 if(receiver is Newspaper paper && method=="Close"){paper.Close();return;}
-                if(method=="ClosePanel" && receiver is ModularUIFunctions) {
+                if((method=="ClosePanel" || method=="OpenClosePanel") && receiver is ModularUIFunctions) {
                     var containing=handler.panel.FirstOrDefault(p=>p.go!=null && control.transform.IsChildOf(p.go.transform) && p.state>0);
                     if(containing!=null && containing.go.GetComponent<Options>()==null) {handler.HidePanel(containing);return;}
                 }
@@ -102,7 +124,8 @@ namespace GTIP
         }
         void OptionsInput(PanelHandler handler)
         {
-            bool open=handler.panel[handler.cpanel_optionspanel].state>0 || handler.panel[handler.cpanel_finances].state>0 || NativeRecruitOpen;
+            var selected=EventSystem.current?.currentSelectedGameObject?.GetComponent<TMPro.TMP_InputField>();
+            bool open=handler.panel[handler.cpanel_optionspanel].state>0 || handler.panel[handler.cpanel_finances].state>0 || NativeRecruitOpen || (selected!=null && selected.isFocused);
             // Local Options needs Unity's sliders, input fields and drop-downs.
             // Gameplay dispatch remains filtered while this modal is open.
             foreach(var module in blockedModules)if(module!=null)module.enabled=open;
@@ -145,7 +168,7 @@ namespace GTIP
             if(!IsReplica){NativeAccess.Call(target,"GTIP_Original_ReplicaUiLate");return;}
             if(BlocksInput || target.panelhandler==null)return;
             var main=NativeAccess.Get<CampaignMainPanel>(target.panelhandler,"campaignmainpanel");
-            if(main!=null && (main.contentselection==0 || main.contentselection==10 || main.contentselection==11))
+            if(main!=null)
                 NativeAccess.Call(target,"GTIP_Original_ReplicaUiLate");
         }
         public static void RepairShortcutFocus()
@@ -188,7 +211,7 @@ namespace GTIP
         bool NativeModalOpen()
         {
             var h=ui?.panelhandler;if(h==null)return false;
-            return new[]{h.cpanel_mainpanel,h.cpanel_finances,h.cpanel_production,h.cpanel_trade,h.cpanel_strategy,h.cpanel_policies,h.cpanel_projects,h.cpanel_newspaper,h.cpanel_optionspanel}
+            return new[]{h.cpanel_mainpanel,h.cpanel_finances,h.cpanel_production,h.cpanel_trade,h.cpanel_strategy,h.cpanel_policies,h.cpanel_projects,h.cpanel_newspaper,h.cpanel_optionspanel,h.cpanel_battle}
                 .Any(i=>i>=0 && i<h.panel.Count && h.panel[i].state>0);
         }
         void RefreshReplicaRosterUi()

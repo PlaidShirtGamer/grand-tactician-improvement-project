@@ -37,7 +37,9 @@ namespace GTIP
         {
             var p=u.transform.position;var colors=u.componentcolor;
             return new MpFormationState {Parent=ParentId(u),Side=u.alliance,Tier=u.unittyp,Commander=u.commander,
-                Garrison=u.garrisonreference==null?-1:BattleUnits.cbuildings.IndexOf(u.garrisonreference),ParentRegiment=u.parentregiment==null?0:ReferenceId(u.parentregiment.GetComponent<Regiment>()),
+                Garrison=CanonicalBuildingIndex(u.garrisonreference),ParentRegiment=u.parentregiment==null?0:ReferenceId(u.parentregiment.GetComponent<Regiment>()),
+                Camp=BuildingReference(u.campbuilding),Entrenchment=BuildingReference(u.entrenchment),Fort=BuildingReference(u.fortinrange),
+                SupplyIip=u.closestiipforsupply==null?0:BattleUnits.iips.IndexOf(u.closestiipforsupply)+1,Telegraph=BuildingReference(u.hastelegraphconnection),
                 Active=u.gameObject.activeSelf,Visible=Visible(u),Horse=u.ishorseartillery,Top=u.istopunit,Detached=u.permanentlydetached,
                 X=p.x,Y=p.y,Z=p.z,Yaw=u.transform.eulerAngles.y,Colors=ColorData(colors!=null && colors.Length>1?colors[1]:Color.gray).Concat(ColorData(colors!=null && colors.Length>0?colors[0]:Color.gray)).ToArray(),Contract=DateData(u.contractdate)};
         }
@@ -135,7 +137,7 @@ namespace GTIP
             foreach(var pair in states.OrderBy(p=>Depth(units[p.Key]))) {
                 var u=units[pair.Key];var s=pair.Value;u.istopunit=s.Top;u.permanentlydetached=s.Detached;u.contractdate=FromDate(s.Contract);
                 ApplyPose(u,new Vector3(s.X,s.Y,s.Z),Quaternion.Euler(0,s.Yaw,0));originalActive[u]=s.Active;
-                u.gameObject.SetActive(s.Active && s.Visible);
+                replicaVisibility[u]=s.Visible;u.gameObject.SetActive(s.Active);
                 if(changed){u.UpdateAllAttachedUnits();NativeAccess.Call(u,"ReferenceGroupsAbove");}
             }
             if(changed) {

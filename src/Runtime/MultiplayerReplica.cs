@@ -13,6 +13,8 @@ namespace GTIP
         readonly Dictionary<Regiment, Vector3> originalPositions = new Dictionary<Regiment, Vector3>();
         readonly Dictionary<Regiment, Quaternion> originalRotations = new Dictionary<Regiment, Quaternion>();
         readonly Dictionary<Regiment, bool> originalActive = new Dictionary<Regiment, bool>();
+        readonly Dictionary<Regiment,bool> replicaVisibility=new Dictionary<Regiment,bool>();
+        public static bool ReplicaHidden(bool native,Regiment unit) => IsReplica && instance!=null && instance.replicaVisibility.TryGetValue(unit,out bool visible)?!visible:native;
         bool leavingReplica;
         public static bool IsReplica => instance != null && ((instance.transport != null && !instance.host && instance.replicaReady) || instance.leavingReplica);
         public static void ReplicaSpeed(float newspeed, bool overrideminmax, bool manualset)
@@ -139,7 +141,12 @@ namespace GTIP
             }
             foreach(var pair in units) {
                 // Full host snapshots determine which native formations are visible. Never retain stale enemies.
-                if(pair.Value!=null) pair.Value.gameObject.SetActive(seen.Contains(pair.Key) && originalActive[pair.Value]);
+                if(pair.Value!=null) {
+                    replicaVisibility[pair.Value]=seen.Contains(pair.Key);
+                    // An invisible parent's transform still carries visible subordinate units.
+                    // Visibility belongs to renderers/icons, not the whole hierarchy node.
+                    pair.Value.gameObject.SetActive(originalActive[pair.Value]);
+                }
             }
             message="Native map synchronized | "+value.units.Length+" formations | host "+(value.paused?"paused":"running");
         }

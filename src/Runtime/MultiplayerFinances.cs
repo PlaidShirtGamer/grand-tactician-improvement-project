@@ -91,11 +91,13 @@ namespace GTIP
             if(category==2)GameVars.automanagefinances=value==1;
             LogDiagnostic("Finance request applied: category="+category+", index="+request.unit+", value="+value);
         }
-        void CaptureControls(List<MpStateRow> rows) => rows.Add(DataRow(12,0,new MpCampaignControls{AutoFinances=GameVars.automanagefinances,Chapter=Policy.CurrentChapter}));
+        void CaptureControls(List<MpStateRow> rows) => rows.Add(DataRow(12,0,new MpCampaignControls{AutoFinances=GameVars.automanagefinances,Chapter=Policy.CurrentChapter,AutoGovernment=GameVars.automanageconstructiong,AutoCompanies=GameVars.automanageconstructionp,AutoRailroads=GameVars.automanageconstructionr,AutoPlace=GameVars.autoplacebuildings,AutoWeapons=GameVars.automanageweapons,UseFog=GameVars.usefow}));
         void ApplyControls(MpStateRow[] rows)
         {
             var row=rows.SingleOrDefault(r=>r.Kind==12);if(row==null)return;
             var state=ReadData<MpCampaignControls>(row);GameVars.automanagefinances=state.AutoFinances;Policy.CurrentChapter=state.Chapter;
+            GameVars.automanageconstructiong=state.AutoGovernment;GameVars.automanageconstructionp=state.AutoCompanies;GameVars.automanageconstructionr=state.AutoRailroads;GameVars.autoplacebuildings=state.AutoPlace;GameVars.automanageweapons=state.AutoWeapons;
+            GameVars.usefow=state.UseFog;
         }
     }
 }
