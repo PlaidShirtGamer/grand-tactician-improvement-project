@@ -72,7 +72,7 @@ namespace GTIP
             transport?.Dispose(); transport = null; authenticated = false; helloSent = false; snapshot = null;
             ClearData(false);
             newsBarrier.Clear();newspaperState=new MpNewspaperState();guestNewsSerial=0;guestNewsClosed=false;guestFileMenu=false;
-            financeViews.Clear();replicaAlerts.Clear();alertPositions.Clear();
+            financeViews.Clear();replicaAlerts.Clear();alertPositions.Clear();lastAlertCounts="";ClearMapNotices();
             clockSequence=receivedClockSequence=0;
             if(exitReplica) {
                 // Deleted native objects cannot be rolled back to the join checkpoint in place.

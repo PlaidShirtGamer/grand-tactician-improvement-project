@@ -9,8 +9,12 @@ namespace GTIP
     {
         readonly Dictionary<int,MpAlertState> replicaAlerts=new Dictionary<int,MpAlertState>();
         readonly Dictionary<int,int> alertPositions=new Dictionary<int,int>();
+        string lastAlertCounts="";
         void CaptureAlerts(List<MpStateRow> rows)
         {
+            // Capture a complete native refresh, not partially accumulated entries between
+            // the native 25-frame refreshes (whose visible count/tooltip may still be old).
+            CampaignTopPanel.AlarmInfo.UpdateButtons();
             var entries=NativeAccess.Get<Array>(typeof(CampaignTopPanel.AlarmInfo),"alarmentriesperbutton");
             if(entries==null)return;
             for(int i=0;i<entries.Length;i++) {
@@ -18,8 +22,9 @@ namespace GTIP
                 var positions=new List<float>();
                 for(int j=0;j<count;j++){var p=(Vector3)NativeAccess.Call(entry,"GetPosition",j);positions.AddRange(new[]{p.x,p.y,p.z});}
                 var tooltips=NativeAccess.Get<List<string>>(entry,"tooltips");
-                rows.Add(DataRow(13,841+i,new MpAlertState{Count=count,Blink=count>0 && (bool)NativeAccess.Call(entry,"ShallBlink"),Headline=NativeAccess.Get<string>(entry,"headline"),Tooltip=string.Join("\n",tooltips??new List<string>()),Positions=positions.ToArray()}));
+                rows.Add(DataRow(13,841+i,new MpAlertState{Count=count,Blink=i!=10 && count>0 && (bool)NativeAccess.Call(entry,"ShallBlink"),Headline=NativeAccess.Get<string>(entry,"headline"),Tooltip=string.Join("\n",tooltips??new List<string>()),Positions=positions.ToArray()}));
             }
+            LogAlertCounts(rows.Where(r=>r.Kind==13).Select(r=>ReadData<MpAlertState>(r).Count));
         }
         void ApplyAlerts(MpStateRow[] changes)
         {
@@ -29,7 +34,13 @@ namespace GTIP
                 if(row.Id<841 || row.Id>851 || s.Count<0 || s.Count>6000 || s.Positions==null || s.Positions.Length!=s.Count*3)throw new System.IO.InvalidDataException("Invalid campaign alerts.");
                 replicaAlerts[row.Id]=s;changed=true;
             }
-            if(changed)RenderAlerts();
+            if(changed) {RenderAlerts();LogAlertCounts(replicaAlerts.OrderBy(p=>p.Key).Select(p=>p.Value.Count));}
+        }
+        void LogAlertCounts(IEnumerable<int> counts)
+        {
+            string value=string.Join(",",counts);
+            if(value==lastAlertCounts)return;
+            lastAlertCounts=value;LogDiagnostic("Authoritative alerts 841-851: "+value);
         }
         public static void ReplicaAlertButtons()
         {
@@ -40,6 +51,12 @@ namespace GTIP
         {
             var h=ui?.panelhandler;if(h==null || h.cpanel_campaigntopbar>=h.panel.Count)return;
             var panel=h.panel[h.cpanel_campaigntopbar];
+            // Native UpdateButtons performs this lazy setup. The replica skips that
+            // method's local alert calculations, but still needs its nested button refs.
+            if(!CampaignTopPanel.AlarmInfo.panelhandlerinitialized) {
+                panel.InitializeReferences(firstlevelonly:false,nonactive:true);
+                CampaignTopPanel.AlarmInfo.panelhandlerinitialized=true;
+            }
             foreach(var pair in replicaAlerts) {
                 int id=pair.Key;var s=pair.Value;
                 h.SetButtonsCondition(panel,s.Count>0?0:2,id,-1,hidedeactivated:true);

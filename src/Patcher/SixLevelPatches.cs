@@ -62,6 +62,7 @@ internal static class SixLevelPatches
         Wrap("Town", "Update", "ReplicaTown", "MultiplayerCampaign");
         Wrap("IIP", "Update", "ReplicaIip", "MultiplayerCampaign");
         Wrap("CBuilding", "Update", "ReplicaBuilding", "MultiplayerCampaign");
+        Wrap("Autocalc", "Update", "ReplicaAutocalc", "MultiplayerCampaign");
         Wrap("ArmyGroup", "IncreaseCommanderExperience", "ReplicaGroupExperience", "MultiplayerCampaign");
         Wrap("Messages", "Update", "ReplicaMessages", "MultiplayerCampaign");
         Wrap("Policy", "CheckSelections", "ReplicaPolicySelection", "MultiplayerCampaign");
@@ -182,7 +183,7 @@ internal static class SixLevelPatches
                 throw new InvalidOperationException("Serialized hook failed verification: " + original.FullName);
             originals++;
         }
-        if (originals != 57) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
+        if (originals != 58) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
         var suitability = game.MainModule.Types.Single(t => t.Name == "GameVars").NestedTypes.Single(t => t.Name == "Commander")
             .Methods.Single(m => m.Name == "CheckSuitableRank" && m.Parameters[0].ParameterType.FullName == "System.Int32");
         if (suitability.Body.Instructions.Count(i => i.Operand is MethodReference r &&

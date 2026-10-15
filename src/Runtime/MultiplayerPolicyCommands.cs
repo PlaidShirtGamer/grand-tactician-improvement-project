@@ -48,6 +48,7 @@ namespace GTIP
             }
             if(request.kind=="speed") {
                 if(newsBarrier.Waiting && request.x>0)throw new InvalidOperationException("Both players must dismiss the newspaper before resuming.");
+                if(newsBarrier.Waiting && request.x==0)newsResumeSpeed=0;
                 if(request.x!=0 && !GameVars.gamespeedcampaigns.Contains(request.x))throw new InvalidOperationException("Unsupported campaign speed.");
                 GameVars.SetGameSpeed(request.x,manualset:true);return true;
             }

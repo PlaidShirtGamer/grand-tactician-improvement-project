@@ -3,6 +3,25 @@ using System.IO;
 
 namespace GTIP
 {
+    public static class MpPresentationRules
+    {
+        public static bool ResumeNewspaper(bool canResume,bool stayPaused,bool otherPanel,float storedSpeed) =>
+            canResume && !stayPaused && !otherPanel && MpRules.Finite(storedSpeed) && storedSpeed>0;
+        public static void ValidateChart(MpChartPoints s)
+        {
+            if(s.Time==null || s.Value==null || s.Time.Length!=s.Value.Length || s.Time.Length>20000 ||
+                Array.Exists(s.Time,x=>!MpRules.Finite(x)) || Array.Exists(s.Value,x=>!MpRules.Finite(x)))throw new InvalidDataException("Invalid goods chart points.");
+            for(int i=1;i<s.Time.Length;i++)if(s.Time[i]<s.Time[i-1])throw new InvalidDataException("Goods chart time moved backwards.");
+        }
+    }
+    public sealed class MpMapNotice
+    {
+        public int Type,Reference;
+        public float X,Y,Z,Age;
+        public string Text;
+        public bool Icon;
+    }
+    public sealed class MpChartPoints {public float[] Time,Value;}
     public sealed class MpCampaignControls {public bool AutoFinances;public int Chapter;}
     public sealed class MpAlertState {public int Count;public bool Blink;public string Headline,Tooltip;public float[] Positions;}
     public static class MpFinanceRules

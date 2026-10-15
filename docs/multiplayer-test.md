@@ -1,3 +1,31 @@
+# GTIP MP Test v0.21 — host-owned campaign presentation and Goods & Trade
+
+Both installs require v0.21 / protocol 15. This remains an incomplete co-op prototype. Versus, tactical battles, full building/economic-object replication and complete native command coverage remain unfinished.
+
+Newspaper dismissal retains the stored native speed rather than selecting a speed. Both players must dismiss the issue; native dontcontinue, other blocking panels and the remain-paused preference still prevent resuming. A manual pause while waiting cancels automatic resume. Logs now include the captured and final speeds. Native Newspaper.Close normally calls SetGameSpeed() with its default -1 argument, which resumes GameVars.gamespeed; it has no hard-coded 50x choice.
+
+All eleven top-bar alert categories are captured after one complete native host refresh, including count, tooltip, blink and navigation positions. The replica preserves the native lazy initialization of nested alert-button references and reasserts host values in LateUpdate rather than letting local refreshes replace them. Alert count changes are logged on both sides for comparison. Guest Autocalc.Update is now suppressed: campaign auto-resolve was another independent local simulation path, capable of modifying units and generating local combat notices.
+
+Host rolling map notices now replicate their text, position, type and age. The guest runs native RollingText cleanup using real elapsed time, including while paused. Disabled ButtonTooltip components are excluded from manual hover activation, preserving native non-interactive map messages. Notice expiry is a presentation deletion and no longer triggers an expensive formation lifecycle rebuild.
+
+Guest map picking no longer accepts company/range blocks. Native campaign icon cards use their normal UI dispatcher; fallback physics picking is limited to visible UnitNameText/paper-map UnitSymbol renderer bounds. Open native management panels and UI under the pointer block camera wheel input without blocking their scroll views. The building/depot ring click is now an allowed native viewing operation and opens/closes its existing info panel. Building upgrades, storage changes and new building lifecycle replication are not added by this fix.
+
+Goods & Trade now receives explicit per-resource/per-alliance prices, current/previous demand and production, market/depot stocks, volume, tax, tariffs, value and stock ratios. Goods chart histories replicate as bounded numeric arrays. Incoming updates change existing native rows and the selected information pane without rebuilding the list or resetting its scroll position. This does not yet replicate every nested trade-flow or building dependency.
+
+Verification: runtime/patcher compile; 203 multiplayer model/protocol/TCP checks; 42 editor presentation checks; existing hierarchy/editor/AI regression suites; 64 structurally verified hooks/changes. These do not prove the live Unity input or rendering fixes. Both copies must be restarted before testing.
+
+## Connected test for v0.21
+
+1. Start a fresh host session and join the guest from the main menu. Confirm both say v0.21.
+2. Trigger a newspaper at 1x, 5x and 20x. Dismiss in both orders. Check the speed resumes as native settings allow; pause manually while waiting and verify it remains paused.
+3. Pause after alerts appear. Compare every populated alert's count and tooltip on both clients after the pending update arrives; leave it paused and verify the guest does not independently change counts.
+4. Observe combat/routed map notices on the guest: they should expire normally and show no blank hover tooltip.
+5. Click empty space within a command radius, then the unit icon. Only the icon should select the formation. Open a depot/building ring and verify its native detail panel opens.
+6. Open Military, Finances, Policies, Projects and Goods & Trade on the guest. Wheel-scroll each and verify the map stays still. Close the panel and verify map zoom works again.
+7. Compare Goods & Trade prices, demand, production, stocks, trade volume, tax and tariffs with the host, including an open table while new host data arrives.
+
+## Earlier build: v0.20
+
 # GTIP MP Test v0.20 — native recruitment, finance controls and campaign presentation
 
 Both installs require v0.20 / protocol 14. This remains an incomplete co-op prototype. Versus, tactical battles, full economy objects and complete UI command coverage remain unfinished.

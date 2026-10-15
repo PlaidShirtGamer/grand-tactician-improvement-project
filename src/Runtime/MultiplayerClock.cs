@@ -100,7 +100,12 @@ namespace GTIP
                     lastClockSend=Time.realtimeSinceStartup;lastHostPaused=hostClock.paused;lastHostSpeed=hostClock.speed;
                     Send(new MpMessage{kind="clock",session=session,sequence=++clockSequence,clock=hostClock});
                 }
-            } else if(IsReplica && hostClock!=null) {SetClockFields(EditorFormationOperations.Engine,EditorFormationOperations.Engine.uniStormSystem,hostClock);RenderClock(hostClock);}
+            } else if(IsReplica && hostClock!=null) {
+                SetClockFields(EditorFormationOperations.Engine,EditorFormationOperations.Engine.uniStormSystem,hostClock);RenderClock(hostClock);
+                // Native panel/tooltip refreshes run independently of the replicated clock.
+                // Reassert host-owned alerts after those callbacks, including while paused.
+                RenderAlerts();
+            }
         }
         void RestoreClock()
         {

@@ -29,7 +29,9 @@ namespace GTIP
             MpStateSchema.Scalars(typeof(MpFormationState)),MpStateSchema.Scalars(typeof(MpOfficerDates)),MpStateSchema.Scalars(typeof(MpArmyGroupState)),
             MpStateSchema.Scalars(typeof(Messages.Message)),MpStateSchema.Scalars(typeof(MpDispatchReferences)),MpStateSchema.Scalars(typeof(MpPolicyState)),
             MpStateSchema.Scalars(typeof(MpProjectState)),MpStateSchema.Scalars(typeof(MpNewspaperState)),
-            MpStateSchema.Scalars(typeof(MpCampaignControls)),MpStateSchema.Scalars(typeof(MpAlertState))
+            MpStateSchema.Scalars(typeof(MpCampaignControls)),MpStateSchema.Scalars(typeof(MpAlertState)),
+            new MpStateSchema(typeof(Economy.Resource.ProductAllianceData),new[]{"averageprice","lastaverageprice","demandpa","lastdemandpa","productionpa","lastproductionpa","stockiniips","laststockiniips","stockindepots","laststockindepots","totaltradevolume","excisetax","tariffs","value","relativestock","maxprice"}),
+            MpStateSchema.Scalars(typeof(MpMapNotice)),MpStateSchema.Scalars(typeof(MpChartPoints))
         });
         byte[] outgoingData;
         MemoryStream incomingData;
@@ -72,6 +74,7 @@ namespace GTIP
             CaptureProjects(rows);
             rows.Add(DataRow(11,0,newspaperState));
             CaptureControls(rows);CaptureAlerts(rows);
+            CaptureGoods(rows);CaptureMapNotices(rows);
             return rows.ToArray();
         }
         static MpStateRow DataRow(int kind,int id,object target) => new MpStateRow {Kind=kind,Id=id,Values=DataSchemas[kind].Capture(target)};
@@ -101,6 +104,7 @@ namespace GTIP
                 if(!incremental) ApplyLifecycleData(received.Rows);
                 ApplyControls(received.Changes);ApplyPolicies(received.Changes);ApplyProjects(received.Rows);ApplyAlerts(received.Changes);
                 ApplyNewspaper(received.Changes);
+                ApplyGoods(received.Changes);ApplyMapNotices(received.Changes);
                 if(received.Changes.Any(r=>r.Kind==7 || r.Kind==8))ApplyDispatches(received.Rows);
                 VerifyAppliedScalars(incremental?received.Changes:received.Rows);
                 if(incomingDataSerial==1 || incomingDataSerial%30==0)LogDiagnostic("Replication apply: revision="+incomingDataSerial+", changed="+received.Changes.Length+", incremental="+incremental+", mainThreadMs="+applyTimer.Elapsed.TotalMilliseconds.ToString("F1"));
@@ -192,7 +196,7 @@ namespace GTIP
         {
             // Structural transactions still use the full validated lifecycle adapter. Ordinary
             // scalar updates must not reparent every unit or rebuild all officer dates/groups.
-            if(!hasLiveData || changes.Any(r=>r.Deleted || r.Kind==6 ||
+            if(!hasLiveData || changes.Any(r=>(r.Deleted && r.Kind<=8) || r.Kind==6 ||
                 (r.Kind<=3 && DataTarget(r)==null) || (r.Kind==5 && r.Id>=GameVars.commander.Count)))return false;
             var formationChanges=changes.Where(r=>r.Kind==4).ToDictionary(r=>r.Id,r=>ReadData<MpFormationState>(r));
             foreach(var pair in formationChanges) {

@@ -15,21 +15,24 @@ namespace GTIP
         void GuestMapInput()
         {
             if(panel || choosingCommander || GuestDialogOpen || NativeRecruitOpen || BlocksInput || CampaignEditor.BlocksInput || !authenticated || snapshot==null) return;
-            if(PointerOverReplicaUi())return;
+            if(PointerOverReplicaUi() || NativeModalOpen())return;
             if(Input.GetMouseButtonDown(0)) {
                 var camera=Camera.main;
                 if(camera==null) return;
+                var ray=camera.ScreenPointToRay(Input.mousePosition);
                 Regiment unit=null;
-                foreach(var hit in Physics.RaycastAll(camera.ScreenPointToRay(Input.mousePosition),100000f).OrderBy(h=>h.distance)) {
+                foreach(var hit in Physics.RaycastAll(ray,100000f).OrderBy(h=>h.distance)) {
                     if(hit.collider==null)continue;
                     var go=hit.collider.gameObject;
                     if(!MpRules.NativeSelectionCollider(go.tag,go.name,GameVars.papermapvisible))continue;
-                    // Native selection accepts Coy blocks, UnitSymbol and UnitNameText;
-                    // a formation's root/range collider is deliberately excluded.
+                    // Campaign cards are selected through the native GraphicRaycaster above.
+                    // A 3-D unit's company/range collider can span its whole command radius;
+                    // only the visible symbol/name surface is eligible here.
                     Regiment candidate=null;
-                    if(go.CompareTag("RegBlock"))candidate=go.GetComponent<Coy>()?.assignedparentreg;
-                    else if(go.name=="UnitNameText" || (go.name=="UnitSymbol" && GameVars.papermapvisible))
+                    if(go.name=="UnitNameText" || (go.name=="UnitSymbol" && GameVars.papermapvisible))
                         candidate=go.transform.parent==null?null:go.transform.parent.GetComponent<Regiment>();
+                    var surface=go.GetComponent<Renderer>();
+                    if(surface==null || !surface.enabled || !surface.isVisible || !surface.bounds.IntersectRay(ray))continue;
                     if(candidate!=null && candidate.alliance==guestSide && ids.ContainsKey(candidate) && candidate.gameObject.activeInHierarchy) { unit=candidate; break; }
                 }
                 LogDiagnostic("Guest selection hit: "+(unit==null?"none":Id(unit)+" / "+unit.name));

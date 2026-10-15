@@ -19,7 +19,8 @@ namespace GTIP
             "104_ToolsMapIcons", "105_MapBorders", "106_MapText", "107_SupplyLines", "120_BattleMonuments",
             "034_OptionsC","034_OptionsB","211_OptionsB","297_Accept","298_Cancel","176_OOBSymbolP",
             "362_EconomyReport","363_IntelligenceReport"
-            ,"385_Replace","487_ScrollLeft","488_ScrollRight","084_Commander","490_Assign","491_Cancel","910_ScrollUp","911_ScrollDn"
+            ,"385_Replace","487_ScrollLeft","488_ScrollRight","084_Commander","490_Assign","491_Cancel","910_ScrollUp","911_ScrollDn",
+            "755_RingBackground","881_List","885_AveragePrice","886_Demand","887_Production","888_InStock"
         };
         ButtonTooltip replicaHover;
         public static void ReplicaBattleUi(BattleUI target)
@@ -29,11 +30,21 @@ namespace GTIP
             if(handler==null)return;
             RepairShortcutFocus();
             ModularUIFunctions.UpdateWindowOperations();
+            // BattleUI.Update normally owns these real-time presentation timers.
+            // They must run even while the authoritative campaign clock is paused.
+            if(RollingText.rollingtext!=null) {RollingText.UpdatePositionsAndExistance();RollingText.UpdateDatabase();}
             var hits=new List<RaycastResult>();
             if(EventSystem.current!=null)EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current){position=Input.mousePosition},hits);
+            // Most replica panels deliberately have their Unity click module disabled.
+            // Deliver scrolling separately so their native ScrollRects still work.
+            if(EventSystem.current!=null && Input.mouseScrollDelta!=Vector2.zero && !instance.blockedModules.Any(m=>m!=null && m.enabled)) {
+                var scrollHit=hits.FirstOrDefault(h=>h.module is UnityEngine.UI.GraphicRaycaster);
+                if(scrollHit.gameObject!=null)ExecuteEvents.ExecuteHierarchy(scrollHit.gameObject,
+                    new PointerEventData(EventSystem.current){position=Input.mousePosition,scrollDelta=Input.mouseScrollDelta},ExecuteEvents.scrollHandler);
+            }
             // Raycasting doesn't require an enabled input module. Keep automatic Unity click
             // callbacks disabled: many of those callbacks execute unreplicated mutations.
-            var button=hits.Select(h=>h.gameObject.GetComponentInParent<ButtonTooltip>()).FirstOrDefault(b=>b!=null);
+            var button=HitReplicaButton(hits);
             // Dynamically created project/policy buttons are not necessarily in panel.buttons.
             if(instance.replicaHover!=button) {
                 if(instance.replicaHover!=null)instance.replicaHover.DeactivateMouseOnObject();
@@ -61,7 +72,7 @@ namespace GTIP
             bool allowed=button!=null && (ReplicaNavigation.Contains(button.name) || recruitment || alert || logEntry || button.GetComponentInParent<Options>()!=null);
             foreach(var p in handler.panel.Concat(handler.symbol).Concat(handler.multiplepanel))
                 if(p.buttons!=null)foreach(var b in p.buttons)if(b!=null) {
-                    if(b==button) { if(!b.mouseonobject || !b.mouseonobject2)b.ActivateMouseOnObject(); }
+                    if(b==button && b.isActiveAndEnabled) { if(!b.mouseonobject || !b.mouseonobject2)b.ActivateMouseOnObject(); }
                     else if(b.mouseonobject || b.mouseonobject2)b.DeactivateMouseOnObject();
                 }
             bool left=allowed && Input.GetMouseButtonDown(0), right=false, twice=false;
@@ -100,8 +111,11 @@ namespace GTIP
         {
             if(EventSystem.current==null)return null;
             var hits=new List<RaycastResult>();EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current){position=Input.mousePosition},hits);
-            return hits.Select(h=>h.gameObject.GetComponentInParent<ButtonTooltip>()).FirstOrDefault(b=>b!=null);
+            return HitReplicaButton(hits);
         }
+        static ButtonTooltip HitReplicaButton(List<RaycastResult> hits) => hits
+            .Where(h=>h.module is UnityEngine.UI.GraphicRaycaster)
+            .Select(h=>h.gameObject.GetComponentInParent<ButtonTooltip>()).FirstOrDefault(b=>b!=null && b.isActiveAndEnabled);
         void OpenReplicaTab(PanelHandler h,string name)
         {
             int selected=-1;
@@ -158,7 +172,24 @@ namespace GTIP
             var hits=new List<RaycastResult>();
             EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current){position=Input.mousePosition},hits);
             // Physics raycasters also return terrain and units. Those are the map, not blocking UI.
-            return hits.Any(h=>h.module is UnityEngine.UI.GraphicRaycaster);
+            return hits.Any(h=>h.module is UnityEngine.UI.GraphicRaycaster &&
+                (h.gameObject.GetComponentInParent<ButtonTooltip>()==null || h.gameObject.GetComponentInParent<ButtonTooltip>().isActiveAndEnabled));
+        }
+        internal static void ReplicaCamera(Camera_Battlefield target)
+        {
+            bool oldZoom=target.preventmanualzoom,oldPointer=BattleUI.pointeroverui;
+            bool block=instance!=null && (PointerOverReplicaUi() || instance.NativeModalOpen());
+            try {
+                target.preventmanualzoom=oldZoom || block;BattleUI.pointeroverui=block;
+                if(block) {NativeAccess.Set(target,"wheely",0f);NativeAccess.Set(target,"mspeedy",0f);}
+                NativeAccess.Call(target,"GTIP_Original_EditorCamera");
+            } finally {target.preventmanualzoom=oldZoom;BattleUI.pointeroverui=oldPointer;}
+        }
+        bool NativeModalOpen()
+        {
+            var h=ui?.panelhandler;if(h==null)return false;
+            return new[]{h.cpanel_mainpanel,h.cpanel_finances,h.cpanel_production,h.cpanel_trade,h.cpanel_strategy,h.cpanel_policies,h.cpanel_projects,h.cpanel_newspaper,h.cpanel_optionspanel}
+                .Any(i=>i>=0 && i<h.panel.Count && h.panel[i].state>0);
         }
         void RefreshReplicaRosterUi()
         {

@@ -42,9 +42,9 @@ namespace GTIP
 
     public static class MpRules
     {
-        public const int Protocol = 14, MaxBytes = 2 * 1024 * 1024;
+        public const int Protocol = 15, MaxBytes = 2 * 1024 * 1024;
         public static bool NewClock(int incoming,int current) => incoming>0 && incoming>current;
-        public static bool NativeSelectionCollider(string tag,string name,bool paperMap) => tag=="RegBlock" || name=="UnitNameText" || (name=="UnitSymbol" && paperMap);
+        public static bool NativeSelectionCollider(string tag,string name,bool paperMap) => name=="UnitNameText" || (name=="UnitSymbol" && paperMap);
         public static void ValidateSnapshot(MpMessage value)
         {
             if (value == null || value.kind != "snapshot") throw new InvalidDataException("Expected snapshot message.");
