@@ -13,6 +13,7 @@ var type=runtime.GetType("GTIP.MultiplayerCampaign",true)!;
 // Builds the compiled, explicit field schemas against actual native metadata. No native
 // object is constructed and no Unity engine function is invoked by this check.
 var schemas=(Array)type.GetProperty("DataSchemas",BindingFlags.NonPublic|BindingFlags.Static)!.GetValue(null)!;
+SnapshotChecks.Run(runtime,schemas);
 int fields=0;
 foreach(var schema in schemas)fields+=((Array)schema!.GetType().GetField("Fields")!.GetValue(schema)!).Length;
 var game=AssemblyLoadContext.Default.LoadFromAssemblyPath(gamePath);

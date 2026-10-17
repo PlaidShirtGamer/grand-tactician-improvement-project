@@ -35,7 +35,7 @@ namespace GTIP
                 "groupstatsguns","statsguns","groupspeed","groupstatsupdated","groupgunslost","groupdesertionslastnight","groupdesertionscumulative",
                 "groupsubordinatesmoving","groupsubordinatesmovingnotfar","groupsubordinatesmovingnonari","groupsubordinatesmovingnonai","groupsubordinatesmovingnonarinonskirmishernonfallback",
                 "moraleeffectscampaign","moraleeffectsaverage","moraleimprovement","fullreadinessreached","covervaluesubordinates","flanksthreated","dlcw_isundercommander","dlcw_isundercommandercampaign",
-                "numberofengagements","numberofrouts","amountofmelees","gunscaptured","inflictedcasualtiesperunittype","inflictedprisonersperunittype","fightingspiritenemysoil","blockadeefficiencyfactors" }),
+                "numberofengagements","numberofrouts","amountofmelees","gunscaptured","inflictedcasualtiesperunittype","inflictedprisonersperunittype","fightingspiritenemysoil","blockadeefficiencyfactors" },new[]{"fullreadinessreached"},new[]{"fullreadinessreached"}),
             MpStateSchema.Scalars(typeof(MpFormationState)),MpStateSchema.Scalars(typeof(MpOfficerDates)),MpStateSchema.Scalars(typeof(MpArmyGroupState)),
             MpStateSchema.Scalars(typeof(Messages.Message)),MpStateSchema.Scalars(typeof(MpDispatchReferences)),MpStateSchema.Scalars(typeof(MpPolicyState)),
             MpStateSchema.Scalars(typeof(MpProjectState)),MpStateSchema.Scalars(typeof(MpNewspaperState)),
@@ -170,7 +170,12 @@ namespace GTIP
                 var changes=baseline.Changes(captured);if(changes.Length==0)return null;
                 int revision=checked(baseline.Revision+1);
                 var rows=baseline.Prepare(revision,baseline.Revision,changes);
-                return new PreparedData{Rows=rows,Hash=baseline.Fingerprint(rows),Bytes=MpStateCodec.Encode(schemas,changes),Revision=revision,BaseRevision=baseline.Revision,Changed=changes.Length,Milliseconds=work.Elapsed.TotalMilliseconds};
+                try {return new PreparedData{Rows=rows,Hash=baseline.Fingerprint(rows),Bytes=MpStateCodec.Encode(schemas,changes),Revision=revision,BaseRevision=baseline.Revision,Changed=changes.Length,Milliseconds=work.Elapsed.TotalMilliseconds};}
+                catch(InvalidDataException error) {
+                    var issues=MpStateCodec.InvalidNumbers(schemas,rows);
+                    if(issues.Length>0)throw new InvalidDataException("Invalid numeric campaign fields (up to 64): "+string.Join("; ",issues),error);
+                    throw;
+                }
             });
         }
         bool DataMessage(MpMessage value)

@@ -15,15 +15,18 @@ namespace GTIP
         public readonly FieldInfo[] Fields;
         public readonly string Signature;
         public readonly HashSet<string> NaNFields;
+        public readonly HashSet<string> InfinityFields;
         readonly Func<object,object>[] readers;
         readonly Action<object,object>[] writers;
-        public MpStateSchema(Type type, IEnumerable<string> names, IEnumerable<string> nanFields=null)
+        public MpStateSchema(Type type, IEnumerable<string> names, IEnumerable<string> nanFields=null,IEnumerable<string> infinityFields=null)
         {
             NaNFields=new HashSet<string>(nanFields??Array.Empty<string>(),StringComparer.Ordinal);
+            InfinityFields=new HashSet<string>(infinityFields??Array.Empty<string>(),StringComparer.Ordinal);
             Fields=names.OrderBy(n=>n,StringComparer.Ordinal).Select(n=>type.GetField(n,BindingFlags.Public|BindingFlags.Instance|BindingFlags.DeclaredOnly)
                 ?? throw new InvalidOperationException("Missing state field: "+type.Name+"."+n)).ToArray();
             if(Fields.Any(f=>f.IsInitOnly || !Supported(f.FieldType))) throw new InvalidOperationException("Unsupported state schema.");
-            Signature=type.Name+":"+string.Join(";",Fields.Select(f=>f.Name+":"+f.FieldType.FullName+(NaNFields.Contains(f.Name)?":nan":"")));
+            if(NaNFields.Concat(InfinityFields).Any(name=>!Fields.Any(f=>f.Name==name && (f.FieldType==typeof(float) || f.FieldType.IsArray && f.FieldType.GetElementType()==typeof(float)))))throw new InvalidOperationException("Special float policy requires a registered float field.");
+            Signature=type.Name+":"+string.Join(";",Fields.Select(f=>f.Name+":"+f.FieldType.FullName+(NaNFields.Contains(f.Name)?":nan":"")+(InfinityFields.Contains(f.Name)?":inf":"")));
             readers=new Func<object,object>[Fields.Length];writers=new Action<object,object>[Fields.Length];
             for(int i=0;i<Fields.Length;i++) {
                 var target=System.Linq.Expressions.Expression.Parameter(typeof(object));
@@ -75,7 +78,7 @@ namespace GTIP
                         var fields=schemas[row.Kind].Fields;
                         if(row.Values.Length!=fields.Length) throw new InvalidDataException("State field count mismatch.");
                         for(int i=0;i<fields.Length;i++) {
-                            try { Write(w,fields[i].FieldType,row.Values[i],schemas[row.Kind].NaNFields.Contains(fields[i].Name)); }
+                            try { Write(w,fields[i].FieldType,row.Values[i],schemas[row.Kind].NaNFields.Contains(fields[i].Name),schemas[row.Kind].InfinityFields.Contains(fields[i].Name)); }
                             catch(InvalidDataException e) { throw new InvalidDataException("State "+row.Kind+":"+row.Id+" "+fields[i].Name+": "+e.Message,e); }
                         }
                         if(raw.Length>MaxBytes) throw new InvalidDataException("State exceeds byte limit.");
@@ -107,7 +110,7 @@ namespace GTIP
                         row.Deleted=(bool)Read(r,typeof(bool));
                         if(row.Deleted){row.Values=Array.Empty<object>();rows[n]=row;continue;}
                         var fields=schemas[row.Kind].Fields; row.Values=new object[fields.Length];
-                        for(int i=0;i<fields.Length;i++) row.Values[i]=Read(r,fields[i].FieldType,schemas[row.Kind].NaNFields.Contains(fields[i].Name));
+                        for(int i=0;i<fields.Length;i++) row.Values[i]=Read(r,fields[i].FieldType,schemas[row.Kind].NaNFields.Contains(fields[i].Name),schemas[row.Kind].InfinityFields.Contains(fields[i].Name));
                         rows[n]=row;
                     }
                     if(raw.Position!=raw.Length) throw new InvalidDataException("Trailing campaign state data.");
@@ -120,25 +123,43 @@ namespace GTIP
         { if(value==null) {w.Write(-1);return;} var b=Utf8.GetBytes(value); if(b.Length>65536) throw new InvalidDataException("State string too long."); w.Write(b.Length);w.Write(b); }
         static string Text(BinaryReader r)
         { int n=r.ReadInt32();if(n==-1)return null;if(n<0 || n>65536 || n>r.BaseStream.Length-r.BaseStream.Position)throw new InvalidDataException("Invalid state string.");return Utf8.GetString(r.ReadBytes(n)); }
-        static void Write(BinaryWriter w,Type t,object v,bool allowNaN=false)
+        static bool InvalidFloat(float value,bool allowNaN,bool allowInfinity) => (!allowNaN && float.IsNaN(value)) || (!allowInfinity && float.IsInfinity(value));
+        public static string[] InvalidNumbers(MpStateSchema[] schemas,MpStateRow[] rows)
+        {
+            var issues=new List<string>();
+            foreach(var row in rows.Where(r=>!r.Deleted)) {
+                var schema=schemas[row.Kind];
+                for(int i=0;i<schema.Fields.Length;i++) {
+                    string name=schema.Fields[i].Name;bool nan=schema.NaNFields.Contains(name),infinity=schema.InfinityFields.Contains(name);
+                    bool bad=row.Values[i] is float value?InvalidFloat(value,nan,infinity):row.Values[i] is Array array && array.GetType().GetElementType()==typeof(float) && array.Cast<float>().Any(n=>InvalidFloat(n,nan,infinity));
+                    if(bad) {
+                        float sample=row.Values[i] is float number?number:((Array)row.Values[i]).Cast<float>().First(n=>InvalidFloat(n,nan,infinity));
+                        issues.Add("State "+row.Kind+":"+row.Id+" "+name+"="+sample.ToString("R",System.Globalization.CultureInfo.InvariantCulture)+" ("+(row.Name??"").Replace('\r',' ').Replace('\n',' ')+")");
+                    }
+                    if(issues.Count>=64)return issues.ToArray();
+                }
+            }
+            return issues.ToArray();
+        }
+        static void Write(BinaryWriter w,Type t,object v,bool allowNaN=false,bool allowInfinity=false)
         {
             if(t==typeof(int)) w.Write((int)v);
-            else if(t==typeof(float)) {float f=(float)v;if((!allowNaN && float.IsNaN(f))||float.IsInfinity(f))throw new InvalidDataException("Nonfinite state value.");w.Write(f);}
+            else if(t==typeof(float)) {float f=(float)v;if(InvalidFloat(f,allowNaN,allowInfinity))throw new InvalidDataException("Nonfinite state value.");if(float.IsNaN(f))w.Write(0x7fc00000);else w.Write(f);}
             else if(t==typeof(bool)) w.Write((bool)v);
             else if(t==typeof(string)) Text(w,(string)v);
-            else {var a=(Array)v;w.Write(a!=null);if(a==null)return;if(a.Length>MaxArray)throw new InvalidDataException("State array too large.");for(int i=0;i<a.Rank;i++)w.Write(a.GetLength(i));foreach(var e in a)Write(w,t.GetElementType(),e,allowNaN);}
+            else {var a=(Array)v;w.Write(a!=null);if(a==null)return;if(a.Length>MaxArray)throw new InvalidDataException("State array too large.");for(int i=0;i<a.Rank;i++)w.Write(a.GetLength(i));foreach(var e in a)Write(w,t.GetElementType(),e,allowNaN,allowInfinity);}
         }
-        static object Read(BinaryReader r,Type t,bool allowNaN=false)
+        static object Read(BinaryReader r,Type t,bool allowNaN=false,bool allowInfinity=false)
         {
             if(t==typeof(int))return r.ReadInt32();
-            if(t==typeof(float)){float f=r.ReadSingle();if((!allowNaN && float.IsNaN(f))||float.IsInfinity(f))throw new InvalidDataException("Nonfinite state value.");return f;}
+            if(t==typeof(float)){float f=r.ReadSingle();if(InvalidFloat(f,allowNaN,allowInfinity))throw new InvalidDataException("Nonfinite state value.");return f;}
             if(t==typeof(bool)){byte b=r.ReadByte();if(b>1)throw new InvalidDataException("Invalid boolean.");return b==1;}
             if(t==typeof(string))return Text(r);
             if(!(bool)Read(r,typeof(bool)))return null;
             int rank=t.GetArrayRank();var sizes=new int[rank];long count=1;
             for(int i=0;i<rank;i++){sizes[i]=Count(r,MaxArray);count*=sizes[i];if(count>MaxArray)throw new InvalidDataException("State array too large.");}
             var a=Array.CreateInstance(t.GetElementType(),sizes);
-            for(int i=0;i<count;i++){var v=Read(r,t.GetElementType(),allowNaN);if(rank==1)a.SetValue(v,i);else a.SetValue(v,i/sizes[1],i%sizes[1]);}return a;
+            for(int i=0;i<count;i++){var v=Read(r,t.GetElementType(),allowNaN,allowInfinity);if(rank==1)a.SetValue(v,i);else a.SetValue(v,i/sizes[1],i%sizes[1]);}return a;
         }
     }
 }

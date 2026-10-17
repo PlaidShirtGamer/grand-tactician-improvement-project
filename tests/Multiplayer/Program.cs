@@ -139,6 +139,38 @@ sourceState.Support[0,0]=float.PositiveInfinity;nativeRows[0].Values=nativeSchem
 Reject(()=>MpStateCodec.Encode(new[]{nativeSchema},nativeRows),"Native NaN exception does not allow infinity");
 sourceState.Support[0,0]=0;sourceState.Treasury=float.NaN;nativeRows[0].Values=nativeSchema.Capture(sourceState);
 Reject(()=>MpStateCodec.Encode(new[]{nativeSchema},nativeRows),"Native NaN exception remains field specific");
+var readinessSchema=new MpStateSchema(typeof(ReadinessFixture),new[]{"fullreadinessreached","Readiness","Treasury"},new[]{"fullreadinessreached"},new[]{"fullreadinessreached"});
+float NativeReadinessEstimate(float current,float previous,float elapsed)=>1f/((current-previous)/elapsed)*(1f-current);
+Check(float.IsPositiveInfinity(NativeReadinessEstimate(.5f,.5f,1f)),"Native unchanged partial readiness produces an infinite ETA");
+Check(float.IsNaN(NativeReadinessEstimate(1f,1f,1f)),"Native unchanged full readiness produces an undefined ETA");
+foreach(float estimate in new[]{0f,.25f,float.PositiveInfinity,float.NegativeInfinity,float.NaN}) {
+    var input=new ReadinessFixture{fullreadinessreached=estimate,Readiness=.5f,Treasury=500};
+    var sourceRows=new[]{new MpStateRow{Id=16,Name="19th wisconsin",Values=readinessSchema.Capture(input)}};
+    var hostState=new MpStateBaseline(new[]{readinessSchema});var clientState=new MpStateBaseline(new[]{readinessSchema});
+    var fullState=hostState.Prepare(1,0,hostState.Changes(sourceRows));var checksum=hostState.Fingerprint(fullState);
+    var readinessDecoded=MpStateCodec.Decode(new[]{readinessSchema},MpStateCodec.Encode(new[]{readinessSchema},fullState));
+    var clientFull=clientState.Prepare(1,0,readinessDecoded,checksum);var replicaState=new ReadinessFixture();readinessSchema.Apply(replicaState,clientFull[0].Values);
+    hostState.Commit(1,fullState,checksum);clientState.Commit(1,clientFull,checksum);
+    Check(replicaState.fullreadinessreached.Equals(estimate) && clientState.Hash==hostState.Hash,"Native readiness estimate survives full snapshot and acknowledgement: "+estimate);
+    Check(MpStateCodec.InvalidNumbers(new[]{readinessSchema},sourceRows).Length==0,"Preflight accepts the registered readiness estimate: "+estimate);
+}
+var badReadiness=new ReadinessFixture{fullreadinessreached=float.PositiveInfinity,Readiness=float.NaN,Treasury=float.NegativeInfinity};
+var badRows=new[]{new MpStateRow{Id=16,Name="19th wisconsin",Values=readinessSchema.Capture(badReadiness)}};
+var numericIssues=MpStateCodec.InvalidNumbers(new[]{readinessSchema},badRows);
+Check(numericIssues.Length==2 && numericIssues.Any(s=>s.Contains("Readiness")) && numericIssues.Any(s=>s.Contains("Treasury")),"Preflight reports all invalid fields while accepting only the ETA sentinel");
+Reject(()=>MpStateCodec.Encode(new[]{readinessSchema},badRows),"ETA exception does not permit invalid readiness or treasury");
+var nanOnly=new MpStateSchema(typeof(ReadinessFixture),new[]{"fullreadinessreached","Readiness","Treasury"},new[]{"fullreadinessreached"});
+var infinityOnly=new MpStateSchema(typeof(ReadinessFixture),new[]{"fullreadinessreached","Readiness","Treasury"},infinityFields:new[]{"fullreadinessreached"});
+var validReadiness=new ReadinessFixture{fullreadinessreached=float.PositiveInfinity};
+var etaRows=new[]{new MpStateRow{Values=readinessSchema.Capture(validReadiness)}};
+Reject(()=>MpStateCodec.Decode(new[]{nanOnly},MpStateCodec.Encode(new[]{readinessSchema},etaRows)),"Infinity permission participates in schema identity");
+validReadiness.fullreadinessreached=float.NaN;etaRows[0].Values=infinityOnly.Capture(validReadiness);
+Reject(()=>MpStateCodec.Encode(new[]{infinityOnly},etaRows),"Infinity permission alone does not allow NaN");
+Reject(()=>new MpStateSchema(typeof(ReadinessFixture),new[]{"Readiness"},infinityFields:new[]{"Unknown"}),"Unknown float-policy field cannot silently bypass validation");
+var canonicalA=new ReadinessFixture{fullreadinessreached=BitConverter.Int32BitsToSingle(unchecked((int)0x7fc00001))};
+var canonicalB=new ReadinessFixture{fullreadinessreached=BitConverter.Int32BitsToSingle(unchecked((int)0xffc00002))};
+var etaBaseline=new MpStateBaseline(new[]{readinessSchema});
+Check(etaBaseline.Fingerprint(new[]{new MpStateRow{Values=readinessSchema.Capture(canonicalA)}})==etaBaseline.Fingerprint(new[]{new MpStateRow{Values=readinessSchema.Capture(canonicalB)}}),"NaN sign and payload variations have one canonical checksum");
 sourceState.Treasury=0;sourceState.Recruits=null;sourceState.Support=new float[0,2];sourceState.Name=null;
 dataRows[0].Values=schema.Capture(sourceState);
 schema.Apply(targetState,MpStateCodec.Decode(schemas,MpStateCodec.Encode(schemas,dataRows))[0].Values);
@@ -372,3 +404,4 @@ sealed class StateFixture
     public float[,] Support;
     public object Unsafe=new object();
 }
+sealed class ReadinessFixture {public float fullreadinessreached,Readiness,Treasury;}

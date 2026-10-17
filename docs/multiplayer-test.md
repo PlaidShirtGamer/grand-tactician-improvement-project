@@ -1,3 +1,25 @@
+# GTIP MP Test v0.24 — native readiness estimates and snapshot validation
+
+Both copies require **v0.24 / protocol 18**. The latest v0.23 logs show a different failure: the host cannot encode its first state because Regiment `3:16` (19th wisconsin) has a non-finite `fullreadinessreached` value. The guest has matched the save but receives no first state update. Pausing cannot avoid this because the value already exists in the loaded native state.
+
+Native `UpdateCampaignUnitStats` calculates the estimate as `1 / ((readiness - previousReadiness) / elapsed) * (1 - readiness)`. With no readiness change, this can produce infinity or NaN, and `UpdateGroupStrength` propagates those values. `CampaignArmyPanel` already treats very large positive estimates as slowly recovering readiness. The replication schema now preserves NaN and signed infinity for this specific estimate. All other unit floats retain finite-value validation; the existing nation-history NaN exception still rejects infinity. Native numbers are transmitted rather than replaced with invented finite ETAs. Allowed NaN payloads are canonicalized for stable checksums.
+
+Before transferring a checkpoint, the host now captures and validates the full registered snapshot. Unregistered non-finite fields are logged together (up to 64), and an invalid host state gives the guest a validation rejection before it spends time loading. Serialization failures during later updates also report all invalid numeric fields found in that snapshot. The v0.23 tooltip simulation guard and scalar divergence checks remain enabled.
+
+New regression coverage reproduces both zero-progress readiness calculations and exercises encoding, decoding, baseline reconstruction, checksums and commit with finite/infinite/NaN estimates. A separate test uses all 31 actual compiled game schemas with synthetic values, including the special readiness values. These tests do not load or execute the user's live campaign.
+
+Verification: 248 multiplayer checks, 9 replica-boundary checks, 42 editor presentation checks and the existing hierarchy/editor/AI suites pass. Native snapshot checks cover all 31 compiled schemas and 619 fields. Staging verifies 96 hooks/changes and 89 preserved methods. Connected gameplay remains unverified.
+
+The v0.24 candidate is installed in both desktop test copies with matching patched-game/runtime hashes. Installed runtime files also pass the compiled-schema snapshot check.
+
+## Connected test for v0.24
+
+1. Restart both copies and create a fresh session from **GT MP Test**. Join from the guest's main menu and keep the host paused for a minute. The host log should report `Host state preflight passed`, followed by revision 1 preparation and an application receipt from the guest.
+2. Hover enemy sightings and friendly icons, inspect readiness, and open Military. Then unpause for several minutes and pause again. The v0.23 morale issue and the v0.24 readiness serialization issue should both remain absent.
+3. If a new validation error occurs, retain both new multiplayer logs. Preflight now reports all rejected numeric fields together. Broader native feature parity, versus and tactical battles remain unfinished.
+
+## Earlier build: v0.23
+
 # GTIP MP Test v0.23 — guest tooltip simulation boundary
 
 Both installs require **v0.23 / protocol 17**. This fixes the v0.22 disconnect during the first campaign state update. The two October 17 guest logs show `Native state divergence at revision 1`, on the `morale` field of 76th North Carolina and 74th Missouri respectively. The checkpoint transfer/load succeeds; the host's subsequent end-of-stream message is a consequence of the guest stopping.

@@ -29,6 +29,18 @@ namespace GTIP
             } finally { Saving.latestfolder=prior; }
             BuildManifest();
             ClearData(false);
+            try {
+                var rows=CaptureData();var issues=MpStateCodec.InvalidNumbers(DataSchemas,rows);
+                if(issues.Length>0) {
+                    foreach(string issue in issues)LogDiagnostic("Host state preflight rejected: "+issue);
+                    throw new InvalidDataException("Invalid numeric campaign fields (up to 64): "+string.Join("; ",issues));
+                }
+                var encoded=MpStateCodec.Encode(DataSchemas,rows,false);
+                LogDiagnostic("Host state preflight passed: records="+rows.Length+", bytes="+encoded.Length);
+            } catch(Exception error) {
+                LogDiagnostic("Host state preflight failed: "+error);
+                RejectGuest("Host campaign state validation failed before transfer. See the host multiplayer log.");return;
+            }
             checkpointHash=MpCheckpoint.Hash(outgoingCheckpoint);
             phase="sending"; bootstrapStarted=Time.realtimeSinceStartup;
             Send(new MpMessage {kind="checkpoint-offer",session=session,campaign=scenario,text=checkpointHash,unit=outgoingCheckpoint.Length,side=guestSide});
