@@ -9,6 +9,9 @@ dotnet build (Join-Path $PSScriptRoot 'src/Runtime/Runtime.csproj') -c Release "
 if ($LASTEXITCODE -ne 0) { throw 'Runtime build failed' }
 dotnet run --project (Join-Path $PSScriptRoot 'tests/NativeSchemas/NativeSchemas.csproj') -c Release -p:UseSharedCompilation=false -- (Join-Path $PSScriptRoot 'src/Runtime/bin/Release/netstandard2.0/GTIP.Runtime.dll') $OriginalAssembly $managed
 if ($LASTEXITCODE -ne 0) { throw 'Native schema ABI checks failed' }
+
+dotnet run --project (Join-Path $PSScriptRoot 'tests/NativeBridge/NativeBridge.csproj') -c Release -p:UseSharedCompilation=false
+if ($LASTEXITCODE -ne 0) { throw 'Native bridge and management rule checks failed' }
 dotnet run --project (Join-Path $PSScriptRoot 'tests/ReplicaBoundary/ReplicaBoundary.csproj') -c Release -p:UseSharedCompilation=false
 if ($LASTEXITCODE -ne 0) { throw 'Replica simulation boundary checks failed' }
 dotnet run --project (Join-Path $PSScriptRoot 'tests/Traversal/Traversal.csproj') -c Release -p:UseSharedCompilation=false

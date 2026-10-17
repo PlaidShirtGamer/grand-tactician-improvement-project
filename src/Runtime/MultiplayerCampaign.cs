@@ -71,6 +71,7 @@ namespace GTIP
             DestroyRecruitPreview();previewPanel=null;previewCommander=-1;
             transport?.Dispose(); transport = null; authenticated = false; helloSent = false; snapshot = null;
             ClearData(false);
+            panelPause.Clear();blockPanelResume=false;pendingPromotions.Clear();officerViewDirty=false;
             newsBarrier.Clear();newspaperState=new MpNewspaperState();guestNewsSerial=0;guestNewsClosed=false;guestFileMenu=false;
             financeViews.Clear();replicaAlerts.Clear();alertPositions.Clear();lastAlertCounts="";ClearMapNotices();replicaVisibility.Clear();ClearDispatchState();ClearWorld();
             clockSequence=receivedClockSequence=0;
@@ -212,7 +213,14 @@ namespace GTIP
                 snapshot = value;
                 if(hostClock==null)ApplyClock(value.clock); // only the sequenced clock stream advances time
                 ApplyReplica(value);
-            } else if (value.kind == "result") { orderStatus = "Order " + value.sequence + ": " + value.text; LogDiagnostic(orderStatus); }
+            } else if(value.kind=="map-notice") {
+                var notices=MpStateCodec.Decode(DataSchemas,value.blob);
+                if(notices.Length!=1 || notices[0].Kind!=15 || notices[0].Deleted)throw new InvalidOperationException("Invalid construction notice.");
+                ApplyMapNotices(notices);
+            } else if (value.kind == "result") {
+                pendingPromotions.Remove(value.sequence);
+                orderStatus = "Order " + value.sequence + ": " + value.text; LogDiagnostic(orderStatus);
+            }
             else throw new InvalidOperationException("Unexpected message.");
         }
         int Id(Regiment unit)

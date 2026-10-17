@@ -34,9 +34,12 @@ namespace GTIP
                     // native presentation reads; no guest pathfinding or movement is run.
                     NativeAccess.Set(u.regimentpath[i],"m_Corners",points);
                 }
-                if(u.pathstatus==null || u.pathstatus.Length<s.Status.Length)System.Array.Resize(ref u.pathstatus,s.Status.Length);
+                if(u.pathstatus==null || u.pathstatus.Length<=s.Status.Length)System.Array.Resize(ref u.pathstatus,s.Status.Length+1);
                 System.Array.Copy(s.Status,u.pathstatus,s.Status.Length);u.regimentpaths=s.Lengths.Length;
                 u.blockobjectcurrentpath=s.BlockPath;u.blockobjectcurrentcorner=s.BlockCorner;
+                // The native renderer caches its mesh until selection or the current corner
+                // changes. A new host route can retain both, so explicitly invalidate it.
+                u.DeletePathArrows();
             }
         }
     }

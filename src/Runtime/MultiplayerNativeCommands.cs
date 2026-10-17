@@ -9,6 +9,8 @@ namespace GTIP
         Regiment bottomUnit;
         int bottomState;
         bool remoteIntent;
+        readonly System.Collections.Generic.Dictionary<int,int> pendingPromotions=new System.Collections.Generic.Dictionary<int,int>();
+        bool officerViewDirty;
         void RefreshGuestBottomPanel(BattleUI target,PanelHandler h)
         {
             if(h.panel[h.cpanel_mainpanel].state<=0) {
@@ -56,7 +58,11 @@ namespace GTIP
             if(action=="promote") {
                 int officer=(int)request.x;
                 if(request.x!=officer || officer<0 || officer>=GameVars.commander.Count || GameVars.commander[officer].alliance!=guestSide || detail!=OfficerCommandIdentity(officer))throw new InvalidOperationException("Officer changed or is unavailable.");
-                GameVars.commander[officer].UpdateRankToFit(null,false,1);GameVars.commander[officer].refreshcommand=false;return true;
+                var c=GameVars.commander[officer];
+                MpOfficerRules.Promote(c.rank,request.unit,GameVars.GetMaxRankForUnittyp(c.historicalbranch==4?17:18,guestSide,true),c.status,
+                    !DLC_WL.dlc_scenarioactive || DLC_WL.IsCommanderBelowPlayer(officer));
+                DLC_WL.PromotionEffects(officer);c.UpdateRankToFit(null,false,1);c.refreshcommand=false;
+                officerViewDirty=true;return true;
             }
             if(!units.TryGetValue(request.unit,out var unit) || unit==null || unit.alliance!=guestSide || !unit.gameObject.activeInHierarchy)throw new InvalidOperationException("Formation unavailable.");
             var engine=EditorFormationOperations.Engine;
@@ -97,7 +103,13 @@ namespace GTIP
         {
             if(!IsReplica){NativeAccess.Call(target,"GTIP_Original_ReplicaPromote");return;}
             int id=NativeAccess.Get<int>(target,"currentcommanderchosen");
-            if(id>=0 && id<GameVars.commander.Count)instance.RequestNative("promote",0,id,OfficerCommandIdentity(id));
+            if(id<0 || id>=GameVars.commander.Count)return;
+            var c=GameVars.commander[id];
+            if(instance.pendingPromotions.ContainsValue(id))return;
+            if(c.status>0 || c.rank>=GameVars.GetMaxRankForUnittyp(c.historicalbranch==4?17:18,c.alliance,true))return;
+            int sequence=instance.guestSequence+1;
+            instance.RequestNative("promote",c.rank,id,OfficerCommandIdentity(id));
+            instance.pendingPromotions[sequence]=id;
         }
     }
 }

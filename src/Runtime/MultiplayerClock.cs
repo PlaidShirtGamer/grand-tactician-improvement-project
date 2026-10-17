@@ -93,6 +93,7 @@ namespace GTIP
         {
             if(transport==null || !authenticated || phase!="live")return;
             if(host) {
+                RefreshOfficerView();
                 // Sample after native simulation/UI Update. A pause must publish the final
                 // clock, and the host's throttled native label must show that same sample.
                 hostClock=CaptureClock();RenderClock(hostClock);

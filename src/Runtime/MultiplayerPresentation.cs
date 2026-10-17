@@ -10,7 +10,7 @@ namespace GTIP
         // Explicit viewing operations. Native recruitment, spending and hierarchy edits must
         // continue through host commands, never through the replica's native click dispatcher.
         static readonly HashSet<string> ReplicaNavigation = new HashSet<string> {
-            "108_MessageLog", "382_PrevArmy", "383_NextArmy", "382_PrevArmy2", "383_NextArmy2",
+            "108_MessageLog","109_Hide","113_Show", "382_PrevArmy", "383_NextArmy", "382_PrevArmy2", "383_NextArmy2",
             "390_Unit", "391_Ship", "392_Commander", "393_History",
             "123_OOBSymbol", "124_HierarchySymbol", "470_OOB", "471_List", "123_UnitSymbol",
             "099_MenuButton", "159_ContinueGame", "210_ContinueGame", "097_CToolsButton", "098_ZoomInOut", "094_GameGuide",
@@ -24,7 +24,7 @@ namespace GTIP
             "187_RemoveDispatches","250_RemoveDispatches","188_MarkAllAsRead","251_MarkAllAsRead",
             "493_Armies","494_Fleets","495_Commanders","496_Weapons","497_Logistics",
             "499_SelectedFleet","500_AllFleets","382_PrevFleet","383_NextFleet","604_MANAGEMENT","653_ADMINISTRATION",
-            "600_STANCE","601_CAVALRY","602_CONSTRUCT","603_MOVEMENT","650_STANCE","651_ORDERS","652_MOVEMENT",
+            "600_STANCE","601_CAVALRY","602_CONSTRUCT","603_MOVEMENT","650_STANCE","651_FLEET","652_MOVEMENT",
             "890_FederalBuildings","891_CompanyApplications","892_Railroads","630_FORT","631_DEPOT","632_TELEGRAPH",
             "090_ChangeWeapon","485_Cancel","484_Upgrade","384_Promote","757_Upgrade",
             "505_CreateShip","505_CreateShipPool","507_Cancel","927_IncBuilt","928_DecBuilt","502_ShipImage","502_ImageLarge","506_Build",
@@ -90,7 +90,7 @@ namespace GTIP
                     if(b==button && b.isActiveAndEnabled) { if(!b.mouseonobject || !b.mouseonobject2)b.ActivateMouseOnObject(); }
                     else if(b.mouseonobject || b.mouseonobject2)b.DeactivateMouseOnObject();
                 }
-            bool left=allowed && Input.GetMouseButtonDown(0), right=false, twice=false;
+            bool left=allowed && button.name!="108_MessageLog" && Input.GetMouseButtonDown(0), right=false, twice=false;
             handler.UpdatePanel(ref left,ref right,ref twice);
             if(clicked)instance.ReplicaLocalClose(hits,handler);
             instance.OptionsInput(handler);
@@ -105,6 +105,11 @@ namespace GTIP
         void ReplicaLocalClose(List<RaycastResult> hits,PanelHandler handler)
         {
             var tooltip=HitReplicaButton(hits);
+            var log=handler.panel[handler.panel_messagelog];
+            if(tooltip!=null && log.state>0 && tooltip.transform.IsChildOf(log.go.transform) &&
+                (tooltip.name=="018_ClosePanel" || tooltip.name=="400_ClosePanel")) {
+                handler.HidePanel(log);handler.SetButtonsCondition(handler.panel[handler.panel_messagesshown],0,108);return;
+            }
             if(tooltip!=null && tooltip.CloseThisPanelIfPressed!=null) {
                 ModularUIFunctions.OpenClosePanelStatic(tooltip.CloseThisPanelIfPressed,false,true);return;
             }
@@ -124,7 +129,10 @@ namespace GTIP
         }
         void OptionsInput(PanelHandler handler)
         {
-            var selected=EventSystem.current?.currentSelectedGameObject?.GetComponent<TMPro.TMP_InputField>();
+            // Unity objects can be destroyed while their managed reference remains non-null.
+            var events=EventSystem.current;
+            var focused=events!=null?events.currentSelectedGameObject:null;
+            var selected=focused!=null?focused.GetComponent<TMPro.TMP_InputField>():null;
             bool open=handler.panel[handler.cpanel_optionspanel].state>0 || handler.panel[handler.cpanel_finances].state>0 || NativeRecruitOpen || (selected!=null && selected.isFocused);
             // Local Options needs Unity's sliders, input fields and drop-downs.
             // Gameplay dispatch remains filtered while this modal is open.
@@ -141,6 +149,13 @@ namespace GTIP
             .Select(h=>h.gameObject.GetComponentInParent<ButtonTooltip>()).FirstOrDefault(b=>b!=null && b.isActiveAndEnabled);
         void OpenReplicaTab(PanelHandler h,string name)
         {
+            if(name=="108_MessageLog") {
+                var log=h.panel[h.panel_messagelog];
+                bool showLog=log.state<=0 || log.state==3;
+                if(showLog){h.ShowPanel(h.panel_messagelog);NativeAccess.Get<MessageLog>(h,"messagelog").ResetEntries();}
+                else h.HidePanel(log);
+                h.SetButtonsCondition(h.panel[h.panel_messagesshown],showLog?1:0,108);return;
+            }
             int selected=-1;
             switch(name) {
                 case "371_Military":selected=h.cpanel_mainpanel;break;

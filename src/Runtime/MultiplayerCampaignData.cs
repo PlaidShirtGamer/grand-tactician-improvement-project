@@ -123,6 +123,8 @@ namespace GTIP
                 var received=receiveTask.GetAwaiter().GetResult();receiveTask=null;
                 replicaMutated=true;
                 var applyTimer=System.Diagnostics.Stopwatch.StartNew();
+                int rankField=Array.FindIndex(DataSchemas[2].Fields,f=>f.Name=="rank");
+                bool promotionChanged=received.Changes.Any(r=>r.Kind==2 && !r.Deleted && r.Id<GameVars.commander.Count && GameVars.commander[r.Id].rank!=(int)r.Values[rankField]);
                 ApplyWorldBuildings(received.Rows,received.Changes);
                 bool incremental=TryApplyScalarDelta(received.Changes);
                 if(!incremental) ApplyLifecycleData(received.Rows);
@@ -134,6 +136,7 @@ namespace GTIP
                 ApplyNewspaper(received.Changes);
                 ApplyGoods(received.Changes);ApplyMapNotices(received.Changes);
                 ApplyEngagement(received.Rows,received.Changes);
+                if(promotionChanged)officerViewDirty=true;
                 if(received.Changes.Any(r=>r.Kind==7 || r.Kind==8))ApplyDispatches(received.Rows);
                 VerifyAppliedScalars(incremental?received.Changes:received.Rows);
                 AuditNativeMap(received.Rows,incomingDataSerial,true);

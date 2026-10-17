@@ -26,7 +26,7 @@ namespace GTIP
         public static void ReplicaUnitName(CampaignMainPanel target)
         {
             if(!IsReplica){NativeAccess.Call(target,"GTIP_Original_ReplicaUnitName");return;}
-            var unit=(Regiment)NativeAccess.Call(target,"GetUsedUnit");if(unit==null || !instance.ids.TryGetValue(unit,out int id))return;
+            var unit=(Regiment)NativeAccess.Call(target,"GetUsedUnit",false,0);if(unit==null || !instance.ids.TryGetValue(unit,out int id))return;
             var h=instance.ui.panelhandler;var field=h.panel[h.cpanel_unitinfopanel].go.transform.Find("Background/078_UnitName")?.GetComponent<TMP_InputField>();
             instance.DriveName(field,id,"unit-name",unit.name);
         }

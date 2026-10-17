@@ -9,6 +9,17 @@ namespace GTIP
     {
         readonly HashSet<int> seenMapNotices=new HashSet<int>();
         readonly Dictionary<int,RollingText> mapNotices=new Dictionary<int,RollingText>();
+        public static void ReplicaMapNotice(RollingText target,Vector3 position,string text,int type,GameObject reference,bool showsymbol,string tooltipheadline,string tooltiptext,float checkforsimilartypeswithinthistime)
+        {
+            NativeAccess.Call(target,"GTIP_Original_ReplicaMapNotice",position,text,type,reference,showsymbol,tooltipheadline,tooltiptext,checkforsimilartypeswithinthistime);
+            var mp=instance;
+            // Construction feedback must not depend on a transient rolling-text object
+            // surviving until the next full campaign snapshot is captured and applied.
+            if(mp==null || !mp.host || !mp.authenticated || mp.phase!="live" || type!=RollingText.type_buildingconstructed)return;
+            var row=DataRow(15,target.uniqueid,new MpMapNotice{Type=type,X=position.x,Y=position.y,Z=position.z,Age=0,Text=text,Icon=showsymbol});
+            mp.Send(new MpMessage{kind="map-notice",session=mp.session,blob=MpStateCodec.Encode(DataSchemas,new[]{row})});
+            mp.LogDiagnostic("Native construction notice sent: "+target.uniqueid);
+        }
         void CaptureMapNotices(List<MpStateRow> rows)
         {
             if(RollingText.rollingtext==null)return;
@@ -25,7 +36,7 @@ namespace GTIP
             foreach(var row in changes.Where(r=>r.Kind==15)) {
                 if(row.Deleted) {RemoveMapNotice(row.Id);continue;}
                 var n=ReadData<MpMapNotice>(row);
-                if(n.Type<0 || n.Type>100 || n.Reference<0 || n.Age<0 || n.Age>3600 || n.Text==null)throw new InvalidDataException("Invalid map notice.");
+                if(row.Id<0 || n.Type<0 || n.Type>100 || n.Reference<0 || !MpRules.Finite(n.X) || !MpRules.Finite(n.Y) || !MpRules.Finite(n.Z) || !MpRules.Finite(n.Age) || n.Age<0 || n.Age>3600 || n.Text==null)throw new InvalidDataException("Invalid map notice.");
                 if(!seenMapNotices.Add(row.Id) || n.Age>=GamePrefs.timeshowrollingtext || GameVars.papermapvisible)continue;
                 var reference=n.Reference!=0 && units.TryGetValue(n.Reference,out var unit)?unit.gameObject:gameObject;
                 var notice=reference.AddComponent<RollingText>();

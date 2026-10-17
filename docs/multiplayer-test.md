@@ -1,3 +1,28 @@
+# GTIP MP Test v0.25 — guest Military panels, promotions and local controls
+
+Both copies require **v0.25 / protocol 19**. The latest v0.24 session remained connected for roughly 22 minutes. Unity nevertheless recorded repeated `TargetParameterCountException` errors in the guest's formation-name bridge: native `GetUsedUnit` takes two optional parameters, and the bridge supplied neither. This interrupted `CampaignMainPanel.UpdateContent` before native filters and lists were initialized. A second repeated exception came from querying an already destroyed UI object during input-focus handling, interrupting later guest view/control updates.
+
+The bridge now supplies declared optional defaults, rejects missing required arguments, and explicitly supplies both unit-lookup arguments. Input-focus checks use Unity's destroyed-object checks. Native Military setup can complete; weapon views are driven only after initialization. Fleet Orders now uses the native `651_FLEET` button name. The guest draws the native path mesh and order-delay symbols, preserving the authoritative delay scalar around the native display callback and invalidating the cached mesh when a host route changes.
+
+Promotion requests carry the officer's expected rank. The host enforces the same native maximum-rank, active-duty and career restrictions as the native promotion button before applying promotion effects once. Repeat requests with an outdated rank are rejected. An authoritative rank change refreshes the visible officer card/list. Previously saved promotions are not reversed.
+
+The guest dispatch toggle and close controls operate locally. A shared pause tracker across native Panel/GameObject modals prevents closing a log from resuming a campaign already paused before it opened; a campaign running on entry retains native resume behavior. Guest viewing still cannot change the host clock. Construction rolling text now also travels immediately as a reliable host event, using the native text/cost and deduplicating against ordinary snapshot notices.
+
+Verification: 248 multiplayer protocol/model/TCP checks; 21 production native-bridge, modal-pause and promotion-rule checks; 9 replica simulation-boundary checks; 42 editor presentation checks; existing hierarchy/editor/AI suites. All 31 compiled schemas / 619 fields pass native metadata and synthetic snapshot checks. The native renderer's direct writes to registered campaign fields were audited, and staging verifies 99 hooks/changes and 92 preserved methods. These checks do not execute live Unity input/rendering.
+
+Installed in both desktop test copies, with matching SHA-256 hashes: patched game `803CB4293AC7B181E1E843E2032F0239525F203F1DDBA05513A508EBEE04B84D`; runtime `304D1415DC6E7B280959521215CCC8582826B32E6B97EF4DA79E33D18C4DE954`. The installed runtime also passes the compiled-schema snapshot checks. Installer backups were preserved. Connected v0.25 testing is pending.
+
+## Connected test for v0.25
+
+1. Restart both copies, host **GT MP Test**, and join from the guest main menu. While paused, open guest Military and switch Armies → Fleets → Officers → Weapons several times. Check that native lists, filters and counters populate, with distinct weapon rows matching the host's filters. Select a weapon, place an eligible order, and compare stock, cost and order quantity on both copies.
+2. Promote an eligible guest officer once and keep the page open. The card and rank list should refresh after the host update. Rapid clicks must not queue several promotions from one displayed rank. Check the promotion limit against the host's native disabled button. Existing officers already promoted too far are not automatically downgraded; use an unaffected officer or an earlier save for the limit check.
+3. On each player independently, open/close and hide/show dispatches while already paused. Time must remain paused and the other player's log visibility must not change. Repeat starting while running: the host's log should retain native pause/resume behavior, while guest viewing does not control campaign time. Also open a second modal before closing the log and check it cannot release the other modal's pause.
+4. Place a permitted building from each player in the 3D map view. Both should receive the native construction/cost notice once; it should fade normally, including while paused. Confirm one building and one payment on each copy.
+5. Select a guest fleet and open Stance, Fleet Orders and Movement. Issue an eligible order, compare the native order-delay marker/path arrow with the host, replace the destination while paused, then deselect/reselect. Check the arrow redraws and disappears when stopped.
+6. Keep both new multiplayer logs and Unity `Player.log` if a panel is still blank, white bars remain, an order is rejected unexpectedly, or a connection fails. This candidate needs a connected manual test; complete native feature parity, versus and tactical battles remain unfinished.
+
+## Earlier build: v0.24
+
 # GTIP MP Test v0.24 — native readiness estimates and snapshot validation
 
 Both copies require **v0.24 / protocol 18**. The latest v0.23 logs show a different failure: the host cannot encode its first state because Regiment `3:16` (19th wisconsin) has a non-finite `fullreadinessreached` value. The guest has matched the save but receives no first state update. Pausing cannot avoid this because the value already exists in the loaded native state.

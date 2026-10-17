@@ -35,10 +35,23 @@ namespace GTIP
             if(buildingListView!=null && buildingListView.isActiveAndEnabled)NativeAccess.Call(buildingListView,"GTIP_Original_ReplicaBuildingList");
             if(railroadListView!=null && railroadListView.isActiveAndEnabled)NativeAccess.Call(railroadListView,"GTIP_Original_ReplicaRailroadList");
             foreach(var v in weaponListViews)if(v!=null && v.isActiveAndEnabled) {
+                if(!NativeAccess.Get<bool>(v,"initialized"))continue;
                 if(weaponViewDirty){v.UpdateList();NativeAccess.Call(v,"UpdateManagementInfo");}
                 NativeAccess.Call(v,"GTIP_Original_ReplicaWeaponList");
             }
             weaponViewDirty=false;
+            RefreshOfficerView();
+        }
+        void RefreshOfficerView()
+        {
+            if(!officerViewDirty || ui==null || ui.panelhandler==null)return;
+            var h=ui.panelhandler;
+            if(h.panel[h.cpanel_mainpanel].state<=0)return;
+            var main=NativeAccess.Get<CampaignMainPanel>(h,"campaignmainpanel");
+            if(main==null)return;
+            NativeAccess.Call(main,"UpdateCommanderData");
+            if(NativeAccess.Get<int>(main,"contentselection")==13)main.ForceCheckFilterSelectionChange();
+            officerViewDirty=false;
         }
         public static void ReplicaBuildingList(BuildingList target){if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaBuildingList");}
         public static void ReplicaRailroadList(RailroadList target){if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaRailroadList");}

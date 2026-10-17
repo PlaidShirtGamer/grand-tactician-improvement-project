@@ -32,6 +32,14 @@ using(var native=Mono.Cecil.AssemblyDefinition.ReadAssembly(gamePath)) {
     if(!Calls(tooltip,"UpdateGroupStrength") || !new[]{"UpdateMoraleCampaign","UpdateCampaignUnitStats","UpdateCondition"}.All(name=>Calls(aggregate,name)))throw new InvalidOperationException("Native tooltip simulation call graph changed; review the replica boundary.");
     var unitSchema=schemas.GetValue(3)!;
     var replicated=((FieldInfo[])unitSchema.GetType().GetField("Fields")!.GetValue(unitSchema)!).Select(f=>f.Name).ToHashSet();
+    foreach(string name in new[]{"ShowPathArrows","UpdateOnMapSymbols"}) {
+        var display=regiment.Methods.Single(m=>m.Name==name);
+        var changed=display.Body.Instructions.Where(i=>i.OpCode==Mono.Cecil.Cil.OpCodes.Stfld && i.Operand is Mono.Cecil.FieldReference f && f.DeclaringType.Name=="Regiment" && replicated.Contains(f.Name)).Select(i=>((Mono.Cecil.FieldReference)i.Operand).Name).Distinct().ToArray();
+        if(changed.Any(field=>field!="totaltimeoforderdelay"))throw new InvalidOperationException("Native map display gained an unprotected campaign write: "+name+" "+string.Join(",",changed));
+    }
+    var lookup=native.MainModule.Types.Single(t=>t.Name=="CampaignMainPanel").Methods.Single(m=>m.Name=="GetUsedUnit");
+    if(lookup.Parameters.Count!=2 || lookup.Parameters.Any(p=>!p.IsOptional || !p.HasConstant) || !Equals(lookup.Parameters[0].Constant,false) || !Equals(lookup.Parameters[1].Constant,0))throw new InvalidOperationException("Native unit lookup defaults changed.");
+    Console.WriteLine("Native UI ABI: unit lookup defaults verified; path/symbol direct writes restricted to the preserved order-delay scalar.");
     var writes=aggregate.Body.Instructions.Where(i=>i.OpCode==Mono.Cecil.Cil.OpCodes.Stfld && i.Operand is Mono.Cecil.FieldReference f && f.DeclaringType.Name=="Regiment").Select(i=>(Mono.Cecil.FieldReference)i.Operand).Select(f=>regiment.Fields.Single(field=>field.Name==f.Name)).Where(f=>f.IsPublic).Select(f=>f.Name).Distinct().ToArray();
     var missing=writes.Where(name=>!replicated.Contains(name)).ToArray();
     if(missing.Length>0)throw new InvalidOperationException("Host group-stat outputs missing from replication: "+string.Join(",",missing));

@@ -22,6 +22,8 @@ namespace GTIP
             if(IsReplica)return;
             var mp=instance;
             if(mp!=null && mp.transport!=null && mp.host) {
+                if(manualset && !mp.blockPanelResume)mp.panelPause.ManualPause(newspeed==0);
+                if(mp.blockPanelResume && !manualset && newspeed!=0)return;
                 if(mp.phase=="sending" && newspeed>0)return;
                 if(mp.newsBarrier.Waiting) {
                     if(manualset && newspeed==0)mp.newsResumeSpeed=0;
@@ -63,6 +65,14 @@ namespace GTIP
             if((Time.frameCount+target.GetInstanceID())%30==0)target.UpdateUnitVisuals();
             // This native presentation refresh is otherwise inside the suppressed simulation loop.
             if((Time.frameCount+target.GetInstanceID())%30==0)NativeAccess.Call(target,"UpdatePaperMapFlagTooltipInfo");
+            if((Time.frameCount+target.GetInstanceID())%15==0 && target.blockobjectcurrentpath!=null && target.blockobjectcurrentpath.Length>0) {
+                target.ShowPathArrows();
+                // This native display method also clears an expired delay. The host owns
+                // that scalar, so retain it while updating only the native map symbols.
+                float delay=target.totaltimeoforderdelay;
+                try {NativeAccess.Call(target,"UpdateOnMapSymbols");}
+                finally {target.totaltimeoforderdelay=delay;}
+            }
         }
         string[] manifestKeys;
         float checkpointDate;
