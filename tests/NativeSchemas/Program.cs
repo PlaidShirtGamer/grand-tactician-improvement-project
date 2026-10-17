@@ -23,4 +23,17 @@ foreach(var item in new[]{("BuildingList","showncontent",false),("CampaignMainPa
 var ai=AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(managed,"UnityEngine.AIModule.dll"));
 var corners=ai.GetType("UnityEngine.AI.NavMeshPath",true)!.GetField("m_Corners",BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance);
 if(corners?.FieldType.Name!="Vector3[]")throw new InvalidOperationException("Native path corner cache layout changed.");
+using(var native=Mono.Cecil.AssemblyDefinition.ReadAssembly(gamePath)) {
+    var regiment=native.MainModule.Types.Single(t=>t.Name=="Regiment");
+    var aggregate=regiment.Methods.Single(m=>m.Name=="UpdateGroupStrength");
+    var tooltip=regiment.Methods.Single(m=>m.Name=="GetUnitTooltipInfo");
+    bool Calls(Mono.Cecil.MethodDefinition method,string name)=>method.Body.Instructions.Any(i=>i.Operand is Mono.Cecil.MethodReference call && call.DeclaringType.Name=="Regiment" && call.Name==name);
+    if(!Calls(tooltip,"UpdateGroupStrength") || !new[]{"UpdateMoraleCampaign","UpdateCampaignUnitStats","UpdateCondition"}.All(name=>Calls(aggregate,name)))throw new InvalidOperationException("Native tooltip simulation call graph changed; review the replica boundary.");
+    var unitSchema=schemas.GetValue(3)!;
+    var replicated=((FieldInfo[])unitSchema.GetType().GetField("Fields")!.GetValue(unitSchema)!).Select(f=>f.Name).ToHashSet();
+    var writes=aggregate.Body.Instructions.Where(i=>i.OpCode==Mono.Cecil.Cil.OpCodes.Stfld && i.Operand is Mono.Cecil.FieldReference f && f.DeclaringType.Name=="Regiment").Select(i=>(Mono.Cecil.FieldReference)i.Operand).Select(f=>regiment.Fields.Single(field=>field.Name==f.Name)).Where(f=>f.IsPublic).Select(f=>f.Name).Distinct().ToArray();
+    var missing=writes.Where(name=>!replicated.Contains(name)).ToArray();
+    if(missing.Length>0)throw new InvalidOperationException("Host group-stat outputs missing from replication: "+string.Join(",",missing));
+    Console.WriteLine($"Native tooltip boundary: simulation call chain confirmed; {writes.Length} public group-stat writes have host fields.");
+}
 Console.WriteLine($"Native schema ABI: {schemas.Length} schemas, {fields} fields bound against the original game assembly. Unity gameplay is not exercised.");

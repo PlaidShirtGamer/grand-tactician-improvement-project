@@ -1,3 +1,24 @@
+# GTIP MP Test v0.23 — guest tooltip simulation boundary
+
+Both installs require **v0.23 / protocol 17**. This fixes the v0.22 disconnect during the first campaign state update. The two October 17 guest logs show `Native state divergence at revision 1`, on the `morale` field of 76th North Carolina and 74th Missouri respectively. The checkpoint transfer/load succeeds; the host's subsequent end-of-stream message is a consequence of the guest stopping.
+
+Native `SpottedEnemy.UpdateTooltips` calls `Regiment.GetUnitTooltipInfo`, which calls `UpdateGroupStrength`. Despite its name, that method advances subordinate morale, campaign stats/readiness and condition. The v0.22 sighting adapter therefore let native simulation overwrite received host values before readback. The bridge now suppresses `UpdateGroupStrength` for replicas, while preserving host/offline execution and the existing isolated recruiting-preview transaction. Its public group-stat outputs and campaign morale breakdowns are explicitly replicated. The divergence check remains enabled, with formation name and expected/actual values added to future error reports.
+
+Regression checks exercise the production bridge with mutating native-operation doubles: guest tooltips preserve authoritative values, previews remain isolated, and host/offline calls and arguments remain intact. Native metadata checks confirm the real tooltip-to-simulation call chain and require every public direct field write in `UpdateGroupStrength` to have a registered host field. These tests do not run Unity gameplay.
+
+Verification: 9 production-bridge regression checks, 230 multiplayer model/protocol/TCP checks, 42 editor presentation checks and the existing hierarchy/editor/AI suites pass. Native checks bind 31 schemas / 619 fields and cover all 57 public direct group-stat field writes. Staging verifies 96 hooks/changes and 89 preserved methods. Connected join/hover testing remains pending.
+
+The v0.23 candidate is installed in both desktop test copies with matching patched-game and runtime hashes. A fresh connection is required; the failed v0.22 guest session should not be continued.
+
+## Connected test for v0.23
+
+1. Restart both copies. Load **GT MP Test** on the host and join from the guest's main menu. Leave the host paused for at least a minute; the guest should finish the first update and remain connected.
+2. Pan/zoom around Washington and Alexandria and hover friendly/enemy icons and remembered sightings. Open Military and select several formations. Check no morale/readiness/condition divergence occurs while paused.
+3. Resume at normal speed for several minutes, pause again, and compare formation values. Open a guest recruitment preview and cancel it, then repeat the hover test.
+4. If either copy disconnects, retain both new `GTIP-Logs/mp-*.log` files. The previous v0.22 checklist below still covers the broader unverified features. Tactical battles and versus remain unfinished.
+
+## Earlier build: v0.22
+
 # GTIP MP Test v0.22 — world objects, native controls and map-state audit
 
 Both installs require **v0.22 / protocol 16** and must be restarted. This is an experimental co-op candidate. Full native parity, versus and tactical battle synchronization remain unfinished. The checks below are required live tests, not recorded passes.

@@ -42,7 +42,7 @@ namespace GTIP
 
     public static class MpRules
     {
-        public const int Protocol = 16, MaxBytes = 2 * 1024 * 1024;
+        public const int Protocol = 17, MaxBytes = 2 * 1024 * 1024;
         public static bool NewClock(int incoming,int current) => incoming>0 && incoming>current;
         public static bool NativeSelectionCollider(string tag,string name,bool paperMap) => name=="UnitNameText" || (name=="UnitSymbol" && paperMap);
         public static void ValidateSnapshot(MpMessage value)

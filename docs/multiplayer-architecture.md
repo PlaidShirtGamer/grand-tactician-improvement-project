@@ -6,7 +6,7 @@ Target: host-authoritative campaign and standalone-battle co-op/versus using nat
 
 1. Host executes simulation and validates all remote intents. Native host UI still executes directly today; routing both players through a shared command boundary remains work.
 2. Guest applies replicated state on Unity's main thread. Networking threads never touch Unity objects.
-3. Presentation updates run independently of simulation: cameras, panels, selection, models, animation, dispatch display. Do not re-enable whole simulation-bearing Update methods to repair rendering.
+3. Presentation updates run independently of simulation: cameras, panels, selection, models, animation, dispatch display. Do not re-enable whole simulation-bearing Update methods to repair rendering. Native `GetUnitTooltipInfo` calls `UpdateGroupStrength`, which advances subordinate morale/readiness/condition; replicas suppress that aggregate routine and receive its outputs from the host. Recruiting previews remain within their existing save/restore transaction.
 4. Join/reconnect loads an isolated native checkpoint. Normal object creation/deletion uses lifecycle adapters, not a reload.
 5. Revisioned transactions carry base revision, changed records, explicit removals and target checksum. A guest reconstructs and validates the complete registered state before application. Host commits its baseline only after application acknowledgement.
 6. Scalar readback checks registered native fields after application. A mismatch reports revision, record kind, identity and field. This does not verify omitted objects, visuals or reference graphs.

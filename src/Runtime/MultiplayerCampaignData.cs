@@ -31,7 +31,11 @@ namespace GTIP
                 "groupstrengthperunittyp","groupstrengthperunittypcampaigndirect","groupcountperunittype",
                 "groupguns","groupmorale","groupfightingspirit","grouplosses","groupwounded","groupkilled",
                 "groupmissing","groupcaptured","groupsick","groupammo","groupcohesion","grouptraining",
-                "groupstate","groupexperience","groupcondition","groupfatigue","groupsupplystate" }),
+                "groupstate","groupexperience","groupcondition","groupfatigue","groupsupplystate",
+                "groupstatsguns","statsguns","groupspeed","groupstatsupdated","groupgunslost","groupdesertionslastnight","groupdesertionscumulative",
+                "groupsubordinatesmoving","groupsubordinatesmovingnotfar","groupsubordinatesmovingnonari","groupsubordinatesmovingnonai","groupsubordinatesmovingnonarinonskirmishernonfallback",
+                "moraleeffectscampaign","moraleeffectsaverage","moraleimprovement","fullreadinessreached","covervaluesubordinates","flanksthreated","dlcw_isundercommander","dlcw_isundercommandercampaign",
+                "numberofengagements","numberofrouts","amountofmelees","gunscaptured","inflictedcasualtiesperunittype","inflictedprisonersperunittype","fightingspiritenemysoil","blockadeefficiencyfactors" }),
             MpStateSchema.Scalars(typeof(MpFormationState)),MpStateSchema.Scalars(typeof(MpOfficerDates)),MpStateSchema.Scalars(typeof(MpArmyGroupState)),
             MpStateSchema.Scalars(typeof(Messages.Message)),MpStateSchema.Scalars(typeof(MpDispatchReferences)),MpStateSchema.Scalars(typeof(MpPolicyState)),
             MpStateSchema.Scalars(typeof(MpProjectState)),MpStateSchema.Scalars(typeof(MpNewspaperState)),
@@ -262,8 +266,14 @@ namespace GTIP
             foreach(var row in rows.Where(r=>r.Kind<=3)) {
                 var target=DataTarget(row);
                 if(target==null)throw new InvalidDataException("Applied native object missing: "+row.Kind+":"+row.Id);
-                string field=MpStateBaseline.FirstDifference(DataSchemas[row.Kind],row.Values,DataSchemas[row.Kind].Capture(target));
-                if(field!=null)throw new InvalidDataException("Native state divergence at revision "+incomingDataSerial+": "+row.Kind+":"+row.Id+" field="+field);
+                var schema=DataSchemas[row.Kind];var actual=schema.Capture(target);
+                string field=MpStateBaseline.FirstDifference(schema,row.Values,actual);
+                if(field!=null) {
+                    int index=Array.FindIndex(schema.Fields,f=>f.Name==field);
+                    string Value(object value)=>value is float number?number.ToString("R",System.Globalization.CultureInfo.InvariantCulture):Convert.ToString(value,System.Globalization.CultureInfo.InvariantCulture);
+                    throw new InvalidDataException("Native state divergence at revision "+incomingDataSerial+": "+row.Kind+":"+row.Id+" field="+field+
+                        " name="+row.Name+(index<0?"":" expected="+Value(row.Values[index])+" actual="+Value(actual[index])));
+                }
             }
         }
     }
