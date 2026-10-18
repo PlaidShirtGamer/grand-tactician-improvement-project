@@ -11,13 +11,14 @@ namespace GTIP
         Texture2D white;
         void BlockInput()
         {
+            cursorGuard.Repair("multiplayer menu");
             if (blockedModules.Length != 0) return;
             var events = EventSystem.current;
             if(events!=null) events.SetSelectedGameObject(null);
             blockedModules = events == null ? new BaseInputModule[0] : events.GetComponents<BaseInputModule>().Where(m => m.enabled).ToArray();
             foreach (var module in blockedModules) module.enabled = false;
         }
-        void RestoreInput() { if (IsReplica) return; foreach (var module in blockedModules) if (module != null) module.enabled = true; blockedModules = new BaseInputModule[0]; }
+        void RestoreInput() {cursorGuard.Repair("input restore"); if (IsReplica) return; foreach (var module in blockedModules) if (module != null) module.enabled = true; blockedModules = new BaseInputModule[0]; }
         void ClosePanel()
         {
             panel=false;

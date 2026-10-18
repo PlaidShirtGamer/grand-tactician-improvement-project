@@ -145,6 +145,17 @@ internal static class SixLevelPatches
         }
         hooks.Add("Regiment.HostFogVisibility");
 
+        foreach(var cursorWriter in new[]{Method("BattleUI","GTIP_Original_EditorBattleUI"),Method("MouseOrbitImproved","LateUpdate")}) {
+            var calls=cursorWriter.Body.Instructions.Where(i=>i.Operand is MethodReference m && m.DeclaringType.FullName=="UnityEngine.Cursor" && m.Name=="set_lockState").ToArray();
+            if(calls.Length!=(cursorWriter.DeclaringType.Name=="BattleUI"?2:1))throw new InvalidOperationException("Native cursor-lock writers changed.");
+            var il=cursorWriter.Body.GetILProcessor();
+            foreach(var call in calls) {
+                call.OpCode=OpCodes.Ldstr;call.Operand=cursorWriter.DeclaringType.Name+"."+cursorWriter.Name;
+                il.InsertAfter(call,il.Create(OpCodes.Call,Helper("MultiplayerCampaign","SetCursorLock")));
+            }
+            hooks.Add(cursorWriter.DeclaringType.Name+".GuestCursorRecovery");
+        }
+
         // Replace reads only inside drawing routines. Logical transforms, order
         // validators and the authoritative map audit retain native coordinates.
         foreach(var drawing in new[]{Method("PanelHandler","UpdatePanels"),Method("Ship","UpdatePosition")}) {
@@ -238,6 +249,12 @@ internal static class SixLevelPatches
         foreach (var expected in new[] { ("RecruitableOfficerState", 1), ("Suitable", 2) })
             if (officerList.Body.Instructions.Count(i => i.Operand is MethodReference r && r.DeclaringType.FullName == "GTIP.OfficerVisibility" && r.Name == expected.Item1) != expected.Item2)
                 throw new InvalidOperationException("Officer state/rank hook verification failed.");
+        var cursorMethods=new[]{game.MainModule.Types.Single(t=>t.Name=="BattleUI").Methods.Single(m=>m.Name=="GTIP_Original_EditorBattleUI"),game.MainModule.Types.Single(t=>t.Name=="MouseOrbitImproved").Methods.Single(m=>m.Name=="LateUpdate")};
+        foreach(var method in cursorMethods) {
+            int expected=method.DeclaringType.Name=="BattleUI"?2:1;
+            if(method.Body.Instructions.Count(i=>i.Operand is MethodReference r && r.DeclaringType.FullName=="GTIP.MultiplayerCampaign" && r.Name=="SetCursorLock")!=expected ||
+                method.Body.Instructions.Any(i=>i.Operand is MethodReference r && r.DeclaringType.FullName=="UnityEngine.Cursor" && r.Name=="set_lockState"))throw new InvalidOperationException("Guest cursor writer verification failed.");
+        }
         int originals = 0;
         foreach (var type in Types(game.MainModule.Types))
         foreach (var original in type.Methods.Where(m => m.Name.StartsWith("GTIP_Original_")))

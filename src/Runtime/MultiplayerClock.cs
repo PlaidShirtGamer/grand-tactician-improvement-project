@@ -91,6 +91,7 @@ namespace GTIP
         }
         void LateUpdate()
         {
+            cursorGuard.Repair("late update");
             if(transport==null || !authenticated || phase!="live")return;
             RefreshEconomyViews();
             if(host) {

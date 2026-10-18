@@ -33,8 +33,19 @@ namespace GTIP
             var go = new GameObject("GTIP_Multiplayer"); DontDestroyOnLoad(go);
             instance = go.AddComponent<MultiplayerCampaign>();
         }
-        public static void Observe(BattleUI target) { if (instance != null) instance.ui = target; }
-        public static void MenuChanged(bool visible) { if (instance != null) instance.mainMenu = visible; }
+        public static void Observe(BattleUI target)
+        {
+            if(instance==null)return;
+            instance.ui=target;
+            if(instance.cursorGuard.Owned && instance.cursorGuard.ReturnedToMenu && instance.transport==null && !instance.leavingReplica && !instance.mainMenu && target.IsCampaign && !target.IsMainMenu)
+                instance.cursorGuard.ReleaseOwnership();
+        }
+        public static void MenuChanged(bool visible)
+        {
+            if(instance==null)return;
+            instance.mainMenu=visible;
+            if(visible && instance.transport==null)instance.cursorGuard.MainMenu();
+        }
         bool Ready => ui != null && ui.IsCampaign && !ui.IsMainMenu && GameVars.frame > 50 && GameVars.allregimentsinitialized &&
             BattleUnits.unitfolder != null && SixLevelRuntime.Active && !DLC_WL.dlc_scenarioactive;
         void BeginHost()
@@ -42,6 +53,7 @@ namespace GTIP
             if (!Ready) throw new InvalidOperationException("Load a main campaign before hosting.");
             if (mode != "coop") throw new InvalidOperationException("Native-map milestone currently supports co-op observation only.");
             if (GameVars.ai_vs_ai) throw new InvalidOperationException("Disable AI-versus-AI before hosting.");
+            cursorGuard.ReleaseOwnership();
             hostSide = GameVars.playeralliance; guestSide = MpRules.GuestSide(mode, hostSide);
             GameVars.SetGameSpeed(0, manualset: true);
             BuildManifest();
@@ -61,10 +73,11 @@ namespace GTIP
             host=false; authenticated=false; helloSent=false; replicaReady=false; phase="joining";
             bootstrapStarted=Time.realtimeSinceStartup;
             transport=MpTransport.Join(IPAddress.Parse(address),ParsePort());
-            StartDiagnostics(); snapshot=null; message="Connecting to receive host campaign...";
+            StartDiagnostics();cursorGuard.Diagnostic=LogDiagnostic;cursorGuard.BeginGuest();snapshot=null; message="Connecting to receive host campaign...";
         }
         void End(string reason)
         {
+            cursorGuard.EndSession();
             bool wasHost = transport != null && host;
             bool exitReplica=transport!=null && !host && (hasLiveData || replicaMutated) && root==BattleUnits.unitfolder;
             if (transport != null) {
@@ -115,9 +128,11 @@ namespace GTIP
             try { File.AppendAllText(diagnosticPath, DateTime.UtcNow.ToString("O") + " " + text + Environment.NewLine); }
             catch { diagnosticPath = null; }
         }
-        void OnDestroy() { End("Disconnected."); RestoreInput(); if (white != null) Destroy(white); if (instance == this) instance = null; }
+        void OnDestroy() { End("Disconnected.");cursorGuard.ReleaseOwnership();RestoreInput(); if (white != null) Destroy(white); if (instance == this) instance = null; }
         void Update()
         {
+            cursorGuard.Repair("update");
+            if(mainMenu && transport==null)cursorGuard.MainMenu();
             RestoreMotionSymbols();
             if(leavingReplica && (root!=BattleUnits.unitfolder || (ui!=null && ui.IsMainMenu))){leavingReplica=false;RestoreInput();}
             if (Input.GetKeyDown(KeyCode.Escape) && panel) {

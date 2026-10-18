@@ -1,3 +1,23 @@
+# GTIP MP Test v0.29 — guest cursor focus and menu recovery
+
+Both copies require **v0.29 / protocol 21**. The latest v0.28 session stayed connected through revision 150 and continued accepting clicks/time controls. It ended when the host explicitly disconnected; the guest receive queue peaked at 31, with no queue-overflow failure. The latest Unity log contained no relevant exception. Existing logs did not record cursor lock/focus, so they cannot establish exactly which event centered the cursor.
+
+Native `BattleUI.Update` releases `Cursor.lockState` when focused and requests a lock when unfocused. The guest replacement skipped that routine, including its recovery, and the previous multiplayer end/menu/input cleanup did not release global Unity cursor state. This supplies a likely path for the reported center-lock that persisted into the main menu. Campaign camera movement itself contains no lock writes. The other native writer is an orbit component's Escape toggle.
+
+Guest cursor ownership now starts at join and remains active across session end and return to the menu. Focus changes, frame updates, F9/input cleanup, disconnect and menu activation recover a locked or hidden guest cursor. Both native UI focus setters and the orbit setter pass through the ownership guard, preventing a late native callback from immediately relocking the guest. It releases ownership when a later local campaign or host session starts. Native lock behavior passes through while guest ownership is inactive. Native cursor textures and camera controls are retained. Connection logs now record focus changes, repaired lock/visibility state and the source of prevented native lock requests, with duplicate request logging suppressed.
+
+Verification: **26 production cursor-guard checks with Unity state doubles**, plus **502 multiplayer model/protocol/TCP checks**, native bridge/boundary checks, the editor/hierarchy/AI suites, and native schema/synthetic snapshots covering **34 schemas / 628 fields**. Staging verifies **110 hooks/changes and 98 preserved methods**, including all three native cursor writer redirections. These checks do not exercise real window focus or mouse hardware in Unity.
+
+Installed in both desktop test copies with matching SHA-256 hashes: patched game `A5B4D6EEF1B8CCFFA0EC1A5B0B46AB40FDDD8F7DD12257E9D8EB4EE4C1CD12AE`; runtime `7E6028E27AFF0ADE2DDE75DF17BA3FF3F8F24A55022ACCE37ED9227DE5842652`. The installed runtime passes native schema/snapshot checks; existing installer backups were retained.
+
+## Connected test for v0.29
+
+1. Restart both games and join **GT MP Test**. Move and click the guest pointer, then switch focus between the two game windows and another application. Repeat while paused, with a native UI panel open and with F9/Escape menus open. Check the pointer remains freely movable after returning to the guest.
+2. Leave the guest window out of focus while the host ends the session. Return to the guest main menu and verify cursor movement, clicking and visibility. Repeat with the guest focused at disconnect.
+3. Rejoin, then leave multiplayer and start a local campaign or host session; verify its native input behavior. If centering recurs, retain the new guest log with its cursor/focus diagnostics. Connected v0.29 behavior remains unverified.
+
+## Earlier build: v0.28
+
 # GTIP MP Test v0.28 — clock-queue disconnect during initial synchronization
 
 Both copies require **v0.28 / protocol 21**. The October 18 v0.27 guest log applied revision 1 successfully (23,540 records, approximately 3.6 seconds on Unity's main thread), then reported `Peer exceeded receive queue`. The host reported EOF after the guest closed. The guest's economy readback and initial building binding had succeeded. The transport disconnected when more than 64 messages accumulated while the main thread was busy; continuous clock packets could reach that limit even in a paused campaign.
