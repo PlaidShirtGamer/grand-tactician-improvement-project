@@ -71,6 +71,7 @@ namespace GTIP
             DestroyRecruitPreview();previewPanel=null;previewCommander=-1;
             transport?.Dispose(); transport = null; authenticated = false; helloSent = false; snapshot = null;
             ClearData(false);
+            ClearMovement();
             panelPause.Clear();blockPanelResume=false;pendingPromotions.Clear();officerViewDirty=false;
             newsBarrier.Clear();newspaperState=new MpNewspaperState();guestNewsSerial=0;guestNewsClosed=false;guestFileMenu=false;
             financeViews.Clear();replicaAlerts.Clear();alertPositions.Clear();lastAlertCounts="";ClearMapNotices();replicaVisibility.Clear();ClearDispatchState();ClearWorld();
@@ -213,6 +214,8 @@ namespace GTIP
                 snapshot = value;
                 if(hostClock==null)ApplyClock(value.clock); // only the sequenced clock stream advances time
                 ApplyReplica(value);
+            } else if(value.kind=="movement-panel") {ReceiveMovementPanel(value);
+            } else if(value.kind=="movement-paths") {ReceiveFastPaths(value);
             } else if(value.kind=="map-notice") {
                 var notices=MpStateCodec.Decode(DataSchemas,value.blob);
                 if(notices.Length!=1 || notices[0].Kind!=15 || notices[0].Deleted)throw new InvalidOperationException("Invalid construction notice.");
@@ -295,7 +298,7 @@ namespace GTIP
                 throw new InvalidOperationException("Destination is outside the campaign map.");
             var point = new Vector3(value.x, 0, value.z); point.y = terrain.SampleHeight(point) + origin.y;
             var controller = GameObject.Find("GameController").GetComponent<BattleUnits>();
-            controller.SetWaypoint(unit, point, useorderdelay: true, showmovementoptions: false);
+            WithGuestRoute(unit,value.sequence,true,()=>controller.SetWaypoint(unit,point,useorderdelay:true,showmovementoptions:true));
         }
         static string SideName(int side) => side == 0 ? "Union" : "Confederacy";
     }

@@ -64,7 +64,7 @@ namespace GTIP
                     if(!units.TryGetValue(row.Id,out var u) || u.fleetref==null)throw new InvalidDataException("Unknown fleet record.");
                     DataSchemas[22].Apply(u.fleetref,row.Values);
                 }
-                if(structural){RefreshReplicaRosterUi();foreach(var row in rows.Where(r=>r.Kind<=3))DataSchemas[row.Kind].Apply(DataTarget(row),row.Values);}
+                if(structural){RefreshReplicaRosterUi();fleetViewDirty=true;foreach(var row in rows.Where(r=>r.Kind<=3))DataSchemas[row.Kind].Apply(DataTarget(row),row.Values);}
             } finally {applyingNaval=false;}
             if(structural)LogDiagnostic("Vessel roster applied: "+vessels.Count);
         }

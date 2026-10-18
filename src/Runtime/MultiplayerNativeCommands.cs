@@ -40,7 +40,8 @@ namespace GTIP
                 case "671_PATROL":RequestNative("fleet-order",id,u.fleetorders==2?0:2);break;
                 case "672_RAID":RequestNative("fleet-order",id,u.fleetorders==3?0:3);break;
                 case "640_FORCED":RequestNative("forced-march",id,u.doublequick?0:1);break;
-                case "641_STOP":case "681_STOP":RequestNative("unit-stop",id);break;
+                case "641_STOP":case "680_STOP":RequestNative("unit-stop",id);CloseFleetMovement();break;
+                case "681_PORT":RequestNative("fleet-port",id);CloseFleetMovement();break;
             }
         }
         bool ExecuteNative(MpMessage request)
@@ -49,7 +50,7 @@ namespace GTIP
             if(mode!="coop" || guestSide!=hostSide || request.sequence<=lastSequence || request.sequence<=0 || !MpRules.Finite(request.x))throw new InvalidOperationException("Stale or unauthorized native request.");
             lastSequence=request.sequence;
             var parts=(request.text??"").Split(new[]{'|'},2);string action=parts[0],detail=parts.Length>1?parts[1]:"";
-            if(ExecuteWorldAction(action,request,detail) || ExecuteNavalAction(action,request,detail) || ExecuteEngagementAction(action,request,detail))return true;
+            if(ExecuteRouteAction(action,request,detail) || ExecuteWorldAction(action,request,detail) || ExecuteNavalAction(action,request,detail) || ExecuteEngagementAction(action,request,detail))return true;
             if(action=="weapon-order") {
                 int weapon=(int)request.x,quantity=request.unit;
                 if(request.x!=weapon || weapon<0 || weapon>=GameVars.weapon.Length || quantity<1 || quantity>1000000 || GameVars.alliance[guestSide].weaponorders[weapon].quantity>0)throw new InvalidOperationException("Weapon order unavailable.");
@@ -73,6 +74,12 @@ namespace GTIP
                 var list=Resources.FindObjectsOfTypeAll<WeaponList>().First(w=>w.gameObject.scene.IsValid());list.AssignWeapon(weapon,unit);return true;
             }
             if(!Controllable(unit))throw new InvalidOperationException("Formation cannot receive this order.");
+            if(action=="fleet-port") {
+                if(unit.unittyp!=17 || unit.fleetref==null)throw new InvalidOperationException("Formation is not a fleet.");
+                var port=engine.GetClosestHarbor(unit.transform.position,guestSide,excludeblocked:false,includeseaports:unit.fleetref.abletomoveonsea,includeriverports:unit.fleetref.abletomoveonriver);
+                if(port==null)throw new InvalidOperationException("No suitable native return port is available.");
+                WithNativeSelection(unit,()=>engine.SetWaypoint(unit,port.transform.position,useorderdelay:false,showmovementoptions:false));return true;
+            }
             bool pending=action=="campaign-order" && (request.x<120?unit.campaignstance!=unit.campaignstanceordered:unit.cavalryorders!=unit.cavalryordersordered);
             MpWorldRules.UnitOrder(action,request.x,unit.unittyp,CampaignArmyPanel.GetReadinessStep(unit),pending);
             switch(action) {
@@ -83,6 +90,11 @@ namespace GTIP
                 default:throw new InvalidOperationException("Unsupported native action: "+action);
             }
             return true;
+        }
+        void CloseFleetMovement()
+        {
+            if(ui==null || ui.panelhandler==null)return;
+            var h=ui.panelhandler;h.HidePanel(h.panel[h.cpanel_fleetmovement]);h.SetButtonsCondition(h.panel[h.cpanel_fleetbottompanel],0,652);
         }
         public static void ReplicaAssignWeapon(WeaponList target,int manualweapon,Regiment manualunit)
         {

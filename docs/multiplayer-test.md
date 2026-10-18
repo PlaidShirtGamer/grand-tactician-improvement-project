@@ -1,3 +1,31 @@
+# GTIP MP Test v0.26 — repeated ship transfers and native movement feedback
+
+Both copies require **v0.26 / protocol 20**. The latest v0.25 logs show guest orders reaching the host quickly, while some complete campaign revisions take roughly 1–2 seconds to prepare, transfer and apply. This candidate addresses repeated ship dragging, fleet Stop/Return to Port, native Movement Options and missing native movement-refusal text.
+
+After an authoritative vessel attachment change, the visible native Fleets page now refreshes its fleet and ship-pool lists after any active drag finishes. Native initialization restores the ship drag targets that an OOB refresh had cleared. Fleet Stop now maps to `680_STOP`; Return to Port maps to `681_PORT` and executes the native closest-harbor search with that fleet's sea/river capabilities and the native no-order-delay return action.
+
+Guest movement calls the host's native waypoint method with movement options enabled. The native popup request is delivered to the guest, including its location, minimized/full choice, active buttons, disabled buttons and lifetime. The host retains separate native route-edit context for guest controls; guest edits preserve the host's selected units and another unit's route context. Popup controls forward accept/cancel, timed movement, forced march, retreat mode and available rail/sea/river changes to the host. A popup carries its originating order identity, so stale controls cannot operate on a newer guest route; a subsequent host waypoint or stop invalidates the affected guest context. These are native UI panels, with host-side mutations.
+
+Native rolling-text messages created during a guest request now travel immediately, including low-readiness movement refusals, garrison/prewar restrictions and disabled-fleet feedback. The text/type/position come from the native call, and the same notice is deduplicated when it later appears in a campaign snapshot.
+
+Host waypoint, stop and route-edit actions also send small priority route records. The guest redraws native path arrows on receipt rather than waiting for the whole campaign revision. Per-unit command generations prevent an older in-flight snapshot from restoring a superseded route; ordinary updates within the same generation continue to apply. These records update path presentation, without guest pathfinding or simulation. Positions and campaign statistics still arrive through validated campaign revisions.
+
+Full-state fingerprinting now caches unchanged encoded records while reproducing the exact original byte stream and SHA-256. Checksums, numeric validation and transactional commit are retained. Signed zero, NaN, arrays, insertions/deletions and changed commits have regression coverage. A synthetic 18,000-row .NET test measured about 78 ms for full encoding versus 35 ms with a warm cache; this is not a measurement of live Unity or network latency.
+
+Verification: 271 multiplayer model/protocol/TCP checks; 21 native-bridge/pause/promotion checks; 9 replica-boundary checks; 42 editor presentation checks; existing hierarchy/editor/AI suites. Native schema/snapshot validation covers 31 compiled schemas / 620 fields. Staging verifies 102 hooks/changes and 95 preserved methods. Live Unity input, native popup interactions and connected latency still need manual verification.
+
+Installed in both desktop test copies with matching SHA-256 hashes: patched game `33AAA8DE07CE42008351CB97387E676840D0A593B8280A99771D68B88FB3B092`; runtime `6389A169FA29F6458B89326503477B9CF7F50AB601CEFB51014A769DA1902F68`. The installed runtime passes the compiled-schema snapshot checks. Installer backups were preserved. Connected v0.26 testing is pending.
+
+## Connected test for v0.26
+
+1. Restart both games and join a fresh session from **GT MP Test**. On the guest Fleets page, transfer several different ships, then move one back, including a fleet-to-pool/pool-to-fleet transfer where allowed. Wait for each authoritative update and continue dragging without leaving the page. Check both players' ship assignments and fleet totals after every transfer.
+2. Select a moving guest fleet and use **Stop**. Its route should clear on both maps. Issue another move, then use **Return to Port**; compare the destination and suitability of the selected harbor on both copies. Repeat with sea-only/river-capable fleets where available.
+3. Give guest army and fleet movement orders. Check the native Movement Options marker appears at the destination, expands normally, and offers appropriate enabled/disabled controls. Test accept/cancel and a permitted transport or timed-movement option. Keep a different unit selected on the host and verify guest interaction does not change that selection or overwrite that unit's route controls.
+4. Replace a destination several times while paused and then stop. Arrows should update promptly and remain on the newest order as campaign snapshots arrive. Run briefly, pause again and compare unit positions/status. Retain both multiplayer logs if arrows regress, units diverge or noticeable movement delay remains; priority-route and popup send/receive entries are now logged.
+5. Move a low-readiness army into hostile territory and compare the guest's native refusal text with the host's behavior. Also try an allowed friendly-territory move so a refused order is distinguishable from a missing response. The warning should fade while paused and should not appear twice from one native notice.
+
+## Earlier build: v0.25
+
 # GTIP MP Test v0.25 — guest Military panels, promotions and local controls
 
 Both copies require **v0.25 / protocol 19**. The latest v0.24 session remained connected for roughly 22 minutes. Unity nevertheless recorded repeated `TargetParameterCountException` errors in the guest's formation-name bridge: native `GetUsedUnit` takes two optional parameters, and the bridge supplied neither. This interrupted `CampaignMainPanel.UpdateContent` before native filters and lists were initialized. A second repeated exception came from querying an already destroyed UI object during input-focus handling, interrupting later guest view/control updates.

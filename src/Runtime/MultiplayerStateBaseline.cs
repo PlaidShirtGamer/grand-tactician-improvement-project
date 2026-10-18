@@ -11,6 +11,8 @@ namespace GTIP
     {
         readonly MpStateSchema[] schemas;
         Dictionary<long,MpStateRow> records=new Dictionary<long,MpStateRow>();
+        sealed class EncodedRow {public MpStateRow Row;public byte[] Bytes;}
+        Dictionary<long,EncodedRow> encodedRows=new Dictionary<long,EncodedRow>();
         public int Revision { get; private set; }
         public string Hash { get; private set; } = "";
         public MpStateBaseline(MpStateSchema[] schemas) { this.schemas=schemas; }
@@ -19,12 +21,18 @@ namespace GTIP
             Values=r.Values?.Select(v=>v is Array a?a.Clone():v).ToArray()};
         static bool SameValue(object a,object b)
         {
+            if(a is float f && b is float g)return SameFloat(f,g);
+            if(a is int[] ai && b is int[] bi)return ai.SequenceEqual(bi);
+            if(a is float[] af && b is float[] bf){if(af.Length!=bf.Length)return false;for(int i=0;i<af.Length;i++)if(!SameFloat(af[i],bf[i]))return false;return true;}
+            if(a is bool[] ab && b is bool[] bb)return ab.SequenceEqual(bb);
+            if(a is string[] at && b is string[] bt)return at.SequenceEqual(bt);
             if(a is Array x && b is Array y) {
                 if(x.Rank!=y.Rank || Enumerable.Range(0,x.Rank).Any(i=>x.GetLength(i)!=y.GetLength(i)))return false;
-                return x.Cast<object>().SequenceEqual(y.Cast<object>());
+                return x.Cast<object>().Zip(y.Cast<object>(),SameValue).All(v=>v);
             }
             return Equals(a,b);
         }
+        static bool SameFloat(float a,float b)=>a.Equals(b) && (a!=0f || (1f/a).Equals(1f/b));
         static bool Same(MpStateRow a,MpStateRow b)=>a.Current==b.Current && a.Last==b.Last && a.Name==b.Name &&
             a.Values.Length==b.Values.Length && a.Values.Zip(b.Values,SameValue).All(v=>v);
         public static string FirstDifference(MpStateSchema schema,object[] expected,object[] actual)
@@ -66,7 +74,27 @@ namespace GTIP
             if(expectedHash!=null && Fingerprint(rows)!=expectedHash)throw new InvalidDataException("Campaign revision checksum mismatch.");
             return rows;
         }
-        public string Fingerprint(MpStateRow[] rows)=>MpCheckpoint.Hash(MpStateCodec.Encode(schemas,rows.OrderBy(Key).ToArray(),false));
+        public string Fingerprint(MpStateRow[] rows)
+        {
+            // Preserve the exact full-snapshot byte stream/checksum. Only encoding of
+            // unchanged immutable records is reused; validation and commit remain intact.
+            var next=new Dictionary<long,EncodedRow>();
+            using(var raw=new MemoryStream())using(var writer=new BinaryWriter(raw,System.Text.Encoding.UTF8,true)) {
+                MpStateCodec.WriteHeader(writer,schemas,rows.Length);
+                foreach(var row in rows.OrderBy(Key)) {
+                    long key=Key(row);
+                    if(row.Deleted || !encodedRows.TryGetValue(key,out var cached) || cached.Row.Deleted || !Same(cached.Row,row)) {
+                        using(var single=new MemoryStream())using(var w=new BinaryWriter(single,System.Text.Encoding.UTF8,true)) {
+                            MpStateCodec.WriteRow(w,schemas,row);w.Flush();
+                            cached=new EncodedRow{Row=Clone(row),Bytes=single.ToArray()};
+                        }
+                    }
+                    writer.Write(cached.Bytes);next[key]=cached;
+                    if(raw.Length>MpStateCodec.MaxBytes)throw new InvalidDataException("State exceeds byte limit.");
+                }
+                writer.Flush();var hash=MpCheckpoint.Hash(raw.ToArray());encodedRows=next;return hash;
+            }
+        }
         public void Commit(int revision,MpStateRow[] rows,string expectedHash)
         {
             if(revision!=checked(Revision+1))throw new InvalidDataException("Cannot commit a stale campaign revision.");

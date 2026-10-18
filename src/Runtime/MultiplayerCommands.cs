@@ -75,6 +75,7 @@ namespace GTIP
             if(state==null || (kind!="commander" && !state.controllable)) { orderStatus="The host reports this formation cannot receive movement orders."; return; }
             string identity=kind=="commander"?OfficerCommandIdentity((int)destination.x):"";
             Send(new MpMessage {kind=kind,session=session,sequence=++guestSequence,unit=id,x=destination.x,z=destination.z,text=identity,baseRevision=Baseline.Revision});
+            if(kind=="move"){lastGuestMove=guestSequence;movementView=null;HideGuestMovement();}
             orderStatus="Order "+guestSequence+" sent to host; awaiting confirmation.";
             LogDiagnostic(kind+" order "+guestSequence+" submitted for formation "+id);
         }

@@ -69,20 +69,8 @@ namespace GTIP
             if(rows.Length>MaxRows) throw new InvalidDataException("Too many state rows.");
             using(var raw=new MemoryStream()) {
                 using(var w=new BinaryWriter(raw,Utf8,true)) {
-                    Text(w,SchemaHash(schemas)); w.Write(rows.Length);
-                    foreach(var row in rows) {
-                        if(row.Kind<0 || row.Kind>=schemas.Length || row.Id<0) throw new InvalidDataException("Invalid state row.");
-                        w.Write(row.Kind); w.Write(row.Id); w.Write(row.Current); w.Write(row.Last); Text(w,row.Name);
-                        w.Write(row.Deleted);
-                        if(row.Deleted)continue;
-                        var fields=schemas[row.Kind].Fields;
-                        if(row.Values.Length!=fields.Length) throw new InvalidDataException("State field count mismatch.");
-                        for(int i=0;i<fields.Length;i++) {
-                            try { Write(w,fields[i].FieldType,row.Values[i],schemas[row.Kind].NaNFields.Contains(fields[i].Name),schemas[row.Kind].InfinityFields.Contains(fields[i].Name)); }
-                            catch(InvalidDataException e) { throw new InvalidDataException("State "+row.Kind+":"+row.Id+" "+fields[i].Name+": "+e.Message,e); }
-                        }
-                        if(raw.Length>MaxBytes) throw new InvalidDataException("State exceeds byte limit.");
-                    }
+                    WriteHeader(w,schemas,rows.Length);
+                    foreach(var row in rows)WriteRow(w,schemas,row);
                 }
                 if(!compress)return raw.ToArray();
                 using(var packed=new MemoryStream()) {
@@ -91,6 +79,21 @@ namespace GTIP
                     return packed.ToArray();
                 }
             }
+        }
+        internal static void WriteHeader(BinaryWriter w,MpStateSchema[] schemas,int count)
+        {if(count<0 || count>MaxRows)throw new InvalidDataException("Too many state rows.");Text(w,SchemaHash(schemas));w.Write(count);}
+        internal static void WriteRow(BinaryWriter w,MpStateSchema[] schemas,MpStateRow row)
+        {
+            if(row.Kind<0 || row.Kind>=schemas.Length || row.Id<0)throw new InvalidDataException("Invalid state row.");
+            w.Write(row.Kind);w.Write(row.Id);w.Write(row.Current);w.Write(row.Last);Text(w,row.Name);w.Write(row.Deleted);
+            if(row.Deleted)return;
+            var schema=schemas[row.Kind];var fields=schema.Fields;
+            if(row.Values==null || row.Values.Length!=fields.Length)throw new InvalidDataException("State field count mismatch.");
+            for(int i=0;i<fields.Length;i++) {
+                try {Write(w,fields[i].FieldType,row.Values[i],schema.NaNFields.Contains(fields[i].Name),schema.InfinityFields.Contains(fields[i].Name));}
+                catch(InvalidDataException e){throw new InvalidDataException("State "+row.Kind+":"+row.Id+" "+fields[i].Name+": "+e.Message,e);}
+            }
+            if(w.BaseStream.Length>MaxBytes)throw new InvalidDataException("State exceeds byte limit.");
         }
         public static MpStateRow[] Decode(MpStateSchema[] schemas,byte[] bytes)
         {

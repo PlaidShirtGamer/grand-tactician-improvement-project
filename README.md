@@ -1,4 +1,4 @@
-> **mp-test branch: GTIP MP Test v0.25.** Multiplayer versioning is independent of base GTIP.
+> **mp-test branch: GTIP MP Test v0.26.** Multiplayer versioning is independent of base GTIP.
 > Guests join from the main menu and receive a host checkpoint. Experimental campaign adapters cover formations, sightings, construction, ships, weapons and native engagement choices, with guest actions validated on the host.
 > See [multiplayer test instructions](docs/multiplayer-test.md). Complete state replication and versus remain unfinished.
 

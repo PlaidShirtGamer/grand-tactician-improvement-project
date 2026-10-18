@@ -17,7 +17,7 @@ SnapshotChecks.Run(runtime,schemas);
 int fields=0;
 foreach(var schema in schemas)fields+=((Array)schema!.GetType().GetField("Fields")!.GetValue(schema)!).Length;
 var game=AssemblyLoadContext.Default.LoadFromAssemblyPath(gamePath);
-foreach(var item in new[]{("BuildingList","showncontent",false),("CampaignMainPanel","shiptoaddto",false),("CampaignMainPanel","currentcommanderchosen",false),("FleetInfoPanel","chosenfleet",false),("RailroadList","lastchosenrailroadline",true),("ShipRecruitingList","fleetthisshipisadded",true),("BattlePanel","bpunitentry",true),("SpottedEnemy","preloadedmodels",false)}) {
+foreach(var item in new[]{("BuildingList","showncontent",false),("CampaignMainPanel","shiptoaddto",false),("CampaignMainPanel","currentcommanderchosen",false),("FleetInfoPanel","chosenfleet",false),("RailroadList","lastchosenrailroadline",true),("ShipRecruitingList","fleetthisshipisadded",true),("BattlePanel","bpunitentry",true),("SpottedEnemy","preloadedmodels",false),("BattleUnits","currentwaypointorders",false),("BattleUnits","lastsetwaypointpos",false),("PanelHandler","moveoutdate",false)}) {
     var field=game.GetType(item.Item1,true)!.GetField(item.Item2,BindingFlags.Instance|BindingFlags.Static|BindingFlags.Public|BindingFlags.NonPublic);
     if(field==null || field.IsStatic!=item.Item3)throw new InvalidOperationException("Native field bridge mismatch: "+item.Item1+"."+item.Item2);
 }

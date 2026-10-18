@@ -5,6 +5,22 @@ int checks = 0;
 void Check(bool value, string name) { if (!value) throw new Exception(name); checks++; }
 void Reject(Action action, string name) { bool rejected = false; try { action(); } catch (Exception) { rejected = true; } Check(rejected, name); }
 var schema=MpStateSchema.Scalars(typeof(StateFixture));
+checks+=FingerprintChecks.Run();
+var pathOrder=new MpPathOrder();Check(pathOrder.Accept(1,0) && pathOrder.Accept(1,2),"A priority host route supersedes the earlier full snapshot");
+Check(!pathOrder.Accept(1,1),"An older in-flight snapshot cannot redraw a superseded route");
+Check(pathOrder.Accept(1,2) && pathOrder.Accept(2,0),"Normal updates in the same route generation and other units remain independent");
+pathOrder.Clear();Check(pathOrder.Accept(1,0),"New sessions do not inherit path generations");
+var moveView=new MpMovementView{Unit=633,Order=10,X=100,Y=2,Z=300,Seconds=5,Minimized=true,Active=new[]{4,5},Disabled=new[]{3}};
+MpMovementRules.View(moveView);checks++;
+var movementSchema=new[]{MpStateSchema.Scalars(typeof(MpMovementView))};
+var viewMessage=MpCodec.Decode(MpCodec.Encode(new MpMessage{kind="movement-panel",blob=MpStateCodec.Encode(movementSchema,new[]{new MpStateRow{Values=movementSchema[0].Capture(moveView)}})}));
+var viewCopy=new MpMovementView();movementSchema[0].Apply(viewCopy,MpStateCodec.Decode(movementSchema,viewMessage.blob)[0].Values);
+Check(viewCopy.Unit==633 && viewCopy.Order==10 && viewCopy.Minimized && viewCopy.Disabled.SequenceEqual(new[]{3}),"Native movement popup and disabled controls survive the production codecs");
+MpMovementRules.Ticket(633,10,633,10);checks++;
+Reject(()=>MpMovementRules.Ticket(633,9,633,10),"An old popup cannot cancel a newer route");
+Reject(()=>MpMovementRules.Ticket(632,10,633,10),"A popup cannot target another fleet");
+moveView.X=float.NaN;Reject(()=>MpMovementRules.View(moveView),"Non-finite native popup position rejected");moveView.X=100;
+moveView.Disabled=new[]{99};Reject(()=>MpMovementRules.View(moveView),"Unknown native movement controls rejected");
 var firstDecision=new MpFirstDecision();
 Check(!firstDecision.Claim(0),"Engagement choice requires an open issue");firstDecision.Begin(1);
 Check(firstDecision.Claim(1) && !firstDecision.Claim(1),"First accepted co-op engagement choice wins exactly once");firstDecision.Begin(2);

@@ -19,7 +19,7 @@ namespace GTIP
     public sealed class MpShipDraft
     {public int Fleet,Type,Count;public string Name;}
     public sealed class MpPathState
-    {public int[] Lengths,Status,BlockPath,BlockCorner;public float[] Corners;}
+    {public int Sample;public int[] Lengths,Status,BlockPath,BlockCorner;public float[] Corners;}
     public sealed class MpSpottedState
     {public string LastSpotted;public float[] Marks;}
     public sealed class MpConstructionSites
@@ -43,7 +43,7 @@ namespace GTIP
         }
         public static void Path(MpPathState s)
         {
-            if(s.Lengths==null || s.Status==null || s.Lengths.Length!=s.Status.Length || s.Lengths.Length>2000 || s.Corners==null || s.Corners.Length>20000 || s.Corners.Length%3!=0 || s.BlockPath==null || s.BlockCorner==null || s.BlockPath.Length!=s.BlockCorner.Length)throw new InvalidDataException("Invalid native path record.");
+            if(s.Sample<0 || s.Lengths==null || s.Status==null || s.Lengths.Length!=s.Status.Length || s.Lengths.Length>2000 || s.Corners==null || s.Corners.Length>20000 || s.Corners.Length%3!=0 || s.BlockPath==null || s.BlockCorner==null || s.BlockPath.Length!=s.BlockCorner.Length)throw new InvalidDataException("Invalid native path record.");
             long points=0;foreach(int length in s.Lengths){if(length<0 || length>6666)throw new InvalidDataException("Invalid path segment.");points+=length;}
             if(points*3!=s.Corners.Length || Array.Exists(s.Corners,x=>!MpRules.Finite(x)))throw new InvalidDataException("Invalid path geometry.");
         }

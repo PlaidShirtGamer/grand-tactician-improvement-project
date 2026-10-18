@@ -12,6 +12,7 @@ namespace GTIP
         sealed class PendingPreference { public bool Value;public float Sent; }
         readonly Dictionary<int,PendingPreference> constructionPreferences=new Dictionary<int,PendingPreference>();
         bool weaponViewDirty;
+        bool fleetViewDirty;
         void GuestPreference(CheckBox box,int key,bool authority)
         {
             if(box.HasChanged()) {
@@ -41,6 +42,11 @@ namespace GTIP
             }
             weaponViewDirty=false;
             RefreshOfficerView();
+            if(fleetViewDirty && ui!=null && ui.panelhandler!=null && !ui.panelhandler.draganddropactive) {
+                var h=ui.panelhandler;var main=NativeAccess.Get<CampaignMainPanel>(h,"campaignmainpanel");
+                if(main!=null && h.panel[h.cpanel_mainpanel].state>0 && main.contentselection==1){main.ForceCheckFilterSelectionChange();LogDiagnostic("Native fleet and ship-pool lists refreshed after roster change.");}
+                fleetViewDirty=false;
+            }
         }
         void RefreshOfficerView()
         {

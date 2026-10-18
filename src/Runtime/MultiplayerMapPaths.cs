@@ -8,22 +8,61 @@ namespace GTIP
 {
     public sealed partial class MultiplayerCampaign
     {
+        readonly Dictionary<int,int> pathSamples=new Dictionary<int,int>();
+        readonly MpPathOrder receivedPaths=new MpPathOrder();
+        int nextPathSample;
+        MpStateRow CaptureMapPath(int id,Regiment u)
+        {
+            var lengths=new int[u.regimentpaths];var corners=new List<float>();
+            for(int i=0;i<u.regimentpaths;i++) {
+                var points=u.regimentpath[i].corners;lengths[i]=points.Length;
+                foreach(var p in points){corners.Add(p.x);corners.Add(p.y);corners.Add(p.z);}
+            }
+            return DataRow(28,id,new MpPathState{Sample=pathSamples.TryGetValue(id,out int sample)?sample:0,Lengths=lengths,Status=(u.pathstatus??new int[0]).Take(u.regimentpaths).ToArray(),Corners=corners.ToArray(),BlockPath=u.blockobjectcurrentpath?.ToArray()??new int[0],BlockCorner=u.blockobjectcurrentcorner?.ToArray()??new int[0]});
+        }
         void CaptureMapPaths(List<MpStateRow> rows)
         {
-            foreach(var pair in units) {
-                var u=pair.Value;var lengths=new int[u.regimentpaths];var corners=new List<float>();
-                for(int i=0;i<u.regimentpaths;i++) {
-                    var points=u.regimentpath[i].corners;lengths[i]=points.Length;
-                    foreach(var p in points){corners.Add(p.x);corners.Add(p.y);corners.Add(p.z);}
-                }
-                rows.Add(DataRow(28,pair.Key,new MpPathState{Lengths=lengths,Status=(u.pathstatus??new int[0]).Take(u.regimentpaths).ToArray(),Corners=corners.ToArray(),BlockPath=u.blockobjectcurrentpath?.ToArray()??new int[0],BlockCorner=u.blockobjectcurrentcorner?.ToArray()??new int[0]}));
+            foreach(var pair in units)rows.Add(CaptureMapPath(pair.Key,pair.Value));
+        }
+        void SendFastPaths(Regiment root)
+        {
+            if(!host || !authenticated || phase!="live" || root==null || root.alliance!=guestSide)return;
+            try {CaptureAndSendFastPaths(root);}
+            catch(System.Exception error){LogDiagnostic("Priority route deferred to validated campaign snapshot: "+error.Message);}
+        }
+        void CaptureAndSendFastPaths(Regiment root)
+        {
+            int sample=checked(++nextPathSample);
+            var rows=new List<MpStateRow>();
+            foreach(var u in root.GetComponentsInChildren<Regiment>().Concat(root.allattachedunits??new Regiment[0]).Append(root).Distinct()) {
+                if(u==null || u.alliance!=guestSide || !ids.TryGetValue(u,out int id))continue;
+                pathSamples[id]=sample;rows.Add(CaptureMapPath(id,u));
             }
+            for(int i=0;i<rows.Count;i+=8)SendPathBatch(rows.Skip(i).Take(8).ToArray());
+            LogDiagnostic("Priority native route sent: sample="+sample+"; records="+rows.Count);
+        }
+        void SendPathBatch(MpStateRow[] rows)
+        {
+            var bytes=MpStateCodec.Encode(DataSchemas,rows);
+            if(bytes.Length>MpCheckpoint.ChunkBytes) {
+                if(rows.Length<=1){LogDiagnostic("Large native route deferred to campaign snapshot.");return;}
+                int mid=rows.Length/2;SendPathBatch(rows.Take(mid).ToArray());SendPathBatch(rows.Skip(mid).ToArray());return;
+            }
+            Send(new MpMessage{kind="movement-paths",session=session,blob=bytes});
+        }
+        void ReceiveFastPaths(MpMessage message)
+        {
+            var rows=MpStateCodec.Decode(DataSchemas,message.blob);
+            if(rows.Length>8 || rows.Any(r=>r.Kind!=28 || r.Deleted))throw new InvalidDataException("Invalid native route update.");
+            ApplyMapPaths(rows.Where(r=>units.TryGetValue(r.Id,out var u) && u!=null && u.alliance==guestSide).ToArray());
+            if(rows.Length>0)LogDiagnostic("Priority native route received: sample="+rows.Max(r=>ReadData<MpPathState>(r).Sample)+"; records="+rows.Length);
         }
         void ApplyMapPaths(MpStateRow[] changes)
         {
             foreach(var row in changes.Where(r=>r.Kind==28 && !r.Deleted)) {
                 if(!units.TryGetValue(row.Id,out var u))throw new InvalidDataException("Unknown path formation.");
                 var s=ReadData<MpPathState>(row);MpWorldRules.Path(s);
+                if(!receivedPaths.Accept(row.Id,s.Sample))continue;
                 if(u.regimentpath==null || u.regimentpath.Length<s.Lengths.Length)System.Array.Resize(ref u.regimentpath,s.Lengths.Length);
                 int offset=0;
                 for(int i=0;i<s.Lengths.Length;i++) {
@@ -40,6 +79,7 @@ namespace GTIP
                 // The native renderer caches its mesh until selection or the current corner
                 // changes. A new host route can retain both, so explicitly invalidate it.
                 u.DeletePathArrows();
+                if(u.blockobjectcurrentpath.Length>0)u.ShowPathArrows();
             }
         }
     }

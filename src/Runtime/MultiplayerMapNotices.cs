@@ -15,10 +15,12 @@ namespace GTIP
             var mp=instance;
             // Construction feedback must not depend on a transient rolling-text object
             // surviving until the next full campaign snapshot is captured and applied.
-            if(mp==null || !mp.host || !mp.authenticated || mp.phase!="live" || type!=RollingText.type_buildingconstructed)return;
-            var row=DataRow(15,target.uniqueid,new MpMapNotice{Type=type,X=position.x,Y=position.y,Z=position.z,Age=0,Text=text,Icon=showsymbol});
+            if(mp==null || !mp.host || !mp.authenticated || mp.phase!="live" || (type!=RollingText.type_buildingconstructed && !mp.remoteIntent))return;
+            var unit=reference!=null?reference.GetComponent<Regiment>():null;
+            int formation=unit!=null && mp.ids.TryGetValue(unit,out int id)?id:0;
+            var row=DataRow(15,target.uniqueid,new MpMapNotice{Type=type,Reference=formation,X=position.x,Y=position.y,Z=position.z,Age=0,Text=text,Icon=showsymbol});
             mp.Send(new MpMessage{kind="map-notice",session=mp.session,blob=MpStateCodec.Encode(DataSchemas,new[]{row})});
-            mp.LogDiagnostic("Native construction notice sent: "+target.uniqueid);
+            mp.LogDiagnostic("Native map notice sent: id="+target.uniqueid+"; type="+type);
         }
         void CaptureMapNotices(List<MpStateRow> rows)
         {

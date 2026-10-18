@@ -59,6 +59,9 @@ internal static class SixLevelPatches
         Wrap("PanelHandler","CheckGamePausePanel","ReplicaPausePanel","MultiplayerCampaign",first:"Panel");
         Wrap("PanelHandler","CheckGamePausePanel","ReplicaPauseObject","MultiplayerCampaign",first:"GameObject");
         Wrap("RollingText","AddNew","ReplicaMapNotice","MultiplayerCampaign");
+        Wrap("BattleUnits","SetWaypoint","ReplicaWaypoint","MultiplayerCampaign",first:"Regiment");
+        Wrap("PanelHandler","CallPanelOnRMBReleased","ReplicaMovementPanel","MultiplayerCampaign");
+        Wrap("BattleUnits","StopAllUnits","ReplicaStopAll","MultiplayerCampaign");
         Wrap("CampaignController", "Update", "ReplicaCampaign", "MultiplayerCampaign");
         Wrap("BattleUnits", "Update", "ReplicaUnits", "MultiplayerCampaign");
         Wrap("Regiment", "Update", "ReplicaRegiment", "MultiplayerCampaign");
@@ -227,7 +230,7 @@ internal static class SixLevelPatches
                 throw new InvalidOperationException("Serialized hook failed verification: " + original.FullName);
             originals++;
         }
-        if (originals != 92) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
+        if (originals != 95) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
         var suitability = game.MainModule.Types.Single(t => t.Name == "GameVars").NestedTypes.Single(t => t.Name == "Commander")
             .Methods.Single(m => m.Name == "CheckSuitableRank" && m.Parameters[0].ParameterType.FullName == "System.Int32");
         if (suitability.Body.Instructions.Count(i => i.Operand is MethodReference r &&
