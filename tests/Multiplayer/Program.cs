@@ -6,6 +6,27 @@ void Check(bool value, string name) { if (!value) throw new Exception(name); che
 void Reject(Action action, string name) { bool rejected = false; try { action(); } catch (Exception) { rejected = true; } Check(rejected, name); }
 var schema=MpStateSchema.Scalars(typeof(StateFixture));
 checks+=FingerprintChecks.Run();
+Check(MpConstructionRules.Funded(true,false,false,-10),"Native army placement is independent of civilian debt-rating gates");
+Check(!MpConstructionRules.Funded(false,false,false,0),"Civilian treasury construction retains its native rating gate");
+Check(MpConstructionRules.Funded(false,false,true,0),"Fully funded company upgrades remain available at low debt ratings");
+Check(!MpConstructionRules.Funded(false,false,true,-1),"Unfunded company upgrades cannot bypass a low debt rating");
+Check(MpConstructionRules.Funded(false,true,true,-1),"Native extraordinary funding is available with an eligible rating");
+var flowIds=new HashSet<int>();
+for(int r=0;r<40;r++)for(int side=0;side<6;side++)for(int partner=0;partner<6;partner++) {
+    int id=MpEconomyRules.FlowId(r,side,partner,6);
+    if(!flowIds.Add(id)||!flowIds.Add(id+1)||id/2/6/6!=r||(id/2/6)%6!=side||(id/2)%6!=partner)throw new Exception("Trade history identity collision");
+}
+Check(flowIds.Count==2880,"All bilateral goods histories have distinct reversible import/export identities");
+Reject(()=>MpEconomyRules.FlowId(0,6,0,6),"Unknown trade side rejected");
+var visual=new MpVisualPosition();visual.Sample(0,0,0,0,false);
+visual.Sample(10,2,4,1,false);Check(visual.X==0,"A received movement sample starts at the displayed endpoint");
+visual.Sample(10,2,4,1.5f,false);Check(visual.X==5 && visual.Y==1 && visual.Z==2,"Visual movement interpolates every frame between host samples");
+visual.Sample(20,2,4,1.5f,false);Check(visual.X==5,"An interrupted blend retains display continuity");
+visual.Sample(20,2,4,2,false);Check(visual.X==20,"Visual movement reaches the received endpoint without overshoot");
+visual.Sample(20,2,4,8,false);Check(visual.X==20,"Missing packets do not cause visual extrapolation");
+visual.Sample(21,2,4,8,true);Check(visual.X==21,"Paused authoritative positions snap exactly");
+visual.Sample(1000,2,4,9,false);Check(visual.X==1000,"Teleports are not animated across the map");
+Reject(()=>visual.Sample(float.NaN,0,0,10,false),"Non-finite visual positions rejected");
 var pathOrder=new MpPathOrder();Check(pathOrder.Accept(1,0) && pathOrder.Accept(1,2),"A priority host route supersedes the earlier full snapshot");
 Check(!pathOrder.Accept(1,1),"An older in-flight snapshot cannot redraw a superseded route");
 Check(pathOrder.Accept(1,2) && pathOrder.Accept(2,0),"Normal updates in the same route generation and other units remain independent");
@@ -36,6 +57,9 @@ Reject(()=>MpWorldRules.Path(new MpPathState{Lengths=new[]{3},Status=new[]{2},Co
 Reject(()=>MpWorldRules.Path(new MpPathState{Lengths=new[]{1},Status=new[]{2},Corners=new[]{float.NaN,1f,2f},BlockPath=new int[0],BlockCorner=new int[0]}),"Non-finite path cannot be installed");
 var buildingRecord=new MpBuildingRecord{Type=22,Owner=0,Level=1,NativeIndex=3,X=500,Y=2,Z=800,Condition=1,Name="Washington Depot",Active=true,Garrison=25};
 MpWorldRules.Building(buildingRecord,28,6);Check(true,"Native building and garrison identity accepted");
+Check(MpWorldRules.SameBuilding(22,500.001f,800.001f,buildingRecord),"Checkpoint rounding preserves a building identity");
+Check(!MpWorldRules.SameBuilding(22,501,800,buildingRecord),"Same-prefab buildings in different places cannot swap session identities");
+Check(!MpWorldRules.SameBuilding(23,500,800,buildingRecord),"Co-located buildings of different types remain distinct");
 var buildingSchema=MpStateSchema.Scalars(typeof(MpBuildingRecord));var buildingCopy=new MpBuildingRecord();
 buildingSchema.Apply(buildingCopy,MpStateCodec.Decode(new[]{buildingSchema},MpStateCodec.Encode(new[]{buildingSchema},new[]{new MpStateRow{Id=17,Values=buildingSchema.Capture(buildingRecord)}}))[0].Values);
 Check(buildingCopy.Garrison==25 && buildingCopy.NativeIndex==3 && buildingCopy.Name==buildingRecord.Name && buildingCopy.X==500,"Building identity and host list index survive replication");

@@ -92,6 +92,7 @@ namespace GTIP
         void LateUpdate()
         {
             if(transport==null || !authenticated || phase!="live")return;
+            RefreshEconomyViews();
             if(host) {
                 RefreshOfficerView();
                 // Sample after native simulation/UI Update. A pause must publish the final
@@ -106,6 +107,7 @@ namespace GTIP
                 // Native panel/tooltip refreshes run independently of the replicated clock.
                 // Reassert host-owned alerts after those callbacks, including while paused.
                 RenderAlerts();
+                DrawMotionSymbols();
             }
         }
         void RestoreClock()

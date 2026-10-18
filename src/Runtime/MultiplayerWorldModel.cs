@@ -3,6 +3,11 @@ using System.IO;
 
 namespace GTIP
 {
+    public static class MpConstructionRules
+    {
+        public static bool Funded(bool armyPlacement,bool ratingOk,bool subsidized,float missingFunding) =>
+            armyPlacement || ratingOk || (subsidized && missingFunding>=0);
+    }
     public sealed class MpBuildingRecord
     {
         public int Type,Owner,Level,NativeIndex,Garrison;
@@ -26,6 +31,8 @@ namespace GTIP
     {public int[] Places;}
     public static class MpWorldRules
     {
+        public static bool SameBuilding(int type,float x,float z,MpBuildingRecord source) =>
+            type==source.Type && Math.Abs(x-source.X)<.1f && Math.Abs(z-source.Z)<.1f;
         public static void UnitOrder(string action,float value,int tier,int readiness,bool pending)
         {
             if(action=="campaign-order") {

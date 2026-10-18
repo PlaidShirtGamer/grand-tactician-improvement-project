@@ -48,7 +48,10 @@ namespace GTIP
             MpStateSchema.Scalars(typeof(GameVars.Alliance.WeaponOrder)),MpStateSchema.Scalars(typeof(MpEngagement)),MpStateSchema.Scalars(typeof(MpEngagementUnit)),
             new MpStateSchema(typeof(IIP),new[]{"allianceowner","BuildingLevel","blocked","stock","relprice","price","condition","continuousprofit","lossestradewarfare","producedpcspa","economyalerttooltip"}),
             new MpStateSchema(typeof(Town),new[]{"Owner","newownership","occupationpoints","representingpopulation","citysize","weightedcitysize","availableworkforcelevel","privatewealth","incometax"}),
-            MpStateSchema.Scalars(typeof(MpPathState)),MpStateSchema.Scalars(typeof(MpSpottedState)),MpStateSchema.Scalars(typeof(MpConstructionSites))
+            MpStateSchema.Scalars(typeof(MpPathState)),MpStateSchema.Scalars(typeof(MpSpottedState)),MpStateSchema.Scalars(typeof(MpConstructionSites)),
+            MpStateSchema.Scalars(typeof(MpChartPoints)),
+            new MpStateSchema(typeof(Economy.TrailingData),new[]{"values","campaigndate","updaterythm"}),
+            new MpStateSchema(typeof(Economy.TrailingData),new[]{"values","campaigndate","updaterythm"})
         });
         byte[] outgoingData;
         MemoryStream incomingData;

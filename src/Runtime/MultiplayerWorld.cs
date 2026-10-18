@@ -20,9 +20,25 @@ namespace GTIP
             foreach(var b in BattleUnits.cbuildings)if(b!=null && b!=CBuilding.manualplacedbuilding){buildingIds[b]=++nextBuilding;worldBuildings[nextBuilding]=b;}
         }
         void ClearWorld()
-        {buildingIds.Clear();worldBuildings.Clear();canonicalBuildingIndices.Clear();nextBuilding=0;buildingIdsInitialized=false;ClearNaval();ClearEngagement();ClearSightings();bottomUnit=null;bottomState=0;buildingListView=null;railroadListView=null;weaponListViews=null;weaponViewDirty=false;constructionPreferences.Clear();nameEdits.Clear();}
+        {ClearMotion();buildingIds.Clear();worldBuildings.Clear();canonicalBuildingIndices.Clear();nextBuilding=0;buildingIdsInitialized=false;ClearNaval();ClearEngagement();ClearSightings();bottomUnit=null;bottomState=0;buildingListView=null;railroadListView=null;weaponListViews=null;productionView=null;tradeView=null;financesView=null;weaponViewDirty=false;constructionPreferences.Clear();nameEdits.Clear();}
         int BuildingReference(CBuilding b) => b!=null && buildingIds.TryGetValue(b,out int id)?id:0;
         int CanonicalBuildingIndex(CBuilding b) => b!=null && canonicalBuildingIndices.TryGetValue(b,out int i)?i:-1;
+        void BindCheckpointBuildings(Dictionary<int,MpBuildingRecord> states)
+        {
+            // A checkpoint load can reorder buildings of the same prefab. List
+            // indices cannot identify banks/depots at different map locations.
+            var available=BattleUnits.cbuildings.Where(b=>b!=null && b!=CBuilding.manualplacedbuilding).ToList();
+            foreach(var pair in states.OrderBy(p=>p.Value.NativeIndex)) {
+                var s=pair.Value;
+                var matches=available.Where(b=>MpWorldRules.SameBuilding(b.BuildingType,b.transform.position.x,b.transform.position.z,s)).ToArray();
+                var b=matches.FirstOrDefault(candidate=>candidate.BuildingName==s.Name)??matches.FirstOrDefault();
+                if(b==null)continue; // New host construction is created below.
+                available.Remove(b);buildingIds[b]=pair.Key;worldBuildings[pair.Key]=b;nextBuilding=Math.Max(nextBuilding,pair.Key);
+            }
+            foreach(var stale in available)stale.RemoveBuilding();
+            buildingIdsInitialized=true;
+            LogDiagnostic("Checkpoint buildings bound by native type/location: "+worldBuildings.Count+" of "+states.Count+"; stale="+available.Count);
+        }
         void CaptureWorld(List<MpStateRow> rows)
         {
             InitializeBuildingIds();
@@ -48,8 +64,8 @@ namespace GTIP
         void ApplyWorldBuildings(MpStateRow[] rows,MpStateRow[] changes)
         {
             if(!changes.Any(r=>r.Kind==17 || r.Kind==18))return;
-            InitializeBuildingIds();
             if(!changes.Any(r=>r.Kind==17)) {
+                if(!buildingIdsInitialized)throw new InvalidDataException("Building values precede their roster.");
                 foreach(var row in changes.Where(r=>r.Kind==18)) {
                     if(row.Deleted || !worldBuildings.TryGetValue(row.Id,out var b))throw new InvalidDataException("Unknown building data.");
                     DataSchemas[18].Apply(b,row.Values);var icon=b.GetComponent<CBuildingIcon>();if(icon!=null && icon.enlarged)icon.UpdateCampaignIcon(false,true);
@@ -60,6 +76,7 @@ namespace GTIP
             var values=rows.Where(r=>r.Kind==18).ToDictionary(r=>r.Id);
             if(!new HashSet<int>(states.Keys).SetEquals(values.Keys) || !states.Values.Select(s=>s.NativeIndex).OrderBy(i=>i).SequenceEqual(Enumerable.Range(0,states.Count)))throw new InvalidDataException("Incomplete building roster.");
             foreach(var s in states.Values)MpWorldRules.Building(s,GameVars.buildingtypes.Count,GameVars.alliance.Length);
+            if(!buildingIdsInitialized && !host)BindCheckpointBuildings(states);else InitializeBuildingIds();
             foreach(var pair in worldBuildings.ToArray())if(!states.ContainsKey(pair.Key)) {
                 var b=pair.Value;if(b!=null){b.GetComponent<CBuildingIcon>()?.UpdateCampaignIcon(true);b.RemoveBuilding();buildingIds.Remove(b);}
                 worldBuildings.Remove(pair.Key);
@@ -74,11 +91,13 @@ namespace GTIP
                 }
                 else if(!dirty.Contains(pair.Key))continue;
                 if(b.BuildingType!=s.Type)throw new InvalidDataException("Building identity changed type.");
+                if(!MpWorldRules.SameBuilding(b.BuildingType,b.transform.position.x,b.transform.position.z,s))throw new InvalidDataException("Building identity changed location: "+pair.Key);
                 b.Owner=s.Owner;b.BuildingName=s.Name;b.gameObject.name=s.Name;
                 if(b.level!=s.Level){b.SetLevel(s.Level);changed=true;}
                 DataSchemas[18].Apply(b,values[pair.Key].Values);b.gameObject.SetActive(s.Active);
             }
             BattleUnits.cbuildings=states.OrderBy(p=>p.Value.NativeIndex).Select(p=>worldBuildings[p.Key]).ToList();
+            canonicalBuildingIndices.Clear();foreach(var pair in states)canonicalBuildingIndices[worldBuildings[pair.Key]]=pair.Value.NativeIndex;
             BattleUnits.fort=BattleUnits.cbuildings.Where(b=>b.BuildingType==CBuilding.id_fort).ToList();
             BattleUnits.supplydepot=BattleUnits.cbuildings.Where(b=>b.BuildingType==CBuilding.id_supplydepot).ToList();
             BattleUnits.telegraphstation=BattleUnits.cbuildings.Where(b=>b.BuildingType==CBuilding.id_telegraphstation).ToList();

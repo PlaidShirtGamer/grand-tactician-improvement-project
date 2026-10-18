@@ -20,13 +20,22 @@ namespace GTIP
         public static void ReplicaBuildingUpgrade(CBuildingIcon target,int allianceforupgrade)
         {
             if(!IsReplica){NativeAccess.Call(target,"GTIP_Original_ReplicaBuildingUpgrade",allianceforupgrade);return;}
-            var b=target.GetComponent<CBuilding>()??target.iipattached?.harborbuildingref;
+            var b=target.iipattached!=null && target.iipattached.IIPType==IIP.id_harbor?target.iipattached.harborbuildingref:
+                NativeAccess.Get<CBuilding>(target,"cbuildingattached")??target.GetComponent<CBuilding>();
             if(b!=null)instance.RequestNative("building-upgrade",instance.BuildingReference(b));
         }
         public static void ReplicaBuildingStock(CBuildingIcon target)
         {
             if(!IsReplica){NativeAccess.Call(target,"GTIP_Original_ReplicaBuildingStock");return;}
             var b=target.GetComponent<CBuilding>();if(b!=null)instance.RequestNative("building-stock",instance.BuildingReference(b));
+        }
+        public static void ReplicaProductionUpgrade(Production target)
+        {
+            if(!IsReplica){NativeAccess.Call(target,"GTIP_Original_ReplicaProductionUpgrade");return;}
+            var button=target.UpgradeTooltip;var building=NativeAccess.Get<CBuilding>(target,"chosenbuilding");
+            // Production also lists buildings without a map-icon component.
+            if(building!=null && button!=null && button.isActiveAndEnabled && button.mouseonobject && button.state!=2 && Input.GetMouseButtonDown(0))
+                instance.RequestNative("building-upgrade",instance.BuildingReference(building));
         }
         public static void ReplicaRailroadConstruction(int alliance)
         {
@@ -53,11 +62,11 @@ namespace GTIP
             instance.GuestPreference(target.automanageconstruction,2,GameVars.automanageconstructionr);
             instance.GuestPreference(target.AutoPlacement,3,GameVars.autoplacebuildings);
         }
-        void ValidateBuildingType(int type)
+        void ValidateBuildingType(int type,bool armyPlacement=false)
         {
             if(type<0 || type>=GameVars.buildingtypes.Count || !GameVars.buildingtypes[type].HasPolicy(guestSide))throw new InvalidOperationException("Building is unavailable under native policy rules.");
             var t=GameVars.buildingtypes[type];
-            if(!GameVars.alliance[guestSide].IsRatingOkForConstruction() && (t.subsidytype<0 || t.GetMissingSubsidyFundingCost(guestSide,0)<0))throw new InvalidOperationException("Native debt rating prohibits construction.");
+            if(!MpConstructionRules.Funded(armyPlacement,GameVars.alliance[guestSide].IsRatingOkForConstruction(),t.subsidytype>=0,t.subsidytype<0?0:t.GetMissingSubsidyFundingCost(guestSide,0)))throw new InvalidOperationException("Native debt rating prohibits construction.");
         }
         bool ExecuteWorldAction(string action,MpMessage request,string detail)
         {
@@ -82,8 +91,10 @@ namespace GTIP
             }
             if(action=="building-place") {
                 var schema=MpStateSchema.Scalars(typeof(MpBuildingDraft));var rows=MpStateCodec.Decode(new[]{schema},Convert.FromBase64String(detail));
-                if(rows.Length!=1)throw new InvalidOperationException("Invalid building draft.");var s=new MpBuildingDraft();schema.Apply(s,rows[0].Values);ValidateBuildingType(s.Type);
+                if(rows.Length!=1)throw new InvalidOperationException("Invalid building draft.");var s=new MpBuildingDraft();schema.Apply(s,rows[0].Values);
                 Regiment caller=null;if(s.Unit!=0 && (!units.TryGetValue(s.Unit,out caller) || !Controllable(caller)))throw new InvalidOperationException("Construction unit unavailable.");
+                bool army=caller!=null && (s.Type==CBuilding.id_fort || s.Type==CBuilding.id_supplydepot || s.Type==CBuilding.id_telegraphstation);
+                ValidateBuildingType(s.Type,army);
                 if(GameVars.buildingtypes[s.Type].needsunitforplacement && caller==null)throw new InvalidOperationException("This building requires an army.");
                 var terrain=Terrain.activeTerrain;var p=new Vector3(s.X,s.Y,s.Z);var origin=terrain.transform.position;var size=terrain.terrainData.size;
                 if(!MpRules.Finite(s.X)||!MpRules.Finite(s.Y)||!MpRules.Finite(s.Z)||s.X<origin.x||s.Z<origin.z||s.X>origin.x+size.x||s.Z>origin.z+size.z)throw new InvalidOperationException("Building site is outside the map.");
@@ -103,14 +114,40 @@ namespace GTIP
             if(action!="building-upgrade" && action!="building-stock")return false;
             InitializeBuildingIds();
             if(!worldBuildings.TryGetValue(request.unit,out var building) || building==null || building.Owner!=guestSide)throw new InvalidOperationException("Building unavailable or not owned.");
-            var icon=building.GetComponent<CBuildingIcon>();if(icon==null)throw new InvalidOperationException("Building control unavailable.");
-            if(action=="building-stock") {if(building.BuildingType!=CBuilding.id_supplydepot)throw new InvalidOperationException("Not a supply depot.");icon.SwitchStorageLevelTarget();}
+            var icon=building.GetComponent<CBuildingIcon>();
+            if(icon==null)icon=BattleUnits.iips.Where(i=>i!=null && i.harborbuildingref==building).Select(i=>i.GetComponent<CBuildingIcon>()).FirstOrDefault(i=>i!=null);
+            if(action=="building-stock") {if(building.BuildingType!=CBuilding.id_supplydepot || icon==null)throw new InvalidOperationException("Not an available supply depot.");icon.SwitchStorageLevelTarget();}
             else {
-                ValidateBuildingType(building.BuildingType);
-                if(building.upgradetimer>0 || building.level>=GameVars.buildingtypes[building.BuildingType].maxlevels-1 || building.constructiontimer>0)throw new InvalidOperationException("Upgrade unavailable.");
-                icon.Upgrade(guestSide);
+                var t=GameVars.buildingtypes[building.BuildingType];int level=building.level+1;
+                // Match UpdateUpgradeIcon: next-level funding here, not new-building
+                // policy checks and level-zero funding at the capital.
+                if(DLC_WL.dlc_scenarioactive || building.upgradetimer>0 || level>=t.maxlevels ||
+                    (building.BuildingType==CBuilding.id_fort && building.level==0) ||
+                    (building.BuildingType==CBuilding.id_supplydepot && !GameVars.alliance[guestSide].projects.Contains(115)))throw new InvalidOperationException("Upgrade unavailable under native building/project rules.");
+                if(!MpConstructionRules.Funded(false,GameVars.alliance[guestSide].IsRatingOkForConstruction(),t.subsidytype>=0,
+                    t.subsidytype<0?0:t.GetMissingSubsidyFundingCost(guestSide,level,building.transform.position,building.closestiip)))throw new InvalidOperationException("Native funding rules prohibit this upgrade.");
+                if(icon!=null) {
+                    if(icon.iipattached==null)NativeAccess.Set(icon,"cbuildingattached",building);
+                    icon.Upgrade(guestSide);
+                } else UpgradeWithoutMapIcon(building,guestSide);
+                if(building.upgradetimer<=0)throw new InvalidOperationException("Native upgrade did not start.");
             }
             return true;
+        }
+        // CBuildingIcon.Upgrade transaction, for production buildings without an icon.
+        static void UpgradeWithoutMapIcon(CBuilding b,int side)
+        {
+            var t=GameVars.buildingtypes[b.BuildingType];int level=b.level+1;var a=GameVars.alliance[side];
+            b.upgradetimer=t.resourceusage[level].GetConstructionDuration(2);
+            float subsidy=t.GetSubsidyCost(side,level,b.transform.position,b.closestiip);
+            float cost=t.GetConstructionCost(level,b.transform.position,b.Owner,b.closestiip);
+            if(t.subsidytype<0){a.AdjustTreasury(cost);a.constructioncosts+=cost;}
+            else {
+                float missing=t.GetMissingSubsidyFundingCost(b.Owner,level,b.transform.position,b.closestiip);
+                a.AdjustSubsidyFunding(t.subsidytype,subsidy);a.AdjustTreasury(missing);
+                a.constructioncosts+=missing;a.cumulatedspending_construction+=subsidy;
+            }
+            Economy.Consume(t.resourceusage[level],b.transform.position,-1,1);
         }
     }
 }

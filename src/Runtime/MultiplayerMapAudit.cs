@@ -21,6 +21,7 @@ namespace GTIP
         }
         void AuditNativeMap(MpStateRow[] rows,int revision,bool readback)
         {
+            AuditEconomy(rows,revision,readback);
             var states=rows.Where(r=>r.Kind==4).ToDictionary(r=>r.Id,ReadData<MpFormationState>);
             if(readback)foreach(var pair in states) {
                 var p=units[pair.Key].transform.position;var s=pair.Value;

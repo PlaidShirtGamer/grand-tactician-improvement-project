@@ -3,6 +3,14 @@ using System.IO;
 
 namespace GTIP
 {
+    public static class MpEconomyRules
+    {
+        public static int FlowId(int resource,int side,int partner,int sides)
+        {
+            if(resource<0 || sides<1 || side<0 || side>=sides || partner<0 || partner>=sides)throw new InvalidDataException("Invalid goods flow identity.");
+            return checked(((resource*sides+side)*sides+partner)*2);
+        }
+    }
     public static class MpPresentationRules
     {
         public static bool ResumeNewspaper(bool canResume,bool stayPaused,bool otherPanel,float storedSpeed) =>

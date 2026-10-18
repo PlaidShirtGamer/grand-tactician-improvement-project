@@ -114,6 +114,7 @@ namespace GTIP
         void OnDestroy() { End("Disconnected."); RestoreInput(); if (white != null) Destroy(white); if (instance == this) instance = null; }
         void Update()
         {
+            RestoreMotionSymbols();
             if(leavingReplica && (root!=BattleUnits.unitfolder || (ui!=null && ui.IsMainMenu))){leavingReplica=false;RestoreInput();}
             if (Input.GetKeyDown(KeyCode.Escape) && panel) {
                 if(panel) ClosePanel();

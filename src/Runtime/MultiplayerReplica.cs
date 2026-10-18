@@ -58,9 +58,10 @@ namespace GTIP
         {
             if (!IsReplica) { NativeAccess.Call(target, "GTIP_Original_ReplicaRegiment"); return; }
             if(IsRecruitPreview(target))return;
+            instance.RestoreMotionSymbols();
             // Deliberately skip movement, supply, combat, recruitment and AI. Keep native rendering.
             NativeAccess.Call(target, "CheckRegimentVisibility");
-            target.UpdateRegimentSpritePos();
+            target.UpdateRegimentSpritePos(instance.UpdateVisualSprites(target));
             NativeAccess.Call(target, "UpdateSpriteAnimatorAll", -1, false);
             if((Time.frameCount+target.GetInstanceID())%30==0)target.UpdateUnitVisuals();
             // This native presentation refresh is otherwise inside the suppressed simulation loop.

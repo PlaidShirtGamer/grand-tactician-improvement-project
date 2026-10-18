@@ -99,6 +99,9 @@ internal static class SixLevelPatches
         Wrap("CampaignMainPanel","Promote","ReplicaPromote","MultiplayerCampaign");
         Wrap("CBuilding","UpdateManualBuildingPlacement","ReplicaBuildingPlacement","MultiplayerCampaign");
         Wrap("CBuildingIcon","Upgrade","ReplicaBuildingUpgrade","MultiplayerCampaign");
+        Wrap("Production","CheckUpgradeButtonInteraction","ReplicaProductionUpgrade","MultiplayerCampaign");
+        Wrap("Production","Update","ReplicaProductionView","MultiplayerCampaign");
+        Wrap("Trade","Update","ReplicaTradeView","MultiplayerCampaign");
         Wrap("CBuildingIcon","SwitchStorageLevelTarget","ReplicaBuildingStock","MultiplayerCampaign");
         Wrap("RailroadList","StartConstruction","ReplicaRailroadConstruction","MultiplayerCampaign");
         Wrap("BuildingList","StartAutoConstruction","ReplicaAutoBuilding","MultiplayerCampaign");
@@ -141,6 +144,22 @@ internal static class SixLevelPatches
             vil.InsertAfter(unit,vil.Create(OpCodes.Call,Helper("MultiplayerCampaign","ReplicaHidden")));
         }
         hooks.Add("Regiment.HostFogVisibility");
+
+        // Replace reads only inside drawing routines. Logical transforms, order
+        // validators and the authoritative map audit retain native coordinates.
+        foreach(var drawing in new[]{Method("PanelHandler","UpdatePanels"),Method("Ship","UpdatePosition")}) {
+            var reads=drawing.Body.Instructions.Where(i=>i.Operand is MethodReference m && m.DeclaringType.FullName=="UnityEngine.Transform" && m.Name=="get_position" &&
+                (drawing.DeclaringType.Name!="PanelHandler" || (i.Previous?.Previous?.Operand is FieldReference f && f.Name=="referencego"))).ToArray();
+            if(reads.Length==0)throw new InvalidOperationException("Native visual position reads changed: "+drawing.FullName);
+            if(drawing.DeclaringType.Name=="PanelHandler" && reads.Length!=4)throw new InvalidOperationException("Native panel anchor reads changed.");
+            foreach(var read in reads){read.OpCode=OpCodes.Call;read.Operand=Helper("MultiplayerCampaign","ReplicaDrawPosition");}
+            hooks.Add(drawing.DeclaringType.Name+".ReplicaVisualPosition");
+        }
+        var spriteDrawing=Method("Regiment","UpdateRegimentSpritePos");
+        var blockReads=spriteDrawing.Body.Instructions.Where(i=>i.Operand is MethodReference m && m.DeclaringType.Name=="Regiment" && m.Name=="GetBlockobjectPosition").ToArray();
+        if(blockReads.Length==0)throw new InvalidOperationException("Native sprite position reads changed.");
+        foreach(var read in blockReads){read.OpCode=OpCodes.Call;read.Operand=Helper("MultiplayerCampaign","ReplicaDrawBlock");}
+        hooks.Add("Regiment.ReplicaVisualSprites");
 
         // The first read diagnoses garrison placeholders; preserve it. The
         // second read removes unassigned dummy officers from the native list.
@@ -230,7 +249,7 @@ internal static class SixLevelPatches
                 throw new InvalidOperationException("Serialized hook failed verification: " + original.FullName);
             originals++;
         }
-        if (originals != 95) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
+        if (originals != 98) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
         var suitability = game.MainModule.Types.Single(t => t.Name == "GameVars").NestedTypes.Single(t => t.Name == "Commander")
             .Methods.Single(m => m.Name == "CheckSuitableRank" && m.Parameters[0].ParameterType.FullName == "System.Int32");
         if (suitability.Body.Instructions.Count(i => i.Operand is MethodReference r &&

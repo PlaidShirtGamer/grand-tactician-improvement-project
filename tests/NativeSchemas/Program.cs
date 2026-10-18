@@ -17,6 +17,8 @@ SnapshotChecks.Run(runtime,schemas);
 int fields=0;
 foreach(var schema in schemas)fields+=((Array)schema!.GetType().GetField("Fields")!.GetValue(schema)!).Length;
 var game=AssemblyLoadContext.Default.LoadFromAssemblyPath(gamePath);
+foreach(var item in new[]{("CBuildingIcon","cbuildingattached"),("Production","chosenbuilding"),("Regiment","unitnametext")})
+    if(game.GetType(item.Item1,true)!.GetField(item.Item2,BindingFlags.Instance|BindingFlags.NonPublic)==null)throw new Exception("Native presentation field changed: "+item);
 foreach(var item in new[]{("BuildingList","showncontent",false),("CampaignMainPanel","shiptoaddto",false),("CampaignMainPanel","currentcommanderchosen",false),("FleetInfoPanel","chosenfleet",false),("RailroadList","lastchosenrailroadline",true),("ShipRecruitingList","fleetthisshipisadded",true),("BattlePanel","bpunitentry",true),("SpottedEnemy","preloadedmodels",false),("BattleUnits","currentwaypointorders",false),("BattleUnits","lastsetwaypointpos",false),("PanelHandler","moveoutdate",false)}) {
     var field=game.GetType(item.Item1,true)!.GetField(item.Item2,BindingFlags.Instance|BindingFlags.Static|BindingFlags.Public|BindingFlags.NonPublic);
     if(field==null || field.IsStatic!=item.Item3)throw new InvalidOperationException("Native field bridge mismatch: "+item.Item1+"."+item.Item2);
@@ -26,6 +28,18 @@ var corners=ai.GetType("UnityEngine.AI.NavMeshPath",true)!.GetField("m_Corners",
 if(corners?.FieldType.Name!="Vector3[]")throw new InvalidOperationException("Native path corner cache layout changed.");
 using(var native=Mono.Cecil.AssemblyDefinition.ReadAssembly(gamePath)) {
     var regiment=native.MainModule.Types.Single(t=>t.Name=="Regiment");
+    using(var compiled=Mono.Cecil.AssemblyDefinition.ReadAssembly(runtimePath)) {
+        var fallback=compiled.MainModule.Types.Single(t=>t.Name=="MultiplayerCampaign").Methods.Single(m=>m.Name=="UpgradeWithoutMapIcon");
+        var upgrade=native.MainModule.Types.Single(t=>t.Name=="CBuildingIcon").Methods.Single(m=>m.Name=="Upgrade");
+        string[] Transactions(Mono.Cecil.MethodDefinition method)=>method.Body.Instructions.Where(i=>i.Operand is Mono.Cecil.MethodReference m &&
+            new[]{"GetConstructionDuration","GetSubsidyCost","GetConstructionCost","GetMissingSubsidyFundingCost","AdjustTreasury","AdjustSubsidyFunding","Consume"}.Contains(m.Name))
+            .Select(i=>((Mono.Cecil.MethodReference)i.Operand).FullName).OrderBy(n=>n).ToArray();
+        if(!Transactions(fallback).SequenceEqual(Transactions(upgrade)))throw new Exception("Iconless upgrade transaction differs from native costs/resources operations.");
+        string[] Costs(Mono.Cecil.MethodDefinition method)=>method.Body.Instructions.Where(i=>i.OpCode==Mono.Cecil.Cil.OpCodes.Stfld && i.Operand is Mono.Cecil.FieldReference f &&
+            new[]{"upgradetimer","constructioncosts","cumulatedspending_construction"}.Contains(f.Name)).Select(i=>((Mono.Cecil.FieldReference)i.Operand).Name).OrderBy(n=>n).ToArray();
+        if(!Costs(fallback).SequenceEqual(Costs(upgrade)))throw new Exception("Iconless upgrade omits a native duration/expense write.");
+        Console.WriteLine("Native upgrade ABI: iconless production upgrade retains native duration, treasury, subsidy and resource operations.");
+    }
     var aggregate=regiment.Methods.Single(m=>m.Name=="UpdateGroupStrength");
     var tooltip=regiment.Methods.Single(m=>m.Name=="GetUnitTooltipInfo");
     bool Calls(Mono.Cecil.MethodDefinition method,string name)=>method.Body.Instructions.Any(i=>i.Operand is Mono.Cecil.MethodReference call && call.DeclaringType.Name=="Regiment" && call.Name==name);

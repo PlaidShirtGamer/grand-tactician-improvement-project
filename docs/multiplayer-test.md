@@ -1,3 +1,32 @@
+# GTIP MP Test v0.27 — construction, upgrades, economy histories and visual movement
+
+Both copies require **v0.27 / protocol 21**. The October 18 v0.26 logs show the guest remaining connected for approximately 25 minutes, with no exceptions in the latest Unity log. Guest depot placement reached the host and was rejected by an extra civilian debt-rating gate. Upgrade requests were rejected through new-construction policy checks or a missing map-icon requirement. These findings explain specific failures; they do not establish complete native UI parity.
+
+Army placement of forts, supply depots and telegraph stations now follows the native army placement route without the civilian debt-rating gate. The host still validates the caller, building policy, map bounds, terrain, enemy proximity and native placement restrictions. Civilian construction retains its funding rules. Building upgrades use native next-level funding at the actual building location and the native ownership, maximum level, active-upgrade, fort and supply-reform restrictions. They no longer require the policies for constructing a new building. Buildings & Production runs after guest hover resolution and sends the selected building directly, including buildings without a map icon. The iconless host transaction retains the native upgrade duration, treasury/subsidy charges, construction spending and resource consumption; a native-metadata check compares those operations with the original implementation.
+
+Checkpoint buildings are initially matched by native building type, map location and name where available, then assigned host session identities. Loaded list ordering cannot silently attach a same-prefab building ID to another location. Later updates validate location as well as type. A connection log records the initial binding count.
+
+The snapshot now includes all finance-chart datasets, bilateral per-good import/export histories, and alliance construction/weapon expense histories. The latter feed native trailing-year expense calculations and were previously absent. Existing price, demand, production, market/depot stock, trade-volume, tax, tariff and value fields remain replicated. Both clients' open Goods & Trade tables refresh current values in place, preserving scroll/selection; native host rows otherwise only refreshed when opened. Finance values and the selected building's information refresh while open. Guest goods/finance charts explicitly redraw after received history changes. Native trade selection is driven after current-frame guest hover resolution.
+
+Guest map icons, flags, names, infantry sprite targets and ship models now interpolate between received host positions using real elapsed time, with a bounded interval and no extrapolation. A new endpoint starts at the current displayed position. Pauses and large discontinuities snap to the received coordinates. Only drawing reads and explicit visual children use the blend; logical formation/block coordinates, movement orders, construction range checks and per-revision map readback remain authoritative. This adds bounded visual delay and does not increase the frequency of campaign-state delivery. Smoothness and rendering performance still require connected testing.
+
+At revision 1 and every 30 revisions, each connection log's `.economy.csv` companion records host-source or guest-readback goods fields, charts, bilateral flows and expense histories. Compare matching revisions. Existing `.state.csv`, scalar checksums and map-position readback remain enabled.
+
+Verification: **289 multiplayer model/protocol/TCP checks**, 21 native-bridge checks, 9 replica-boundary checks, 42 editor-presentation checks, and the existing hierarchy/editor/AI suites. Native metadata and synthetic snapshot checks cover **34 schemas / 628 fields**. Staging verifies **108 hooks/changes and 98 preserved methods**. These checks do not execute Unity gameplay.
+
+Installed in both desktop test copies with matching SHA-256 hashes: patched game `75DCD4B81DC542B25D8EBC6D53B8C5F91D4033FBFE2095D45E67FA70C71B07A2`; runtime `0FA8372FCD41E9576697047658626E681C8DD0ACDBE4902A12C177D6450DAAA1`. The installed runtime passes native-metadata and synthetic snapshot checks. Existing installer backups were preserved.
+
+## Connected test for v0.27
+
+1. Restart both games and join a fresh session from **GT MP Test**. At the current low debt rating, place a guest army supply depot at an otherwise valid site. Compare the building, native cost notice and one treasury charge on both copies. Repeat a host placement. Check civilian construction still respects native rating/subsidy restrictions.
+2. On the guest **Buildings & Production** screen (image 4 in the report), upgrade an eligible Union Bank or company. Keep the page open and compare its upgrade timer and funding deduction with the host. Also test an eligible map depot upgrade, the supply-reform restriction, maximum level and an already-running upgrade. Repeat an upgrade from the host.
+3. Open Goods & Trade on both copies with the same selected product and filters. Compare average price, demand, production, market/depot stock, trade volume, sales taxes, tariffs, value and every import/export partner. Run briefly, pause, and compare again without reopening either screen.
+4. Select the same finance dataset and alliance checkboxes on both copies. Compare graph dates and points, including treasury and construction expense graphs, and compare current construction expenses. Run across another chart sample and check the guest graph refreshes while open.
+5. Watch a moving army and fleet at the same zoom on both maps, replace an order, then pause. Check icons, names, flags, models and arrows stay aligned, motion is smoother, clicking the drawn icon selects the right unit, and paused positions settle exactly. Check native single-player/host rendering remains normal.
+6. If a discrepancy remains, retain both new connection logs and their `.state.csv` / `.economy.csv` companions, plus Unity `Player.log`. Connected v0.27 verification remains pending.
+
+## Earlier build: v0.26
+
 # GTIP MP Test v0.26 — repeated ship transfers and native movement feedback
 
 Both copies require **v0.26 / protocol 20**. The latest v0.25 logs show guest orders reaching the host quickly, while some complete campaign revisions take roughly 1–2 seconds to prepare, transfer and apply. This candidate addresses repeated ship dragging, fleet Stop/Return to Port, native Movement Options and missing native movement-refusal text.

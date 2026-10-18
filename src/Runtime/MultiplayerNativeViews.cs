@@ -9,6 +9,10 @@ namespace GTIP
         BuildingList buildingListView;
         RailroadList railroadListView;
         WeaponList[] weaponListViews;
+        Production productionView;
+        Trade tradeView;
+        Finances financesView;
+        float lastEconomyViewRefresh;
         sealed class PendingPreference { public bool Value;public float Sent; }
         readonly Dictionary<int,PendingPreference> constructionPreferences=new Dictionary<int,PendingPreference>();
         bool weaponViewDirty;
@@ -33,6 +37,10 @@ namespace GTIP
             if(buildingListView==null)buildingListView=Resources.FindObjectsOfTypeAll<BuildingList>().FirstOrDefault(v=>v.gameObject.scene.IsValid());
             if(railroadListView==null)railroadListView=Resources.FindObjectsOfTypeAll<RailroadList>().FirstOrDefault(v=>v.gameObject.scene.IsValid());
             if(weaponListViews==null)weaponListViews=Resources.FindObjectsOfTypeAll<WeaponList>().Where(v=>v.gameObject.scene.IsValid()).ToArray();
+            if(productionView==null)productionView=Resources.FindObjectsOfTypeAll<Production>().FirstOrDefault(v=>v.gameObject.scene.IsValid());
+            if(tradeView==null)tradeView=Resources.FindObjectsOfTypeAll<Trade>().FirstOrDefault(v=>v.gameObject.scene.IsValid());
+            if(productionView!=null && productionView.isActiveAndEnabled)NativeAccess.Call(productionView,"GTIP_Original_ReplicaProductionView");
+            if(tradeView!=null && tradeView.isActiveAndEnabled)NativeAccess.Call(tradeView,"GTIP_Original_ReplicaTradeView");
             if(buildingListView!=null && buildingListView.isActiveAndEnabled)NativeAccess.Call(buildingListView,"GTIP_Original_ReplicaBuildingList");
             if(railroadListView!=null && railroadListView.isActiveAndEnabled)NativeAccess.Call(railroadListView,"GTIP_Original_ReplicaRailroadList");
             foreach(var v in weaponListViews)if(v!=null && v.isActiveAndEnabled) {
@@ -60,6 +68,22 @@ namespace GTIP
             officerViewDirty=false;
         }
         public static void ReplicaBuildingList(BuildingList target){if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaBuildingList");}
+        public static void ReplicaProductionView(Production target){if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaProductionView");}
+        public static void ReplicaTradeView(Trade target){if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaTradeView");}
+        void RefreshFinanceValues()
+        {
+            if(financesView==null)financesView=Resources.FindObjectsOfTypeAll<Finances>().FirstOrDefault(v=>v.gameObject.scene.IsValid());
+            if(financesView!=null && financesView.isActiveAndEnabled)NativeAccess.Call(financesView,"UpdateValues",true);
+        }
+        void RefreshEconomyViews()
+        {
+            if(Time.realtimeSinceStartup-lastEconomyViewRefresh<.25f)return;
+            lastEconomyViewRefresh=Time.realtimeSinceStartup;
+            // Native trade rows are otherwise frozen at OnEnable, even on the host.
+            RefreshGoodsView();RefreshFinanceValues();
+            if(productionView==null)productionView=Resources.FindObjectsOfTypeAll<Production>().FirstOrDefault(v=>v.gameObject.scene.IsValid());
+            if(productionView!=null && productionView.isActiveAndEnabled)NativeAccess.Call(productionView,"UpdateCompanyInformation");
+        }
         public static void ReplicaRailroadList(RailroadList target){if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaRailroadList");}
         public static void ReplicaWeaponList(WeaponList target){if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaWeaponList");}
         public static void ReplicaWeaponOptions(WeaponList target)
