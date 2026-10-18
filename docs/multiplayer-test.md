@@ -1,3 +1,21 @@
+# GTIP MP Test v0.28 — clock-queue disconnect during initial synchronization
+
+Both copies require **v0.28 / protocol 21**. The October 18 v0.27 guest log applied revision 1 successfully (23,540 records, approximately 3.6 seconds on Unity's main thread), then reported `Peer exceeded receive queue`. The host reported EOF after the guest closed. The guest's economy readback and initial building binding had succeeded. The transport disconnected when more than 64 messages accumulated while the main thread was busy; continuous clock packets could reach that limit even in a paused campaign.
+
+Incoming and outgoing queues now replace consecutive, valid clock envelopes for the same session with the newest sequence. Ordered commands, state chunks, results, session boundaries and malformed messages remain barriers and are never coalesced. The incoming queue still holds at most 64 pending frames; when full of reliable traffic, its network reader waits for the main thread to make space rather than throwing a queue-overflow disconnect. Closing the connection wakes a waiting reader. Socket timeouts and frame-size limits remain enabled. Unchanged paused clocks send once per second; running clocks retain the existing update cadence and pause/speed changes send immediately. Connection logs record peak queue depth and coalesced-clock counts when a session ends.
+
+Regression verification deliberately leaves the guest application consumer idle for roughly four seconds while the production TCP transport receives 120 native clock packets, then checks delivery of the newest clock and a reliable barrier. A separate test fills the real receive queue to 64 and verifies all 180 reliable messages arrive in order after consumption resumes. Pure queue checks cover 1,000 clocks, stale sequences, different sessions, malformed clock envelopes, state-chunk barriers, producer wake-up and disconnect cancellation. **502 multiplayer model/protocol/TCP checks** pass. Native schema/snapshot checks still cover **34 schemas / 628 fields**; native-bridge, replica-boundary, editor and hierarchy/AI suites pass. Staging verifies **108 hooks/changes and 98 preserved methods**. This is a transport regression test, not a live Unity campaign test.
+
+Installed in both desktop test copies with matching SHA-256 hashes: patched game `6153BB8A6C75E4BED3864B857F6CAF79BFF1507764FF92C278B70DE7EB632D06`; runtime `EFBC66C488FED83F9121DF0AF6EC47ACF5CDE1A0CA66A9FE5C407E0682ED4312`. The installed runtime passes native schema/snapshot checks; existing installer backups were retained.
+
+## Connected test for v0.28
+
+1. Restart both games, host **GT MP Test**, and join from the guest main menu. Leave the campaign paused for at least a minute after the initial synchronization. Confirm the guest stays connected and the host log receives the revision 1 application receipt.
+2. Unpause briefly, pause again, and verify time, units and economy screens continue updating. Exercise the v0.27 construction/upgrade checks below once connection stability is confirmed.
+3. If the connection closes, retain both new connection logs; their final transport statistics distinguish a queue backlog from another failure. Connected v0.28 gameplay remains unverified.
+
+## Earlier build: v0.27
+
 # GTIP MP Test v0.27 — construction, upgrades, economy histories and visual movement
 
 Both copies require **v0.27 / protocol 21**. The October 18 v0.26 logs show the guest remaining connected for approximately 25 minutes, with no exceptions in the latest Unity log. Guest depot placement reached the host and was rejected by an extra civilian debt-rating gate. Upgrade requests were rejected through new-construction policy checks or a missing map-icon requirement. These findings explain specific failures; they do not establish complete native UI parity.

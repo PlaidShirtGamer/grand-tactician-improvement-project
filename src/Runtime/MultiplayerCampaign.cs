@@ -67,7 +67,11 @@ namespace GTIP
         {
             bool wasHost = transport != null && host;
             bool exitReplica=transport!=null && !host && (hasLiveData || replicaMutated) && root==BattleUnits.unitfolder;
-            if (transport != null) { LogDiagnostic(reason); Application.runInBackground = previousBackground; }
+            if (transport != null) {
+                LogDiagnostic(reason);
+                LogDiagnostic("Transport queues: peakIncoming="+transport.PeakIncoming+", pendingIncoming="+transport.PendingIncoming+", pendingOutgoing="+transport.PendingOutgoing+", clocksCoalescedIn="+transport.CoalescedIncoming+", clocksCoalescedOut="+transport.CoalescedOutgoing);
+                Application.runInBackground = previousBackground;
+            }
             DestroyRecruitPreview();previewPanel=null;previewCommander=-1;
             transport?.Dispose(); transport = null; authenticated = false; helloSent = false; snapshot = null;
             ClearData(false);

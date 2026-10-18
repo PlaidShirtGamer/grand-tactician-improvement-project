@@ -9,6 +9,27 @@ namespace GTIP
     {
         const int MaxStringBytes = 4096;
         static readonly Encoding Utf8 = new UTF8Encoding(false, true);
+        static readonly string ClockPrefix=MakeClockPrefix();
+        static string MakeClockPrefix()
+        {
+            using(var stream=new MemoryStream())using(var writer=new BinaryWriter(stream,Utf8)) {
+                writer.Write(MpRules.Protocol);Write(writer,"clock");
+                return Convert.ToBase64String(stream.ToArray()).Substring(0,16);
+            }
+        }
+        internal static bool ReplaceableClock(string encoded,out string session,out int sequence)
+        {
+            session=null;sequence=0;
+            // Inspect only small, valid clock envelopes. Other messages, including
+            // malformed clocks, retain ordered delivery and normal validation.
+            if(encoded==null || encoded.Length<24 || encoded.Length>1024 || !encoded.StartsWith(ClockPrefix,StringComparison.Ordinal))return false;
+            try {
+                var frame=Decode(encoded);
+                if(frame.kind!="clock" || frame.clock==null || string.IsNullOrEmpty(frame.session) || frame.sequence<=0 || frame.blob.Length!=0 || frame.units.Length!=0 || frame.towns.Length!=0)return false;
+                session=frame.session;sequence=frame.sequence;return true;
+            } catch(FormatException){return false;}
+              catch(IOException){return false;}
+        }
         public static string Encode(MpMessage message)
         {
             if (message == null) throw new InvalidDataException("Missing message.");
