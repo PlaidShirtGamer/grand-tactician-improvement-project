@@ -43,7 +43,7 @@ namespace GTIP
             new MpStateSchema(typeof(Economy.Resource.ProductAllianceData),new[]{"averageprice","lastaverageprice","demandpa","lastdemandpa","productionpa","lastproductionpa","stockiniips","laststockiniips","stockindepots","laststockindepots","totaltradevolume","excisetax","tariffs","value","relativestock","maxprice"}),
             MpStateSchema.Scalars(typeof(MpMapNotice)),MpStateSchema.Scalars(typeof(MpChartPoints)),
             MpStateSchema.Scalars(typeof(MpBuildingRecord)),
-            new MpStateSchema(typeof(CBuilding),new[]{"BuildingName","Owner","Condition","stock","productionefficiency","production","avgprodefficiency","cumulativeprofit","cumulativevolumesold","fillratiotarget","automanagesupplies","hasdummygarrison","isconnected","constructiontimer","upgradetimer","constructiondaysleft","relativeworkforce","absoluteworkforce","availablecapital","marketcapacity","slaveratio","latestunitsupply","prisoners"}),
+            new MpStateSchema(typeof(CBuilding),new[]{"BuildingName","Owner","Condition","stock","productionefficiency","production","producedpcspa","demandedpcspa","economyalerttooltip","avgprodefficiency","cumulativeprofit","cumulativevolumesold","fillratiotarget","automanagesupplies","hasdummygarrison","isconnected","constructiontimer","upgradetimer","constructiondaysleft","relativeworkforce","absoluteworkforce","availablecapital","marketcapacity","slaveratio","latestunitsupply","prisoners"}),
             MpStateSchema.Scalars(typeof(MpRailroadRecord)),MpStateSchema.Scalars(typeof(MpVesselRecord)),MpStateSchema.Scalars(typeof(Vessel)),MpStateSchema.Scalars(typeof(Fleet)),
             MpStateSchema.Scalars(typeof(GameVars.Alliance.WeaponOrder)),MpStateSchema.Scalars(typeof(MpEngagement)),MpStateSchema.Scalars(typeof(MpEngagementUnit)),
             new MpStateSchema(typeof(IIP),new[]{"allianceowner","BuildingLevel","blocked","stock","relprice","price","condition","continuousprofit","lossestradewarfare","producedpcspa","economyalerttooltip"}),
@@ -55,7 +55,9 @@ namespace GTIP
             MpStateSchema.Scalars(typeof(MpBattleRecord)),
             new MpStateSchema(typeof(BattleMonument),new[]{"battleinfolines","landorsea","alliancewon","battlename","alliance","commander","strength","casualties","battleresulttype","battleendtype","capturedweapons","nationalmoraleeffect","averagemorale","averagesupply","commandergotfame","commandergotdefamed","guns","hoursfought","battlepasseddays","battlestarttime","capturedships","sunkenships","prisonerstaken","prisonersparoled"}),
             MpStateSchema.Scalars(typeof(Autocalc)),MpStateSchema.Scalars(typeof(MpBattleSide)),MpStateSchema.Scalars(typeof(MpBattlePresentation)),
-            MpStateSchema.Scalars(typeof(MpBattleAudioSource))
+            MpStateSchema.Scalars(typeof(MpBattleAudioSource)),
+            MpStateSchema.Scalars(typeof(MpBuildingProduction)),MpStateSchema.Scalars(typeof(MpBuildingHistory)),
+            MpStateSchema.Scalars(typeof(MpMapSupplyState))
         });
         byte[] outgoingData;
         MemoryStream incomingData;
@@ -67,8 +69,9 @@ namespace GTIP
         string pendingStateHash;
         int incomingBaseRevision;
         string incomingStateHash;
+        float incomingCaptureTime;
         double lastCaptureMs,lastPrepareMs;
-        sealed class PreparedData {public MpStateRow[] Rows;public byte[] Bytes;public string Hash;public int Revision,BaseRevision,Changed;public double Milliseconds;}
+        sealed class PreparedData {public MpStateRow[] Rows;public byte[] Bytes;public string Hash;public int Revision,BaseRevision,Changed;public double Milliseconds;public float CapturedAt;}
         System.Threading.Tasks.Task<PreparedData> prepareTask;
         System.Threading.Tasks.Task commitTask;
         sealed class ReceivedData {public MpStateRow[] Rows,Changes;public int Bytes;}
@@ -104,7 +107,9 @@ namespace GTIP
             CaptureGoods(rows);CaptureMapNotices(rows);
             CaptureEngagement(rows);
             CaptureMapPaths(rows);
+            CaptureMapSupply(rows);
             CaptureSightings(rows);
+            CaptureBuildingEconomy(rows);
             return rows.ToArray();
         }
         static MpStateRow DataRow(int kind,int id,object target) => new MpStateRow {Kind=kind,Id=id,Values=DataSchemas[kind].Capture(target)};
@@ -137,7 +142,9 @@ namespace GTIP
                 bool incremental=TryApplyScalarDelta(received.Changes);
                 if(!incremental) ApplyLifecycleData(received.Rows);
                 ApplyWorldAfterUnits(received.Rows,received.Changes);
+                ApplyBuildingEconomy(received.Changes);
                 ApplyMapPaths(received.Changes);
+                ApplyMapSupply(received.Changes);
                 ApplySightings(received.Changes);
                 if(received.Changes.Any(r=>r.Kind==4))ApplyMapPoses(received.Rows);
                 ApplyControls(received.Changes);ApplyPolicies(received.Changes);ApplyProjects(received.Rows);ApplyAlerts(received.Changes);
@@ -149,6 +156,7 @@ namespace GTIP
                 if(received.Changes.Any(r=>r.Kind==7 || r.Kind==8))ApplyDispatches(received.Rows);
                 VerifyAppliedScalars(incremental?received.Changes:received.Rows);
                 AuditNativeMap(received.Rows,incomingDataSerial,true);
+                RecordReliableMotion(received.Rows,incomingCaptureTime,incomingDataSerial);
                 if(incomingDataSerial==1 || incomingDataSerial%30==0)LogDiagnostic("Replication apply: revision="+incomingDataSerial+", changed="+received.Changes.Length+", incremental="+incremental+", mainThreadMs="+applyTimer.Elapsed.TotalMilliseconds.ToString("F1"));
                 var appliedBaseline=Baseline;var rows=received.Rows;int revision=incomingDataSerial;string hash=incomingStateHash;
                 commitTask=System.Threading.Tasks.Task.Run(()=>appliedBaseline.Commit(revision,rows,hash));
@@ -173,12 +181,13 @@ namespace GTIP
                 outgoingData=prepared.Bytes;dataOffset=0;lastPrepareMs=prepared.Milliseconds;dataStarted=Time.realtimeSinceStartup;
                 AuditNativeMap(prepared.Rows,dataSerial,false);
                 if(dataSerial==1 || dataSerial%30==0)LogDiagnostic("Replication prepare: revision="+dataSerial+", records="+pendingDataRows.Length+", changed="+prepared.Changed+", bytes="+outgoingData.Length+", captureMs="+lastCaptureMs.ToString("F1")+", workerMs="+lastPrepareMs.ToString("F1"));
-                Send(new MpMessage{kind="data-offer",session=session,sequence=dataSerial,baseRevision=prepared.BaseRevision,stateHash=pendingStateHash,unit=outgoingData.Length,text=MpCheckpoint.Hash(outgoingData)});
+                Send(new MpMessage{kind="data-offer",session=session,sequence=dataSerial,baseRevision=prepared.BaseRevision,stateHash=pendingStateHash,unit=outgoingData.Length,text=MpCheckpoint.Hash(outgoingData),date=prepared.CapturedAt});
                 return;
             }
             if(!host || outgoingData!=null || Time.realtimeSinceStartup-lastDataSend<0.25f)return;
             lastDataSend=Time.realtimeSinceStartup;dataStarted=lastDataSend;
             var timer=System.Diagnostics.Stopwatch.StartNew();
+            float capturedAt=Time.realtimeSinceStartup;
             var captured=CaptureData();lastCaptureMs=timer.Elapsed.TotalMilliseconds;
             var baseline=Baseline;var schemas=DataSchemas;
             // Capture owns cloned arrays. This worker sees DTOs only, never Unity objects.
@@ -188,7 +197,7 @@ namespace GTIP
                 var changes=baseline.Changes(captured);if(changes.Length==0)return null;
                 int revision=checked(baseline.Revision+1);
                 var rows=baseline.Prepare(revision,baseline.Revision,changes);
-                try {return new PreparedData{Rows=rows,Hash=baseline.Fingerprint(rows),Bytes=MpStateCodec.Encode(schemas,changes),Revision=revision,BaseRevision=baseline.Revision,Changed=changes.Length,Milliseconds=work.Elapsed.TotalMilliseconds};}
+                try {return new PreparedData{Rows=rows,Hash=baseline.Fingerprint(rows),Bytes=MpStateCodec.Encode(schemas,changes),Revision=revision,BaseRevision=baseline.Revision,Changed=changes.Length,Milliseconds=work.Elapsed.TotalMilliseconds,CapturedAt=capturedAt};}
                 catch(InvalidDataException error) {
                     var issues=MpStateCodec.InvalidNumbers(schemas,rows);
                     if(issues.Length>0)throw new InvalidDataException("Invalid numeric campaign fields (up to 64): "+string.Join("; ",issues),error);
@@ -214,7 +223,8 @@ namespace GTIP
             }
             if(value.kind=="data-offer") {
                 if(host || incomingData!=null || receiveTask!=null || commitTask!=null || value.sequence<=incomingDataSerial || value.unit<1 || value.unit>MpStateCodec.MaxBytes)throw new InvalidDataException("Invalid campaign data offer.");
-                if(value.baseRevision!=Baseline.Revision || value.sequence!=checked(Baseline.Revision+1) || string.IsNullOrEmpty(value.stateHash))throw new InvalidDataException("Unexpected campaign base revision.");
+                if(value.baseRevision!=Baseline.Revision || value.sequence!=checked(Baseline.Revision+1) || string.IsNullOrEmpty(value.stateHash) || !MpRules.Finite(value.date) || value.date<0)throw new InvalidDataException("Unexpected campaign base revision.");
+                incomingCaptureTime=value.date;
                 incomingBaseRevision=value.baseRevision;incomingStateHash=value.stateHash;
                 incomingDataSerial=value.sequence;dataLength=value.unit;dataHash=value.text;incomingData=new MemoryStream();dataStarted=Time.realtimeSinceStartup;
                 Send(new MpMessage{kind="data-next",session=session,sequence=incomingDataSerial,unit=0});return true;
@@ -246,6 +256,7 @@ namespace GTIP
             dataBaseline=null;pendingDataRows=null;pendingStateHash=null;incomingStateHash=null;incomingBaseRevision=0;
             prepareTask=null;commitTask=null;receiveTask=null;
             snapshotRoster.Clear();
+            incomingCaptureTime=0;
         }
         bool TryApplyScalarDelta(MpStateRow[] changes)
         {

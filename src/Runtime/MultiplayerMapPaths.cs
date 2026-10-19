@@ -18,7 +18,8 @@ namespace GTIP
                 var points=u.regimentpath[i].corners;lengths[i]=points.Length;
                 foreach(var p in points){corners.Add(p.x);corners.Add(p.y);corners.Add(p.z);}
             }
-            return DataRow(28,id,new MpPathState{Sample=pathSamples.TryGetValue(id,out int sample)?sample:0,Lengths=lengths,Status=(u.pathstatus??new int[0]).Take(u.regimentpaths).ToArray(),Corners=corners.ToArray(),BlockPath=u.blockobjectcurrentpath?.ToArray()??new int[0],BlockCorner=u.blockobjectcurrentcorner?.ToArray()??new int[0]});
+            return DataRow(28,id,new MpPathState{Sample=pathSamples.TryGetValue(id,out int sample)?sample:0,Lengths=lengths,Status=(u.pathstatus??new int[0]).Take(u.regimentpaths).ToArray(),Corners=corners.ToArray(),BlockPath=u.blockobjectcurrentpath?.ToArray()??new int[0],BlockCorner=u.blockobjectcurrentcorner?.ToArray()??new int[0],
+                Destinations=(u.lastwaypointposition??new Vector3[0]).SelectMany(p=>new[]{p.x,p.y,p.z}).ToArray(),DestinationYaw=u.lastwaypointrotation?.ToArray()??new float[0]});
         }
         void CaptureMapPaths(List<MpStateRow> rows)
         {
@@ -76,11 +77,37 @@ namespace GTIP
                 if(u.pathstatus==null || u.pathstatus.Length<=s.Status.Length)System.Array.Resize(ref u.pathstatus,s.Status.Length+1);
                 System.Array.Copy(s.Status,u.pathstatus,s.Status.Length);u.regimentpaths=s.Lengths.Length;
                 u.blockobjectcurrentpath=s.BlockPath;u.blockobjectcurrentcorner=s.BlockCorner;
+                u.lastwaypointposition=Enumerable.Range(0,s.DestinationYaw.Length).Select(i=>new Vector3(s.Destinations[i*3],s.Destinations[i*3+1],s.Destinations[i*3+2])).ToArray();
+                u.lastwaypointrotation=s.DestinationYaw;
                 // The native renderer caches its mesh until selection or the current corner
                 // changes. A new host route can retain both, so explicitly invalidate it.
                 u.DeletePathArrows();
                 if(u.blockobjectcurrentpath.Length>0)u.ShowPathArrows();
+                RefreshReplicaMapDestinations(u);
             }
+        }
+        static void RefreshReplicaMapDestinations(Regiment u)
+        {
+            // Native destination squares are a separate renderer from the blue route
+            // ribbon. Use the host's per-block endpoint/rotation, never guest navigation.
+            var rendered=NativeAccess.Get<GameObject[]>(u,"waypoint");
+            if(rendered!=null && rendered.Length!=u.blockobjects) {
+                // Native cleanup loops over the current block count. Destroy every
+                // old marker before a fleet/formation block-count change can orphan it.
+                foreach(var marker in rendered)if(marker!=null)Object.Destroy(marker);
+                NativeAccess.Set(u,"waypoint",null);rendered=null;
+            }
+            if(u.regimentpaths<=0) {
+                if(rendered!=null)u.ShowWaypoints(true);
+                return;
+            }
+            if(u.blockobjects<=0 || u.lastwaypointposition==null || u.lastwaypointrotation==null ||
+                u.lastwaypointposition.Length<u.blockobjects || u.lastwaypointrotation.Length<u.blockobjects ||
+                (u.regimentpaths>0 && (u.regimentpath==null || u.regimentpath.Length<u.regimentpaths || u.regimentpath[u.regimentpaths-1]==null))) {
+                if(rendered!=null)u.ShowWaypoints(true);
+                return;
+            }
+            u.ShowWaypoints();
         }
     }
 }

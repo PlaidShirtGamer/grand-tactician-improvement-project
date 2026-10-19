@@ -46,9 +46,11 @@ namespace GTIP
             var transport = new MpTransport();
             transport.client = new TcpClient();
             transport.Start(() => {
-                var result = transport.client.BeginConnect(address, port, null, null);
-                using (result.AsyncWaitHandle) { if (!result.AsyncWaitHandle.WaitOne(5000)) throw new TimeoutException("Connection timed out."); }
-                transport.client.EndConnect(result); transport.Open(transport.client);
+                // Disposing an APM AsyncWaitHandle before EndConnect can race
+                // socket completion. A task keeps completion ownership in TcpClient.
+                var connecting = transport.client.ConnectAsync(address, port);
+                if (!connecting.Wait(5000)) throw new TimeoutException("Connection timed out.");
+                connecting.GetAwaiter().GetResult(); transport.Open(transport.client);
             });
             return transport;
         }

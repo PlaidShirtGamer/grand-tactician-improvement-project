@@ -68,6 +68,7 @@ namespace GTIP
             if((Time.frameCount+target.GetInstanceID())%30==0)NativeAccess.Call(target,"UpdatePaperMapFlagTooltipInfo");
             if((Time.frameCount+target.GetInstanceID())%15==0 && target.blockobjectcurrentpath!=null && target.blockobjectcurrentpath.Length>0) {
                 target.ShowPathArrows();
+                RefreshReplicaMapDestinations(target);
                 // This native display method also clears an expired delay. The host owns
                 // that scalar, so retain it while updating only the native map symbols.
                 float delay=target.totaltimeoforderdelay;

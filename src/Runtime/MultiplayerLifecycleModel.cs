@@ -50,6 +50,8 @@ namespace GTIP
                     f.parent!=prior.parent || f.side!=prior.side || f.tier!=prior.tier)return false;
             return seen.Count==acknowledged.Count;
         }
+        public bool Contains(int id,int parent,int side,int tier) => Revision>0 && acknowledged.TryGetValue(id,out var prior) &&
+            prior.parent==parent && prior.side==side && prior.tier==tier;
         public void Clear(){acknowledged.Clear();Revision=0;}
     }
     public static class MpLifecycle

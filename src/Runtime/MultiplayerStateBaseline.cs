@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace GTIP
 {
@@ -26,6 +27,22 @@ namespace GTIP
             if(a is float[] af && b is float[] bf){if(af.Length!=bf.Length)return false;for(int i=0;i<af.Length;i++)if(!SameFloat(af[i],bf[i]))return false;return true;}
             if(a is bool[] ab && b is bool[] bb)return ab.SequenceEqual(bb);
             if(a is string[] at && b is string[] bt)return at.SequenceEqual(bt);
+            if(a is float[,] amf && b is float[,] bmf) {
+                if(!SameShape(amf,bmf))return false;
+                for(int i=0;i<amf.GetLength(0);i++)for(int j=0;j<amf.GetLength(1);j++)if(!SameFloat(amf[i,j],bmf[i,j]))return false;return true;
+            }
+            if(a is int[,] ami && b is int[,] bmi) {
+                if(!SameShape(ami,bmi))return false;
+                for(int i=0;i<ami.GetLength(0);i++)for(int j=0;j<ami.GetLength(1);j++)if(ami[i,j]!=bmi[i,j])return false;return true;
+            }
+            if(a is bool[,] amb && b is bool[,] bmb) {
+                if(!SameShape(amb,bmb))return false;
+                for(int i=0;i<amb.GetLength(0);i++)for(int j=0;j<amb.GetLength(1);j++)if(amb[i,j]!=bmb[i,j])return false;return true;
+            }
+            if(a is string[,] ams && b is string[,] bms) {
+                if(!SameShape(ams,bms))return false;
+                for(int i=0;i<ams.GetLength(0);i++)for(int j=0;j<ams.GetLength(1);j++)if(ams[i,j]!=bms[i,j])return false;return true;
+            }
             if(a is Array x && b is Array y) {
                 if(x.Rank!=y.Rank || Enumerable.Range(0,x.Rank).Any(i=>x.GetLength(i)!=y.GetLength(i)))return false;
                 return x.Cast<object>().Zip(y.Cast<object>(),SameValue).All(v=>v);
@@ -33,8 +50,15 @@ namespace GTIP
             return Equals(a,b);
         }
         static bool SameFloat(float a,float b)=>a.Equals(b) && (a!=0f || (1f/a).Equals(1f/b));
+        static bool SameShape(Array a,Array b)=>a.GetLength(0)==b.GetLength(0) && a.GetLength(1)==b.GetLength(1);
         static bool Same(MpStateRow a,MpStateRow b)=>a.Current==b.Current && a.Last==b.Last && a.Name==b.Name &&
-            a.Values.Length==b.Values.Length && a.Values.Zip(b.Values,SameValue).All(v=>v);
+            SameValues(a.Values,b.Values);
+        static bool SameValues(object[] a,object[] b)
+        {
+            if(a.Length!=b.Length)return false;
+            for(int i=0;i<a.Length;i++)if(!SameValue(a[i],b[i]))return false;
+            return true;
+        }
         public static string FirstDifference(MpStateSchema schema,object[] expected,object[] actual)
         {
             if(expected.Length!=actual.Length || expected.Length!=schema.Fields.Length)return "field count";
@@ -79,8 +103,12 @@ namespace GTIP
             // Preserve the exact full-snapshot byte stream/checksum. Only encoding of
             // unchanged immutable records is reused; validation and commit remain intact.
             var next=new Dictionary<long,EncodedRow>();
-            using(var raw=new MemoryStream())using(var writer=new BinaryWriter(raw,System.Text.Encoding.UTF8,true)) {
-                MpStateCodec.WriteHeader(writer,schemas,rows.Length);
+            using(var hash=SHA256.Create()) {
+                byte[] header;
+                using(var raw=new MemoryStream())using(var writer=new BinaryWriter(raw,System.Text.Encoding.UTF8,true)) {
+                    MpStateCodec.WriteHeader(writer,schemas,rows.Length);writer.Flush();header=raw.ToArray();
+                }
+                hash.TransformBlock(header,0,header.Length,header,0);long length=header.Length;
                 foreach(var row in rows.OrderBy(Key)) {
                     long key=Key(row);
                     if(row.Deleted || !encodedRows.TryGetValue(key,out var cached) || cached.Row.Deleted || !Same(cached.Row,row)) {
@@ -89,10 +117,13 @@ namespace GTIP
                             cached=new EncodedRow{Row=Clone(row),Bytes=single.ToArray()};
                         }
                     }
-                    writer.Write(cached.Bytes);next[key]=cached;
-                    if(raw.Length>MpStateCodec.MaxBytes)throw new InvalidDataException("State exceeds byte limit.");
+                    length+=cached.Bytes.Length;
+                    if(length>MpStateCodec.MaxBytes)throw new InvalidDataException("State exceeds byte limit.");
+                    // Hash the exact canonical bytes directly. Avoid buffering and
+                    // copying a second complete campaign for each checksum.
+                    hash.TransformBlock(cached.Bytes,0,cached.Bytes.Length,cached.Bytes,0);next[key]=cached;
                 }
-                writer.Flush();var hash=MpCheckpoint.Hash(raw.ToArray());encodedRows=next;return hash;
+                hash.TransformFinalBlock(Array.Empty<byte>(),0,0);encodedRows=next;return Convert.ToBase64String(hash.Hash);
             }
         }
         public void Commit(int revision,MpStateRow[] rows,string expectedHash)

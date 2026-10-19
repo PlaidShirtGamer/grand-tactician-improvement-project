@@ -99,6 +99,7 @@ namespace GTIP
                 // Sample after native simulation/UI Update. A pause must publish the final
                 // clock, and the host's throttled native label must show that same sample.
                 hostClock=CaptureClock();RenderClock(hostClock);
+                SendMotion();
                 if(MpRules.ClockDue(hostClock.paused,lastHostPaused!=hostClock.paused || lastHostSpeed!=hostClock.speed,Time.realtimeSinceStartup,lastClockSend)) {
                     lastClockSend=Time.realtimeSinceStartup;lastHostPaused=hostClock.paused;lastHostSpeed=hostClock.speed;
                     Send(new MpMessage{kind="clock",session=session,sequence=++clockSequence,clock=hostClock});

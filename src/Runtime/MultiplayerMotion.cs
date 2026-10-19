@@ -11,9 +11,11 @@ namespace GTIP
         readonly HashSet<Regiment> visualSpriteMoving=new HashSet<Regiment>();
         Vector3 VisualOffset(Regiment unit)
         {
-            if(!IsReplica || unit==null || !ids.ContainsKey(unit))return Vector3.zero;
-            if(!visualMotion.TryGetValue(unit,out var state))visualMotion[unit]=state=new MpVisualPosition();
+            if(!IsReplica || unit==null || !ids.TryGetValue(unit,out int id))return Vector3.zero;
             var p=unit.transform.position;
+            if(poseHistory.TryGetValue(id,out var history) && history.Evaluate(poseClock.RenderTime(Time.realtimeSinceStartup),hostClock==null || hostClock.paused))
+                return new Vector3(history.X-p.x,history.Y-p.y,history.Z-p.z);
+            if(!visualMotion.TryGetValue(unit,out var state))visualMotion[unit]=state=new MpVisualPosition();
             state.Sample(p.x,p.y,p.z,Time.realtimeSinceStartup,hostClock==null || hostClock.paused);
             return new Vector3(state.X-p.x,state.Y-p.y,state.Z-p.z);
         }
@@ -56,6 +58,6 @@ namespace GTIP
                 }
             }
         }
-        void ClearMotion(){RestoreMotionSymbols();visualMotion.Clear();visualSpriteMoving.Clear();}
+        void ClearMotion(){RestoreMotionSymbols();visualMotion.Clear();visualSpriteMoving.Clear();ClearPoseStream();}
     }
 }

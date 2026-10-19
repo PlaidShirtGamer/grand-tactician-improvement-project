@@ -40,6 +40,7 @@ namespace GTIP
             if(productionView==null)productionView=Resources.FindObjectsOfTypeAll<Production>().FirstOrDefault(v=>v.gameObject.scene.IsValid());
             if(tradeView==null)tradeView=Resources.FindObjectsOfTypeAll<Trade>().FirstOrDefault(v=>v.gameObject.scene.IsValid());
             if(productionView!=null && productionView.isActiveAndEnabled)NativeAccess.Call(productionView,"GTIP_Original_ReplicaProductionView");
+            RefreshProductionRows();
             if(tradeView!=null && tradeView.isActiveAndEnabled)NativeAccess.Call(tradeView,"GTIP_Original_ReplicaTradeView");
             if(buildingListView!=null && buildingListView.isActiveAndEnabled)NativeAccess.Call(buildingListView,"GTIP_Original_ReplicaBuildingList");
             if(railroadListView!=null && railroadListView.isActiveAndEnabled)NativeAccess.Call(railroadListView,"GTIP_Original_ReplicaRailroadList");
@@ -83,6 +84,7 @@ namespace GTIP
             RefreshGoodsView();RefreshFinanceValues();
             if(productionView==null)productionView=Resources.FindObjectsOfTypeAll<Production>().FirstOrDefault(v=>v.gameObject.scene.IsValid());
             if(productionView!=null && productionView.isActiveAndEnabled)NativeAccess.Call(productionView,"UpdateCompanyInformation");
+            RefreshProductionRows();
         }
         public static void ReplicaRailroadList(RailroadList target){if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaRailroadList");}
         public static void ReplicaWeaponList(WeaponList target){if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaWeaponList");}

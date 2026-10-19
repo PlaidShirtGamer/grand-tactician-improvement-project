@@ -45,6 +45,7 @@ internal static class SixLevelPatches
         Wrap("ArmyGroup", "AddUnit", "AddArmyGroupUnit");
         Wrap("BattleUI", "UpdateCommanderPanel", "CommanderPanel");
         Wrap("CampaignMainPanel", "UpdateCreateCorpsButton", "UpgradeButtons");
+        Wrap("CampaignMainPanel", "UpdateSoldierPicture", "ReplicaSoldierPicture", "MultiplayerCampaign");
         Wrap("ToolsUnitList", "CreateList", "Sidebar", "HierarchySidebar");
         Wrap("BattleUnits", "GetUnitVisibilityStateOnCampaignMap", "Visibility", first: "Regiment");
         Wrap("ArmyGroup", "CreateNewArmyGroup", "CreateArmyGroup");
@@ -278,7 +279,7 @@ internal static class SixLevelPatches
                 throw new InvalidOperationException("Serialized hook failed verification: " + original.FullName);
             originals++;
         }
-        if (originals != 110) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
+        if (originals != 111) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
         var suitability = game.MainModule.Types.Single(t => t.Name == "GameVars").NestedTypes.Single(t => t.Name == "Commander")
             .Methods.Single(m => m.Name == "CheckSuitableRank" && m.Parameters[0].ParameterType.FullName == "System.Int32");
         if (suitability.Body.Instructions.Count(i => i.Operand is MethodReference r &&

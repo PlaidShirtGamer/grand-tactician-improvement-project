@@ -64,7 +64,13 @@ namespace GTIP
             bool clicked=Input.GetMouseButtonDown(0);
             if(clicked) {
                 var field=hits.Select(h=>h.gameObject.GetComponentInParent<TMPro.TMP_InputField>()).FirstOrDefault(f=>f!=null && f.interactable);
-                if(field!=null){field.Select();field.ActivateInputField();}
+                if(field!=null){
+                    // The replica's input module is normally disabled. Enable it before
+                    // activation so TMP receives keyboard/focus events on the first click.
+                    foreach(var module in instance.blockedModules)if(module!=null)module.enabled=true;
+                    field.Select();field.ActivateInputField();
+                } else if(EventSystem.current!=null && EventSystem.current.currentSelectedGameObject!=null &&
+                    EventSystem.current.currentSelectedGameObject.GetComponent<TMPro.TMP_InputField>()!=null)EventSystem.current.SetSelectedGameObject(null);
             }
             if(clicked && button!=null) {
                 if(button.name=="169_SaveGame" || button.name=="213_SaveGameB" || button.name=="160_Quit" || button.name=="212_Quit")instance.guestFileMenu=true;
@@ -136,7 +142,7 @@ namespace GTIP
             var events=EventSystem.current;
             var focused=events!=null?events.currentSelectedGameObject:null;
             var selected=focused!=null?focused.GetComponent<TMPro.TMP_InputField>():null;
-            bool open=handler.panel[handler.cpanel_optionspanel].state>0 || handler.panel[handler.cpanel_finances].state>0 || NativeRecruitOpen || (selected!=null && selected.isFocused);
+            bool open=handler.panel[handler.cpanel_optionspanel].state>0 || handler.panel[handler.cpanel_finances].state>0 || NativeRecruitOpen || selected!=null;
             // Local Options needs Unity's sliders, input fields and drop-downs.
             // Gameplay dispatch remains filtered while this modal is open.
             foreach(var module in blockedModules)if(module!=null)module.enabled=open;

@@ -169,7 +169,13 @@ namespace GTIP
                 if(host && phase=="waiting" && Time.realtimeSinceStartup-connectedAt>30)throw new TimeoutException("Connected peer did not submit a join request.");
                 if(phase!="live") { BootstrapTick(); return; }
                 DataTick();
-                if(!host) {GuestMapInput();GuestTimeKeys();}
+                if(!host) {
+                    // Pick the symbol at its rendered position without moving the
+                    // logical formation used for orders and exact-state audits.
+                    DrawMotionSymbols();
+                    try {GuestMapInput();} finally {RestoreMotionSymbols();}
+                    GuestTimeKeys();
+                }
                 if (authenticated && Time.realtimeSinceStartup - lastSend > 1) {
                     lastSend = Time.realtimeSinceStartup;
                     if(!host) Send(new MpMessage { kind = "ping", session = session });
@@ -225,6 +231,8 @@ namespace GTIP
                 if(!MpRules.NewClock(value.sequence,receivedClockSequence))return;
                 receivedClockSequence=value.sequence;
                 ApplyClock(value.clock);
+            } else if(value.kind=="motion") {
+                ReceiveMotion(value);
             } else if (value.kind == "hierarchy") {
                 ApplyHierarchy(value.units);
             } else if (value.kind == "snapshot") {
