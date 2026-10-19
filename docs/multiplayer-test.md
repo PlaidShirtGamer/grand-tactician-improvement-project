@@ -1,3 +1,21 @@
+# GTIP MP Test v0.31 — acknowledge recruited formations before map snapshots
+
+Both copies require **v0.31 / protocol 22**. The latest v0.30 session successfully loaded the guest checkpoint, synchronized revision 1, and continued through revision 270. At `01:02:29 UTC` the host accepted guest recruitment request 38 and created formation 1940 under parent 535. At `01:02:30 UTC` the guest ended the session with `Snapshot formation does not match the loaded checkpoint: 1940`; the host then observed EOF. This was a strict map-snapshot validation failure after successful recruitment, rather than a transport timeout.
+
+Host session IDs were refreshed immediately during recruitment and during campaign capture. That made the local roster appear current while the guest still had an older applied lifecycle revision. Both map-snapshot send paths checked local registration, allowing a snapshot containing the new formation to be labeled with the earlier revision. The host now keeps a separate copy of formation IDs, sides, tiers and parents from the exact lifecycle records acknowledged by the guest. Map snapshots wait until the complete live roster matches that acknowledged roster and use its revision number. A receipt for an older in-flight revision cannot acknowledge a later recruitment. Deletions, replacements, tier/side changes and reparenting use the same barrier; ordinary movement and scalar changes remain eligible. Guest snapshot validation remains strict. A deferred map update is recorded in the host log.
+
+Verification: **549 multiplayer model/protocol/TCP checks** pass, including **28 acknowledged-roster checks** reproducing recruitment before an older receipt and another recruitment while a later revision is in flight. The checks also cover removal, equal-sized replacement, reparenting, tier/side changes, hidden opponents, input ownership, revision rejection and session reset. Native schema/synthetic snapshots cover **34 schemas / 628 fields**; cursor, native bridge/boundary, editor/hierarchy/AI suites also pass. Staging verifies **110 hooks/changes**. These checks do not exercise live Unity recruitment.
+
+Installed in both desktop test copies with matching SHA-256 hashes: patched game `B8385AF957A1F57ABB55ADAE79656C03280A2D7245970BBF193FCA541F0F2817`; runtime `48A94E10517A05ECD71AF2CB79F57EAD1F1EA45AC6AF42ACE51786583A4D000D`. The installed runtime passes native schema/snapshot checks; existing installer backups were retained.
+
+## Connected test for v0.31
+
+1. Restart both games and join **GT MP Test**. Recruit a unit from the guest, then recruit one from the host. Confirm each appears in both military lists and on the native map after its lifecycle update, with no disconnect.
+2. Recruit several units while the campaign is running and repeat while paused. Rename, move and reassign the resulting units; check both clients receive the hierarchy and movement. Check a normal removal/disband also synchronizes.
+3. Retain both new logs if a disconnect occurs. A live Unity recruitment test remains required; the model/transport checks do not exercise native prefab creation or rendering.
+
+## Earlier build: v0.30
+
 # GTIP MP Test v0.30 — transport liveness while Unity loads a checkpoint
 
 Both copies require **v0.30 / protocol 22**. In the latest v0.29 attempt, the guest verified the complete checkpoint and began loading at `23:52:25 UTC`. The host closed first at `23:52:59 UTC` with a socket read timeout; the guest subsequently observed EOF. Neither side reached the loaded/ready handshake. Queue peaks were only 2 on the host and 14 on the guest, and the Unity log contained no relevant exception. This failure occurred during native campaign loading, before initial state replication.

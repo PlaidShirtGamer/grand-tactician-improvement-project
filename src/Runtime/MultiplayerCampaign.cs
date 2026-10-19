@@ -173,7 +173,7 @@ namespace GTIP
                 if (authenticated && Time.realtimeSinceStartup - lastSend > 1) {
                     lastSend = Time.realtimeSinceStartup;
                     if(!host) Send(new MpMessage { kind = "ping", session = session });
-                    else if(outgoingData==null && prepareTask==null && commitTask==null && !RosterChanged()) Send(Capture());
+                    else if(outgoingData==null && prepareTask==null && commitTask==null && CanSendSnapshot()) Send(Capture());
                 }
             } catch (Exception error) { LogDiagnostic(error.ToString()); Debug.LogWarning("[GTIP MP] " + error); End("Session stopped: " + error.Message); }
         }
@@ -272,8 +272,7 @@ namespace GTIP
         MpMessage Capture()
         {
             var rows = new List<MpUnit>();
-            if(BattleUnits.completeunitlist.Count(u=>u!=null)!=ids.Count || BattleUnits.completeunitlist.Any(u=>u!=null && !ids.ContainsKey(u)))
-                throw new InvalidOperationException("Formation roster changed. Save a new checkpoint and reload it on both clients before reconnecting.");
+            if(!CanSendSnapshot())throw new InvalidOperationException("Map snapshot roster has not been acknowledged by the guest.");
             foreach (var unit in BattleUnits.completeunitlist) {
                 if (unit == null || !Visible(unit)) continue;
                 bool own = unit.alliance == guestSide; var pos = unit.transform.position;
@@ -286,7 +285,7 @@ namespace GTIP
                     x = pos.x, y=pos.y, z = pos.z, yaw=unit.transform.eulerAngles.y, targetX = target.x, targetZ = target.z,
                     controllable = Controllable(unit), moving = own && unit.regimentpaths > 0 });
             }
-            var result = new MpMessage { kind = "snapshot", session = session, side = guestSide, mode = mode, campaign=manifest, sequence=dataSerial,
+            var result = new MpMessage { kind = "snapshot", session = session, side = guestSide, mode = mode, campaign=manifest, sequence=snapshotRoster.Revision,
                 date = GameVars.GetCampaignFloatingDate(), paused = GameVars.gamepaused, clock=CaptureClock(), units = rows.ToArray(),
                 towns = (BattleUnits.towns ?? new List<Town>()).Where(t => t != null).Select(t => new MpTown { name = t.CityName, x = t.transform.position.x, z = t.transform.position.z })
                     .Where(t => MpRules.Finite(t.x) && MpRules.Finite(t.z)).ToArray() };

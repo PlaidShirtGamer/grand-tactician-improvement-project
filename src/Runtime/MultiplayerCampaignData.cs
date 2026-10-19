@@ -150,8 +150,14 @@ namespace GTIP
             if(host && commitTask!=null) {
                 if(!commitTask.IsCompleted)return;
                 commitTask.GetAwaiter().GetResult();commitTask=null;
+                // The receipt covers these captured lifecycle records, not any
+                // formations registered or changed while this revision was in flight.
+                snapshotRoster.Acknowledge(dataSerial,pendingDataRows.Where(r=>r.Kind==4).Select(r=> {
+                    var s=ReadData<MpFormationState>(r);return new MpUnit{id=r.Id,parent=s.Parent,side=s.Side,tier=s.Tier};
+                }));
                 outgoingData=null;pendingDataRows=null;pendingStateHash=null;
-                if(!RosterChanged())Send(Capture());
+                if(CanSendSnapshot())Send(Capture());
+                else LogDiagnostic("Map snapshot deferred: live formation roster differs from guest-applied revision "+snapshotRoster.Revision);
             }
             if(host && prepareTask!=null) {
                 if(!prepareTask.IsCompleted)return;
@@ -233,6 +239,7 @@ namespace GTIP
             outgoingData=null;incomingData?.Dispose();incomingData=null;dataSerial=0;incomingDataSerial=0;lastDataSend=0;
             dataBaseline=null;pendingDataRows=null;pendingStateHash=null;incomingStateHash=null;incomingBaseRevision=0;
             prepareTask=null;commitTask=null;receiveTask=null;
+            snapshotRoster.Clear();
         }
         bool TryApplyScalarDelta(MpStateRow[] changes)
         {

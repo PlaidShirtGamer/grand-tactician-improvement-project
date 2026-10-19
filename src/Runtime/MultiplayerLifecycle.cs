@@ -12,6 +12,9 @@ namespace GTIP
         readonly Dictionary<int,ArmyGroup> groups=new Dictionary<int,ArmyGroup>();
         int nextGroupId;
         bool hasLiveData;
+        readonly MpSnapshotRoster snapshotRoster=new MpSnapshotRoster();
+        bool CanSendSnapshot() => !RosterChanged() && snapshotRoster.Matches(BattleUnits.completeunitlist.Where(u=>u!=null)
+            .Select(u=>new MpUnit{id=ids[u],parent=ParentId(u),side=u.alliance,tier=u.unittyp}));
         void InitializeGroupIds()
         {
             groupIds.Clear();groups.Clear();nextGroupId=0;
