@@ -42,7 +42,7 @@ namespace GTIP
 
     public static class MpRules
     {
-        public const int Protocol = 22, MaxBytes = 2 * 1024 * 1024;
+        public const int Protocol = 23, MaxBytes = 2 * 1024 * 1024;
         public static bool NewClock(int incoming,int current) => incoming>0 && incoming>current;
         public static bool ClockDue(bool paused,bool stateChanged,float now,float lastSent) => stateChanged || now-lastSent>=(paused?1f:1f/30f);
         public static bool NativeSelectionCollider(string tag,string name,bool paperMap) => name=="UnitNameText" || (name=="UnitSymbol" && paperMap);

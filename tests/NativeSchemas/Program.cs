@@ -14,6 +14,7 @@ var type=runtime.GetType("GTIP.MultiplayerCampaign",true)!;
 // object is constructed and no Unity engine function is invoked by this check.
 var schemas=(Array)type.GetProperty("DataSchemas",BindingFlags.NonPublic|BindingFlags.Static)!.GetValue(null)!;
 SnapshotChecks.Run(runtime,schemas);
+BattleChecks.Run(gamePath,runtimePath,schemas);
 int fields=0;
 foreach(var schema in schemas)fields+=((Array)schema!.GetType().GetField("Fields")!.GetValue(schema)!).Length;
 var game=AssemblyLoadContext.Default.LoadFromAssemblyPath(gamePath);
@@ -27,6 +28,17 @@ var ai=AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(managed,"Un
 var corners=ai.GetType("UnityEngine.AI.NavMeshPath",true)!.GetField("m_Corners",BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance);
 if(corners?.FieldType.Name!="Vector3[]")throw new InvalidOperationException("Native path corner cache layout changed.");
 using(var native=Mono.Cecil.AssemblyDefinition.ReadAssembly(gamePath)) {
+    var nation=native.MainModule.Types.Single(t=>t.Name=="GameVars").NestedTypes.Single(t=>t.Name=="Nation");
+    var recruitInitialize=native.MainModule.Types.Single(t=>t.Name=="RecruitingList").Methods.Single(m=>m.Name=="Initialize");
+    var nationSchema=schemas.GetValue(1)!;
+    var nationFields=((FieldInfo[])nationSchema.GetType().GetField("Fields")!.GetValue(nationSchema)!).Select(f=>f.Name).ToHashSet();
+    foreach(string name in new[]{"UpdateUnitStatistics","UpdateRecruitData"}) {
+        if(!recruitInitialize.Body.Instructions.Any(i=>i.Operand is Mono.Cecil.MethodReference m && m.DeclaringType.Name=="Nation" && m.Name==name))throw new Exception("Native recruitment UI recalculation boundary changed: "+name);
+        var outputs=nation.Methods.Single(m=>m.Name==name).Body.Instructions.Where(i=>i.OpCode==Mono.Cecil.Cil.OpCodes.Stfld && i.Operand is Mono.Cecil.FieldReference f && f.DeclaringType.Name=="Nation")
+            .Select(i=>((Mono.Cecil.FieldReference)i.Operand).Name).Distinct();
+        if(outputs.Any(field=>!nationFields.Contains(field)))throw new Exception("Native recruiting-list outputs missing from authoritative nation schema: "+name);
+    }
+    Console.WriteLine("Native recruitment boundary: cached nation statistics and recruit-pool outputs are host replicated.");
     var regiment=native.MainModule.Types.Single(t=>t.Name=="Regiment");
     using(var compiled=Mono.Cecil.AssemblyDefinition.ReadAssembly(runtimePath)) {
         var fallback=compiled.MainModule.Types.Single(t=>t.Name=="MultiplayerCampaign").Methods.Single(m=>m.Name=="UpgradeWithoutMapIcon");

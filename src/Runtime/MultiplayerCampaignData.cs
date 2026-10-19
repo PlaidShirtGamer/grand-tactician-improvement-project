@@ -51,7 +51,11 @@ namespace GTIP
             MpStateSchema.Scalars(typeof(MpPathState)),MpStateSchema.Scalars(typeof(MpSpottedState)),MpStateSchema.Scalars(typeof(MpConstructionSites)),
             MpStateSchema.Scalars(typeof(MpChartPoints)),
             new MpStateSchema(typeof(Economy.TrailingData),new[]{"values","campaigndate","updaterythm"}),
-            new MpStateSchema(typeof(Economy.TrailingData),new[]{"values","campaigndate","updaterythm"})
+            new MpStateSchema(typeof(Economy.TrailingData),new[]{"values","campaigndate","updaterythm"}),
+            MpStateSchema.Scalars(typeof(MpBattleRecord)),
+            new MpStateSchema(typeof(BattleMonument),new[]{"battleinfolines","landorsea","alliancewon","battlename","alliance","commander","strength","casualties","battleresulttype","battleendtype","capturedweapons","nationalmoraleeffect","averagemorale","averagesupply","commandergotfame","commandergotdefamed","guns","hoursfought","battlepasseddays","battlestarttime","capturedships","sunkenships","prisonerstaken","prisonersparoled"}),
+            MpStateSchema.Scalars(typeof(Autocalc)),MpStateSchema.Scalars(typeof(MpBattleSide)),MpStateSchema.Scalars(typeof(MpBattlePresentation)),
+            MpStateSchema.Scalars(typeof(MpBattleAudioSource))
         });
         byte[] outgoingData;
         MemoryStream incomingData;
@@ -91,6 +95,7 @@ namespace GTIP
                 var g=pair.Value;var state=new MpArmyGroupState{Commander=g.GetCommanderID(),Override=g.overridelev,Members=g.attachedunits.Where(u=>u!=null).Select(ReferenceId).ToArray(),Color=ColorData(g.GetColor())};
                 var row=DataRow(6,pair.Key,state);row.Name=g.name;rows.Add(row);
             }
+            CaptureBattles(rows);
             CaptureDispatches(rows);
             CapturePolicies(rows);
             CaptureProjects(rows);
@@ -138,6 +143,7 @@ namespace GTIP
                 ApplyControls(received.Changes);ApplyPolicies(received.Changes);ApplyProjects(received.Rows);ApplyAlerts(received.Changes);
                 ApplyNewspaper(received.Changes);
                 ApplyGoods(received.Changes);ApplyMapNotices(received.Changes);
+                ApplyBattles(received.Rows,received.Changes);
                 ApplyEngagement(received.Rows,received.Changes);
                 if(promotionChanged)officerViewDirty=true;
                 if(received.Changes.Any(r=>r.Kind==7 || r.Kind==8))ApplyDispatches(received.Rows);

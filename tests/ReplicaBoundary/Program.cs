@@ -23,8 +23,35 @@ Check(NativeAccess.LastMethod=="GTIP_Original_ReplicaGroupStats","Bridge invokes
 NativeAccess.Fail=true;
 bool failed=false;try{MultiplayerCampaign.ReplicaGroupStats(parent,false,false,null);}catch(InvalidOperationException){failed=true;}
 Check(failed,"Host native failures remain visible");
+NativeAccess.Fail=false;MultiplayerCampaign.IsReplica=true;
+var nation=new GameVars.Nation{menfielded=25611};int before=NativeAccess.Calls;
+MultiplayerCampaign.ReplicaNationStats(nation,9);
+Check(nation.menfielded==25611 && NativeAccess.Calls==before,"Guest recruiting list retains the host men-fielded value instead of locally adding a placeholder soldier");
+MultiplayerCampaign.Preview=child;MultiplayerCampaign.ReplicaNationStats(nation,9);
+Check(nation.menfielded==25611 && NativeAccess.Calls==before,"A recruitment preview cannot authorize campaign-wide nation recalculation");
+MultiplayerCampaign.Preview=null;MultiplayerCampaign.IsReplica=false;MultiplayerCampaign.ReplicaNationStats(nation,9);
+Check(nation.menfielded==25612 && NativeAccess.Calls==before+1,"Host and offline recruiting lists retain native nation recalculation");
+Check(NativeAccess.LastMethod=="GTIP_Original_ReplicaNationStats" && (int)NativeAccess.LastArguments[0]==9,"The native nation bridge retains the selected state and preserved entry point");
+NativeAccess.Fail=true;failed=false;
+try{MultiplayerCampaign.ReplicaNationStats(nation,9);}catch(InvalidOperationException){failed=true;}
+Check(failed,"Native nation-statistics failures remain visible on the host");
+NativeAccess.Fail=false;MultiplayerCampaign.IsReplica=true;before=NativeAccess.Calls;
+MultiplayerCampaign.ReplicaNationRecruitData(nation);
+Check(nation.Volunteers==1000 && NativeAccess.Calls==before,"Guest recruiting-list refresh cannot recompute host volunteer/draft pools");
+MultiplayerCampaign.IsReplica=false;MultiplayerCampaign.ReplicaNationRecruitData(nation);
+Check(nation.Volunteers==999 && NativeAccess.LastMethod=="GTIP_Original_ReplicaNationRecruitData" && NativeAccess.LastArguments.Length==0,"Host and offline recruitment pools retain the native parameterless calculation");
+MultiplayerCampaign.IsReplica=true;MultiplayerCampaign.instance=new MultiplayerCampaign();var fleet=new Fleet();before=NativeAccess.Calls;
+MultiplayerCampaign.ReplicaFleetStats(fleet,true);
+Check(NativeAccess.Calls==before && fleet.Cache==42 && fleet.VesselStrength==7,"Viewing a guest naval battle cannot recompute fleet caches or vessel firing-strength data");
+MultiplayerCampaign.instance.applyingNaval=true;MultiplayerCampaign.ReplicaFleetStats(fleet,true);
+Check(NativeAccess.Calls==before+1 && fleet.Cache==43 && fleet.VesselStrength==8,"Validated naval structural application can rebuild native references before authoritative scalar restoration");
+Check((bool)NativeAccess.LastArguments[0] && NativeAccess.LastMethod=="GTIP_Original_ReplicaFleetStats","Fleet-stat refresh retains its native force-update flag and preserved implementation");
+MultiplayerCampaign.instance.applyingNaval=false;MultiplayerCampaign.IsReplica=false;MultiplayerCampaign.ReplicaFleetStats(fleet,false);
+Check(NativeAccess.Calls==before+2 && !(bool)NativeAccess.LastArguments[0],"Host and offline fleet-cache refreshes keep native behavior");
 Console.WriteLine($"Replica boundary: {checks} checks passed using the production bridge and native-operation doubles; not a live Unity test.");
 
+public static class GameVars {public sealed class Nation {public int menfielded;public int Volunteers=1000;}}
+public sealed class Fleet {public int Cache=42,VesselStrength=7;}
 public sealed class Regiment
 {
     public float Morale,Readiness,Condition,GroupMorale;
@@ -35,6 +62,8 @@ namespace GTIP
     public sealed partial class MultiplayerCampaign
     {
         public static bool IsReplica;
+        public static MultiplayerCampaign instance;
+        public bool applyingNaval;
         public static Regiment Preview;
         public static bool IsRecruitPreview(Regiment unit)=>ReferenceEquals(unit,Preview);
     }
@@ -45,6 +74,15 @@ namespace GTIP
         public static string LastMethod;
         public static object[] LastArguments;
         public static bool Fail;
+        public static object Call(Fleet target,string method,params object[] args)
+        {Calls++;LastMethod=method;LastArguments=args;target.Cache++;target.VesselStrength++;return null;}
+        public static object Call(GameVars.Nation target,string method,params object[] args)
+        {
+            if(Fail)throw new InvalidOperationException("Native failure");
+            Calls++;LastMethod=method;LastArguments=args;
+            if(method=="GTIP_Original_ReplicaNationStats")target.menfielded++;else target.Volunteers--;
+            return null;
+        }
         public static object Call(Regiment target,string method,params object[] args)
         {
             if(Fail)throw new InvalidOperationException("Native failure");

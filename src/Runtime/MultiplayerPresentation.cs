@@ -80,6 +80,7 @@ namespace GTIP
             }
             if(Input.GetMouseButtonDown(0) && button!=null)instance.RequestTimeButton(button.name);
             bool movementAction=clicked && instance.GuestMovementAction(button);
+            bool recruitAction=clicked && instance.GuestRecruitPreviewAction(button);
             if(clicked && button!=null && button.state!=2 && !movementAction)instance.GuestUnitAction(button.name);
             bool logEntry=button!=null && button.name.Length>=14 && button.name.Substring(3,9)=="_LogEntry";
             bool recruitment=button!=null && instance.NativeRecruitOpen && (button.name.StartsWith("474_RecruitingRow") || button.name.StartsWith("480_Color") ||
@@ -92,7 +93,7 @@ namespace GTIP
                     if(b==button && b.isActiveAndEnabled) { if(!b.mouseonobject || !b.mouseonobject2)b.ActivateMouseOnObject(); }
                     else if(b.mouseonobject || b.mouseonobject2)b.DeactivateMouseOnObject();
                 }
-            bool left=allowed && !movementAction && button.name!="108_MessageLog" && Input.GetMouseButtonDown(0), right=false, twice=false;
+            bool left=allowed && !movementAction && !recruitAction && button.name!="108_MessageLog" && Input.GetMouseButtonDown(0), right=false, twice=false;
             handler.UpdatePanel(ref left,ref right,ref twice);
             if(clicked)instance.ReplicaLocalClose(hits,handler);
             instance.OptionsInput(handler);
@@ -187,6 +188,7 @@ namespace GTIP
             var main=NativeAccess.Get<CampaignMainPanel>(target.panelhandler,"campaignmainpanel");
             if(main!=null)
                 NativeAccess.Call(target,"GTIP_Original_ReplicaUiLate");
+            instance.RefreshGuestBattleControls();
         }
         public static void RepairShortcutFocus()
         {
@@ -234,7 +236,7 @@ namespace GTIP
         void RefreshReplicaRosterUi()
         {
             var main=GameObject.Find("UI/Panel_Main")?.GetComponent<CampaignMainPanel>();
-            if(main!=null)main.UpdateOOBs(true,true);
+            if(main!=null && !RefreshRecruitPreviewRosterUi(main))main.UpdateOOBs(true,true);
         }
     }
 }

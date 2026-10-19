@@ -33,7 +33,7 @@ namespace GTIP
             NativeAccess.Call(typeof(GameVars), "GTIP_Original_ReplicaSpeed", newspeed, overrideminmax, manualset);
         }
         public static void ReplicaAutocalc(Autocalc target)
-        {if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaAutocalc");}
+        {if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaAutocalc");else instance.ReplicaAutocalcPresentation(target);}
         public static void ReplicaSave(bool saveunits, bool saveobjects, bool savecommanders, bool savecampaigndata, bool isautosave, string manualsavename)
         {
             // Saving belongs to the host; a guest has only partially replicated campaign data.

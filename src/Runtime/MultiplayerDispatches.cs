@@ -8,7 +8,7 @@ namespace GTIP
 {
     public sealed class MpDispatchReferences
     {
-        public int Regiment, Sender, ObjectRegiment;
+        public int Regiment, Sender, ObjectRegiment, ObjectBattle, AutoOpenSerial;
         public float X, Y, Z;
     }
 
@@ -16,7 +16,10 @@ namespace GTIP
     {
         readonly Dictionary<int,MpStateRow[]> dispatchArchive=new Dictionary<int,MpStateRow[]>();
         readonly HashSet<int> hiddenDispatches=new HashSet<int>();
-        void ClearDispatchState(){dispatchArchive.Clear();hiddenDispatches.Clear();}
+        readonly Dictionary<int,int> dispatchOpenSerials=new Dictionary<int,int>();
+        readonly MpDispatchOpens dispatchOpens=new MpDispatchOpens();
+        int dispatchOpenSerial;
+        void ClearDispatchState(){dispatchArchive.Clear();hiddenDispatches.Clear();dispatchOpenSerials.Clear();dispatchOpens.Clear();dispatchOpenSerial=0;}
         static Messages Dispatches => GameObject.Find("UI")?.GetComponent<Messages>();
         int DispatchReference(Regiment unit) => unit != null && ids.TryGetValue(unit, out var id) ? id : 0;
         void CaptureDispatches(List<MpStateRow> rows)
@@ -31,8 +34,26 @@ namespace GTIP
                 dispatchArchive[m.number]=new[]{DataRow(7,m.number,m),DataRow(8, m.number, new MpDispatchReferences {
                     Regiment=DispatchReference(m.regref), Sender=DispatchReference(m.sender),
                     ObjectRegiment=DispatchReference(m.objref == null ? null : m.objref.GetComponent<Regiment>()),
+                    ObjectBattle=BattleReference(m.objref == null ? null : m.objref.GetComponent<BattleMonument>()),
+                    AutoOpenSerial=dispatchOpenSerials.TryGetValue(m.number,out var serial)?serial:0,
                     X=m.targetdestination.x, Y=m.targetdestination.y, Z=m.targetdestination.z
                 })};
+        }
+        public static void ReplicaDispatchOpen(Messages target,int messageid,bool movetoposition,bool removescreenmassage)
+        {
+            NativeAccess.Call(target,"GTIP_Original_ReplicaDispatchOpen",messageid,movetoposition,removescreenmassage);
+            var mp=instance;
+            // ImportBattleResults explicitly opens the just-created major battle
+            // result, without moving the camera. Capture that event rather than
+            // guessing from unread state or reopening historical result messages.
+            // Manual log/reopen operations remain local to the player using them.
+            if(mp==null || !mp.host || mp.transport==null || mp.phase!="live" || !mp.authenticated ||
+                messageid!=-1 || movetoposition || removescreenmassage || target.message.Count==0)return;
+            var message=target.message[target.message.Count-1];
+            if(message.type!=Messages.msg_combatresult && message.type!=Messages.msg_navalcombatresult)return;
+            mp.dispatchOpenSerials[message.number]=checked(++mp.dispatchOpenSerial);
+            mp.ArchiveDispatch(message);
+            mp.LogDiagnostic("Native battle-result dispatch opened: number="+message.number+"; serial="+mp.dispatchOpenSerial);
         }
         public static void ReplicaRemoveDispatch(Messages target,int index)
         {
@@ -58,20 +79,33 @@ namespace GTIP
                 if(!keep.Contains(messages.message[i].number)) messages.RemoveMessage(i);
             int added=0;
             foreach(var row in incoming) {
-                if(hiddenDispatches.Contains(row.Id))continue;
+                var refs=new MpDispatchReferences(); DataSchemas[8].Apply(refs,references[row.Id].Values);
+                bool hidden=hiddenDispatches.Contains(row.Id);
+                dispatchOpens.Observe(row.Id,refs.AutoOpenSerial,hidden);
+                if(hidden)continue;
                 bool isNew=!existing.TryGetValue(row.Id,out var m);
                 if(isNew) m=new Messages.Message();
                 bool shown=m.wasshownonscreen,read=m.read;
                 DataSchemas[7].Apply(m,row.Values);
                 m.read=isNew?false:read;
                 if(m.number!=row.Id)throw new InvalidDataException("Dispatch identity mismatch.");
-                var refs=new MpDispatchReferences(); DataSchemas[8].Apply(refs,references[row.Id].Values);
                 m.regref=units.TryGetValue(refs.Regiment,out var regiment)?regiment:null;
                 m.sender=units.TryGetValue(refs.Sender,out var sender)?sender:null;
-                if(refs.ObjectRegiment!=0) m.objref=units.TryGetValue(refs.ObjectRegiment,out var obj)?obj.gameObject:null;
+                if(refs.ObjectBattle!=0)m.objref=BattleById(refs.ObjectBattle)?.gameObject;
+                else if(refs.ObjectRegiment!=0)m.objref=units.TryGetValue(refs.ObjectRegiment,out var obj)?obj.gameObject:null;
                 m.targetdestination=new Vector3(refs.X,refs.Y,refs.Z);
                 m.wasshownonscreen=shown;
                 if(isNew) { messages.message.Add(m); added++; NativeAccess.Call(messages,"ShowMessageOnScreen",messages.message.Count-1); }
+            }
+            int opened=dispatchOpens.Take();
+            if(opened>=0) {
+                int index=messages.message.FindIndex(m=>m.number==opened);
+                if(index>=0) {
+                    // Native OpenMessage uses the replicated content and the local
+                    // read flag. It has no dependency on a host-only battle monument.
+                    messages.OpenMessage(index);
+                    LogDiagnostic("Host battle-result dispatch displayed: number="+opened);
+                }
             }
             NativeAccess.Set(messages,"messagesunread",messages.message.Count(m=>!m.read));
             Messages.runningnumber=Math.Max(Messages.runningnumber,incoming.Length==0?1:incoming.Max(r=>r.Id)+1);

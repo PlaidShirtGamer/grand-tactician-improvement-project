@@ -66,13 +66,24 @@ internal static class SixLevelPatches
         Wrap("BattleUnits", "Update", "ReplicaUnits", "MultiplayerCampaign");
         Wrap("Regiment", "Update", "ReplicaRegiment", "MultiplayerCampaign");
         Wrap("Regiment", "UpdateGroupStrength", "ReplicaGroupStats", "MultiplayerCampaign");
+        Wrap("Nation", "UpdateUnitStatistics", "ReplicaNationStats", "MultiplayerCampaign");
+        Wrap("Nation", "UpdateRecruitData", "ReplicaNationRecruitData", "MultiplayerCampaign");
         Wrap("Town", "Update", "ReplicaTown", "MultiplayerCampaign");
         Wrap("IIP", "Update", "ReplicaIip", "MultiplayerCampaign");
         Wrap("CBuilding", "Update", "ReplicaBuilding", "MultiplayerCampaign");
         Wrap("Autocalc", "Update", "ReplicaAutocalc", "MultiplayerCampaign");
+        Wrap("Autocalc", "Start", "ReplicaBattleStart", "MultiplayerCampaign");
+        Wrap("BattleMonument", "Update", "ReplicaBattleMonument", "MultiplayerCampaign");
+        Wrap("Autocalc", "SingleExplosion", "ReplicaBattleExplosion", "MultiplayerCampaign");
+        Wrap("Autocalc", "Retreat", "ReplicaAutocalcRetreat", "MultiplayerCampaign");
+        Wrap("Autocalc", "SetStance", "ReplicaAutocalcStance", "MultiplayerCampaign");
+        Wrap("Autocalc", "StartManualBattleFromAutocalc", "ReplicaAutocalcManual", "MultiplayerCampaign");
+        Wrap("SoundEngine", "Activate", "ReplicaBattleSound", "MultiplayerCampaign");
+        Wrap("SoundEngine", "ActivateArray", "ReplicaBattleSoundArray", "MultiplayerCampaign");
         Wrap("ArmyGroup", "IncreaseCommanderExperience", "ReplicaGroupExperience", "MultiplayerCampaign");
         Wrap("Messages", "Update", "ReplicaMessages", "MultiplayerCampaign");
         Wrap("Messages", "RemoveMessage", "ReplicaRemoveDispatch", "MultiplayerCampaign");
+        Wrap("Messages", "OpenMessageOutright", "ReplicaDispatchOpen", "MultiplayerCampaign");
         Wrap("Policy", "CheckSelections", "ReplicaPolicySelection", "MultiplayerCampaign");
         Wrap("BattleUI", "LateUpdate", "ReplicaUiLate", "MultiplayerCampaign");
         Wrap("BattleUnits", "MoveUnit", "ReplicaMoveUnit", "MultiplayerCampaign");
@@ -123,6 +134,7 @@ internal static class SixLevelPatches
         Wrap("SpottedEnemy","Update","ReplicaSightings","MultiplayerCampaign");
         Wrap("CBuilding","UpdateBuildingLists","ReplicaBuildingLists","MultiplayerCampaign");
         Wrap("Fleet","Update","ReplicaFleetUpdate","MultiplayerCampaign");
+        Wrap("Fleet","UpdateFleetData","ReplicaFleetStats","MultiplayerCampaign");
         Wrap("CampaignMainPanel","UpdateUnitNameInputs","ReplicaUnitName","MultiplayerCampaign");
         Wrap("FleetInfoPanel","UpdateFleetNameInputs","ReplicaFleetName","MultiplayerCampaign");
         Wrap("FleetInfoPanel","UpdateShipNameInputs","ReplicaShipName","MultiplayerCampaign");
@@ -266,7 +278,7 @@ internal static class SixLevelPatches
                 throw new InvalidOperationException("Serialized hook failed verification: " + original.FullName);
             originals++;
         }
-        if (originals != 98) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
+        if (originals != 110) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
         var suitability = game.MainModule.Types.Single(t => t.Name == "GameVars").NestedTypes.Single(t => t.Name == "Commander")
             .Methods.Single(m => m.Name == "CheckSuitableRank" && m.Parameters[0].ParameterType.FullName == "System.Int32");
         if (suitability.Body.Instructions.Count(i => i.Operand is MethodReference r &&
