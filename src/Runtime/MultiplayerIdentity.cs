@@ -8,7 +8,7 @@ namespace GTIP
 {
     public static class MpBuild
     {
-        public const string Version = "0.33";
+        public const string Version = "0.34";
         public const string Label = "GTIP MP Test v" + Version;
     }
     public static class MpIdentity

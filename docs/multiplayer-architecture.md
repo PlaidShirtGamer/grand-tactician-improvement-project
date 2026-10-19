@@ -10,6 +10,10 @@ Target: host-authoritative campaign and standalone-battle co-op/versus using nat
 4. Join/reconnect loads an isolated native checkpoint. Normal object creation/deletion uses lifecycle adapters, not a reload.
 5. Revisioned transactions carry base revision, changed records, explicit removals and target checksum. A guest reconstructs and validates the complete registered state before application. Host commits its baseline only after application acknowledgement.
 6. Scalar readback checks registered native fields after application. A mismatch reports revision, record kind, identity and field. This does not verify omitted objects, visuals or reference graphs.
+7. Short-lived notices are events, not sampled durable state. Publish at the accepted native creation boundary and deduplicate fast delivery against later snapshots. Local read/dismiss state is separate from host history.
+8. Local input/presentation needs its own native contract: owning UI collection, eligibility, object ancestry, native callback and cleanup. Structural adapters finish native references before refreshing roster panels. Redraw failures restore authoritative scalars and are reported separately; restoration or readback failures remain fatal.
+
+The [native interaction coverage and connected acceptance matrix](multiplayer-coverage.md) records these boundaries and their evidence. A protocol/model assertion count is not a measure of complete gameplay coverage.
 
 ## Current adapters and gaps
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace GTIP
 {
@@ -116,6 +117,28 @@ namespace GTIP
             if(!IsReplica) { NativeAccess.Call(target,"GTIP_Original_ReplicaMessages"); return; }
             NativeAccess.Call(target,"UpdateScreenMessages");
             NativeAccess.Call(target,"UpdateMessagesCounter");
+        }
+        bool GuestDispatchNotification(List<RaycastResult> hits,PanelHandler handler)
+        {
+            bool left=Input.GetMouseButtonDown(0),right=Input.GetMouseButtonDown(1);
+            if(!left && !right)return false;
+            // Native ShowSymbol registers notifications in symbol, not in
+            // multiplepanel. The tooltip may live on a child of the named symbol.
+            // Only the frontmost UI hit is eligible, so covered notices stay inert.
+            var hit=hits.FirstOrDefault(h=>h.module is UnityEngine.UI.GraphicRaycaster).gameObject;
+            if(hit==null)return false;
+            var symbol=handler.symbol.FirstOrDefault(p=>p.go!=null && p.go.activeInHierarchy && hit.transform.IsChildOf(p.go.transform));
+            var messages=Dispatches;
+            if(symbol==null || messages==null)return false;
+            var message=messages.message.FirstOrDefault(m=>m.number==symbol.uniqueid);
+            // Map rolling text also uses ShowSymbol and overlapping numeric icon
+            // IDs. Require the complete native dispatch identity before routing.
+            if(message==null || !MpDispatchSymbols.Matches(symbol.go.name,message.type,message.symboloffset) ||
+                symbol.secondaryreference!=(message.sender!=null?message.sender.gameObject:null) ||
+                symbol.referencego!=(message.regref!=null?message.regref.gameObject:null))return false;
+            messages.InteractScreenMessage(message.number,right?2:1);
+            LogDiagnostic("Dispatch notification "+(right?"dismissed":"opened")+": number="+message.number);
+            return true;
         }
     }
 }

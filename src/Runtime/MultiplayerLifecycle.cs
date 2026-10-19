@@ -145,7 +145,7 @@ namespace GTIP
             }
             if(changed) {
                 BattleUnits.UpdateUnitList();
-                RefreshReplicaRosterUi();
+                rosterUiPending=true;
                 foreach(var a in GameVars.alliance)if(a!=null){a.unitlist.RemoveAll(u=>u==null || !ids.ContainsKey(u));a.lastmonthunitsformed?.RemoveAll(u=>u==null || !ids.ContainsKey(u));}
                 LogDiagnostic("Live lifecycle applied: "+created.Count+" created, "+removed.Length+" removed; formations="+units.Count+", officers="+officerRows.Count);
             }

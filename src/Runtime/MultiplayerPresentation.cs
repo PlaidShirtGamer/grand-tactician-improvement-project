@@ -76,14 +76,7 @@ namespace GTIP
                 if(button.name=="169_SaveGame" || button.name=="213_SaveGameB" || button.name=="160_Quit" || button.name=="212_Quit")instance.guestFileMenu=true;
             }
             if(Input.GetMouseButtonDown(0) && button!=null)instance.OpenReplicaTab(handler,button.name);
-            if(Input.GetMouseButtonDown(0) && button!=null && button.name.Length>=10 && button.name.Substring(3,7)=="_Symbol") {
-                var p=handler.multiplepanel.FirstOrDefault(x=>x.buttons!=null && x.buttons.Contains(button));
-                var messages=Dispatches;
-                if(p!=null && messages!=null) {
-                    int index=messages.message.FindIndex(m=>m.number==p.uniqueid);
-                    if(index>=0)messages.OpenMessage(index);
-                }
-            }
+            bool dispatchAction=instance.GuestDispatchNotification(hits,handler);
             if(Input.GetMouseButtonDown(0) && button!=null)instance.RequestTimeButton(button.name);
             bool movementAction=clicked && instance.GuestMovementAction(button);
             bool recruitAction=clicked && instance.GuestRecruitPreviewAction(button);
@@ -99,7 +92,7 @@ namespace GTIP
                     if(b==button && b.isActiveAndEnabled) { if(!b.mouseonobject || !b.mouseonobject2)b.ActivateMouseOnObject(); }
                     else if(b.mouseonobject || b.mouseonobject2)b.DeactivateMouseOnObject();
                 }
-            bool left=allowed && !movementAction && !recruitAction && button.name!="108_MessageLog" && Input.GetMouseButtonDown(0), right=false, twice=false;
+            bool left=allowed && !movementAction && !recruitAction && !dispatchAction && button.name!="108_MessageLog" && Input.GetMouseButtonDown(0), right=false, twice=false;
             handler.UpdatePanel(ref left,ref right,ref twice);
             if(clicked)instance.ReplicaLocalClose(hits,handler);
             instance.OptionsInput(handler);

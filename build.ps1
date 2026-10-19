@@ -18,6 +18,12 @@ dotnet run --project (Join-Path $PSScriptRoot 'tests/ReplicaCursor/ReplicaCursor
 if ($LASTEXITCODE -ne 0) { throw 'Guest cursor recovery checks failed' }
 dotnet run --project (Join-Path $PSScriptRoot 'tests/RecruitPreview/RecruitPreview.csproj') -c Release -p:UseSharedCompilation=false
 if ($LASTEXITCODE -ne 0) { throw 'Guest recruitment preview checks failed' }
+
+dotnet run --project (Join-Path $PSScriptRoot 'tests/CameraRotation/CameraRotation.csproj') -c Release -p:UseSharedCompilation=false
+if ($LASTEXITCODE -ne 0) { throw 'Campaign camera rotation lock checks failed' }
+
+dotnet run --project (Join-Path $PSScriptRoot 'tests/MotionPresentation/MotionPresentation.csproj') -c Release -p:UseSharedCompilation=false
+if ($LASTEXITCODE -ne 0) { throw 'Guest motion presentation checks failed' }
 dotnet run --project (Join-Path $PSScriptRoot 'tests/Traversal/Traversal.csproj') -c Release -p:UseSharedCompilation=false
 if ($LASTEXITCODE -ne 0) { throw 'Traversal tests failed' }
 dotnet run --project (Join-Path $PSScriptRoot 'tests/Formation/Formation.csproj') -c Release -p:UseSharedCompilation=false

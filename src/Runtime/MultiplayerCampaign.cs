@@ -172,8 +172,9 @@ namespace GTIP
                 if(!host) {
                     // Pick the symbol at its rendered position without moving the
                     // logical formation used for orders and exact-state audits.
-                    DrawMotionSymbols();
-                    try {GuestMapInput();} finally {RestoreMotionSymbols();}
+                    bool pickSymbols=Input.GetMouseButtonDown(0) && CBuilding.manualplacedbuilding==null;
+                    if(pickSymbols)DrawMotionSymbols();
+                    try {GuestMapInput();} finally {if(pickSymbols)RestoreMotionSymbols();}
                     GuestTimeKeys();
                 }
                 if (authenticated && Time.realtimeSinceStartup - lastSend > 1) {
@@ -247,7 +248,7 @@ namespace GTIP
             } else if(value.kind=="movement-paths") {ReceiveFastPaths(value);
             } else if(value.kind=="map-notice") {
                 var notices=MpStateCodec.Decode(DataSchemas,value.blob);
-                if(notices.Length!=1 || notices[0].Kind!=15 || notices[0].Deleted)throw new InvalidOperationException("Invalid construction notice.");
+                if(notices.Length!=1 || notices[0].Kind!=15 || notices[0].Deleted)throw new InvalidOperationException("Invalid map notice.");
                 ApplyMapNotices(notices);
             } else if (value.kind == "result") {
                 pendingPromotions.Remove(value.sequence);

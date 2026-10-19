@@ -6,12 +6,18 @@ void Check(bool valid,string name){if(!valid)throw new Exception(name);checks++;
 var panel=new CampaignMainPanel();
 var preview=new Regiment {uniformset=2,AvailableUniforms=new[]{2,8},recruitingtype=0};
 var authority=new Regiment {uniformset=4,recruitingtype=0};
+var parent=new Regiment {name="Native recruiting army"};parent.transform.SetParent(BattleUnits.unitfolder.transform,true);
+panel.RecruitParent=parent;authority.transform.SetParent(BattleUnits.unitfolder.transform,true);
+preview.transform.SetParent(new Transform{name="MultiplayerCampaign"},true);
+bool nativeTooltipFailed=false;try{preview.GetUnitTooltipInfo();}catch(NullReferenceException){nativeTooltipFailed=true;}
+Check(nativeTooltipFailed,"The native tooltip walk reproduces the observed null when a dummy is isolated outside the Units ancestry");
 var mp=new MultiplayerCampaign {Panel=panel,Preview=preview,Open=true};
 mp.Register(authority,17);panel.Used=authority;
 CampaignMainPanel.dummyregiment=preview;MultiplayerCampaign.IsReplica=true;
 ButtonTooltip Button(string name)=>new ButtonTooltip {name=name,transform=new Transform{Parent=panel.transform}};
 var next=Button("477_NextSoldier");
 Check(mp.Apply(next),"The next-uniform click is consumed for the active guest preview");
+Check(preview.transform.parent==mp.transform && preview.GetUnitTooltipInfo(true).content=="Native recruiting army","The production tooltip context reads native army ancestry and restores the dummy's isolated parent before returning");
 Check(preview.uniformset==8 && preview.LastUniformDirection==1,"Uniform cycling delegates to the native eligibility operation instead of incrementing an arbitrary uniform ID");
 Check(panel.InfoRefreshes==1,"A preview uniform change immediately refreshes the native panel");
 Check(mp.Apply(next) && preview.uniformset==2,"Successive uniform changes remain usable and wrap within the eligible native list");
@@ -43,6 +49,11 @@ panel.List.chosenstate=9;panel.List.SelectedRow=3;panel.List.Filter="Own states"
 Check(mp.Refresh(panel),"A live roster update uses the active guest recruiting refresh");
 Check(panel.List.ListRefreshes==1 && panel.DataRefreshes==1,"The recruiting list and native unit information refresh after live roster changes");
 Check(panel.List.chosenstate==9 && panel.List.SelectedRow==3 && panel.List.Filter=="Own states","Roster refresh retains the chosen recruiting state, row and filters");
+Check(panel.UnitTooltipDraws>0 && panel.CommanderTooltipDraws>0,"Roster refresh exercises the same native unit and commander hierarchy tooltip paths as the disconnect stack");
+for(int cycle=0;cycle<3;cycle++){parent.UpdateAllAttachedUnits();BattleUnits.UpdateUnitList();mp.Refresh(panel);}
+Check(!parent.allattachedunits.Contains(preview) && !BattleUnits.completeunitlist.Contains(preview),"Repeated lifecycle attachment and full roster scans exclude the dummy while the preview remains open");
+Check(parent.allattachedunits.Sum(r=>r.strength)==parent.strength && BattleUnits.completeunitlist.Sum(r=>r.strength)==parent.strength+authority.strength,"The isolated dummy cannot inflate native attachment or global aggregate strength");
+Check(preview.AggregateUpdates==0,"Unit and commander recruiting redraws request only hierarchy data before native aggregate calculations");
 Check(ReferenceEquals(CampaignMainPanel.dummyregiment,preview) && preview.uniformset==8 && preview.recruitingtype==0,"Roster refresh preserves the same uncommitted uniform and recruit-pool choices");
 var otherPanel=new CampaignMainPanel();
 Check(!mp.Refresh(otherPanel) && otherPanel.List.ListRefreshes==0,"An unrelated military view uses its normal roster refresh");
@@ -110,11 +121,24 @@ Check(mp.Requests.Count==requests,"Invalid multiline names are not sent");
 CampaignMainPanel.dummyregiment=preview;mp.Preview=preview;field.text="Draft regiment";
 MultiplayerCampaign.ReplicaUnitName(panel);
 Check(preview.name=="Draft regiment" && mp.Requests.Count==requests,"Recruiting dummy names remain local until the recruitment commit");
+var officer=new GameVars.Commander {currentcommand=authority};
+mp.RenderCommander(panel,preview,officer,()=>Check(officer.currentcommand==preview && officer.GetTooltipInfo()=="Native recruiting army","Preview commander rendering uses the local dummy with native-safe ancestry"));
+Check(officer.currentcommand==authority,"Preview commander rendering restores the authoritative officer command reference");
+Reject(()=>mp.RenderCommander(panel,preview,officer,()=>throw new InvalidOperationException("Native display failure")),"The preview commander context propagates display errors to the caller");
+Check(officer.currentcommand==authority,"Even a failed native display restores the authoritative officer command reference");
+preview.FailTooltip=true;Reject(()=>preview.GetUnitTooltipInfo(true),"Native tooltip failure still propagates out of the ancestry scope");preview.FailTooltip=false;
+Check(preview.transform.parent==mp.transform,"Even a failed native tooltip restores the isolated preview hierarchy");
+panel.RecruitParent=null;mp.RepairPreview(panel,preview);
+Check(preview.transform.parent==mp.transform && preview.GetUnitTooltipInfo(true).content=="","A vanished recruiting parent uses the native Units folder only during tooltip rendering and remains isolated afterward");
+Check(parent.GetUnitTooltipInfo(true).content=="","Registered formation tooltips retain their original native ancestry");
 Console.WriteLine($"Recruit preview, appearance and names: {checks} checks passed using the production bridges and native-operation doubles; not a live Unity test.");
 
 public sealed class Transform
 {
     public Transform Parent;
+    public Transform parent=>Parent;
+    public string name="Node";
+    public void SetParent(Transform value,bool preserveWorldPosition){Parent=value;}
     public TMPro.TMP_InputField Field;
     public bool IsChildOf(Transform other)=>ReferenceEquals(this,other) || Parent!=null && Parent.IsChildOf(other);
     public Transform Find(string path)=>this;
@@ -132,10 +156,17 @@ public sealed class ButtonTooltip
 }
 public sealed class Regiment
 {
+    public Regiment(){All.Add(this);}
+    public static readonly List<Regiment> All=new List<Regiment>();
     public int uniformset,recruitingtype,LastUniformDirection;
-    public string name="Authoritative regiment";
+    public string name {get=>gameObject.transform.name;set=>gameObject.transform.name=value;}
     public int alliance,unittyp;
+    public int strength=100;
+    public Regiment[] allattachedunits=Array.Empty<Regiment>();
+    public bool FailTooltip;
+    public int AggregateUpdates;
     public GameObject gameObject=new GameObject();
+    public Transform transform=>gameObject.transform;
     public Color[] componentcolor={new Color(0),new Color(0)};
     public int[] AvailableUniforms=Array.Empty<int>();
     public void AdjustUniformSet(int direction)
@@ -144,6 +175,30 @@ public sealed class Regiment
         int index=Array.IndexOf(AvailableUniforms,uniformset);
         uniformset=AvailableUniforms[(index+direction+AvailableUniforms.Length)%AvailableUniforms.Length];
     }
+    // Native GetUnitTooltipInfo performs this unguarded ancestry walk before returning
+    // hierarchy-only data; both UpdateUnitInfoPanel and Commander.GetTooltipInfo call it.
+    public sealed class UnitTooltipInfo {public string content;}
+    public UnitTooltipInfo GetUnitTooltipInfo(bool hierarchyonly=false,bool onlyuptocampaigngroup=false,bool usebrackets=true,bool useenter=true)
+        =>MultiplayerCampaign.ReplicaUnitTooltip(this,hierarchyonly,onlyuptocampaigngroup,usebrackets,useenter);
+    public UnitTooltipInfo GetUnitTooltipInfoOriginal(bool hierarchyonly)
+    {
+        var current=transform.parent;var names=new List<string>();
+        while(current.name!="Units"){names.Add(current.name);current=current.parent;}
+        if(FailTooltip)throw new InvalidOperationException("Native tooltip failure");
+        if(!hierarchyonly)AggregateUpdates++;
+        return new UnitTooltipInfo {content=string.Join(" / ",names)};
+    }
+    public void UpdateAllAttachedUnits(){allattachedunits=All.Where(r=>r.transform.IsChildOf(transform)).ToArray();}
+}
+public static class BattleUnits
+{
+    public static GameObject unitfolder=new GameObject {transform=new Transform {name="Units"}};
+    public static List<Regiment> completeunitlist=new List<Regiment>();
+    public static void UpdateUnitList(){completeunitlist=Regiment.All.Where(r=>r.transform.IsChildOf(unitfolder.transform)).ToList();}
+}
+public static class GameVars
+{
+    public sealed class Commander {public Regiment currentcommand;public string GetTooltipInfo()=>currentcommand==null?"":currentcommand.GetUnitTooltipInfo(true).content;}
 }
 public sealed class RecruitingList
 {
@@ -161,10 +216,11 @@ public sealed class CampaignMainPanel
     public Palette[] Palettes={new Palette(),new Palette()};
     public TMPro.TMP_InputField Field=new TMPro.TMP_InputField();
     public RecruitingList List=new RecruitingList();
-    public int InfoRefreshes,DataRefreshes;
+    public int InfoRefreshes,DataRefreshes,UnitTooltipDraws,CommanderTooltipDraws;
+    public Regiment RecruitParent;
     public bool RecruitEnabled;
-    public void UpdateUnitInfoPanel(){InfoRefreshes++;RecruitEnabled=dummyregiment==null || dummyregiment.recruitingtype==0;MultiplayerCampaign.ReplicaSoldierPicture(this);}
-    public void UpdateUnitData(){DataRefreshes++;}
+    public void UpdateUnitInfoPanel(){InfoRefreshes++;RecruitEnabled=dummyregiment==null || dummyregiment.recruitingtype==0;if(dummyregiment!=null){dummyregiment.GetUnitTooltipInfo(true);UnitTooltipDraws++;}MultiplayerCampaign.ReplicaSoldierPicture(this);}
+    public void UpdateUnitData(){DataRefreshes++;if(dummyregiment!=null){new GameVars.Commander {currentcommand=dummyregiment}.GetTooltipInfo();CommanderTooltipDraws++;}UpdateUnitInfoPanel();}
     public void ActivatePalette(bool value=true){paletteactive=value;}
 }
 public sealed class Palette
@@ -218,6 +274,7 @@ namespace GTIP
         public static bool IsReplica;
         static MultiplayerCampaign instance;
         public MultiplayerCampaign(){instance=this;}
+        public Transform transform=new Transform {name="MultiplayerCampaign"};
         public CampaignMainPanel Panel {get=>previewPanel;set{previewPanel=value;ui=new BattleUI {panelhandler=new PanelHandler{Main=value}};ui.panelhandler.panel[0].go.transform.Field=value.Field;}}
         public Regiment Preview {get=>nativePreview;set=>nativePreview=value;}
         public bool Open;
@@ -235,6 +292,8 @@ namespace GTIP
         public static bool IsRecruitPreview(Regiment unit)=>unit!=null && unit==instance.nativePreview;
         bool NativeRecruitOpen=>Open;
         public bool Apply(ButtonTooltip button)=>GuestRecruitPreviewAction(button);
+        public void RepairPreview(CampaignMainPanel target,Regiment preview)=>IsolateRecruitPreview(preview);
+        public void RenderCommander(CampaignMainPanel target,Regiment preview,GameVars.Commander officer,Action draw)=>WithRecruitPreviewCommander(target,preview,officer,draw);
         public bool Refresh(CampaignMainPanel panel)=>RefreshRecruitPreviewRosterUi(panel);
         void LogDiagnostic(string value){}
     }
@@ -244,6 +303,7 @@ namespace GTIP
         {
             object value;
             if(target is CampaignMainPanel panel && name=="recruitinglist")value=panel.List;
+            else if(target is CampaignMainPanel recruit && name=="unittorecruitfor")value=recruit.RecruitParent;
             else if(target is CampaignMainPanel colors && name=="palette")value=colors.Palettes;
             else if(target is PanelHandler handler && name=="campaignmainpanel")value=handler.Main;
             else if(target is Type type && type==typeof(Palette) && name=="palettecolors")value=Palette.Colors;
@@ -252,6 +312,7 @@ namespace GTIP
         }
         public static object Call(object target,string name,params object[] args)
         {
+            if(target is Regiment regiment && name=="GTIP_Original_ReplicaUnitTooltip")return regiment.GetUnitTooltipInfoOriginal((bool)args[0]);
             if(target is CampaignMainPanel panel) {
                 var unit=CampaignMainPanel.dummyregiment??panel.Used;
                 if(name=="GetUsedUnit")return unit;

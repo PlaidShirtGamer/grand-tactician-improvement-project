@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/Runtime/MultiplayerMotion.cs" Link="MultiplayerMotion.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerPoseStreamModel.cs" Link="MultiplayerPoseStreamModel.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerMovementModel.cs" Link="MultiplayerMovementModel.cs" />
+  </ItemGroup>
+</Project>

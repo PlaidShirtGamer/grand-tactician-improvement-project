@@ -54,7 +54,7 @@ static class PoseStreamChecks
                 .Any(i=>i.Operand is MethodReference m && m.Name=="RestoreMotionSymbols"));
         Require(restored,"Guest picking can leave visual offsets installed after a native callback failure.");
         var draw=Method("DrawMotionSymbols");
-        var roots=draw.Body.Instructions.Where(i=>i.OpCode==OpCodes.Ldstr).Select(i=>(string)i.Operand).ToHashSet();
+        var roots=Method("MotionRoots").Body.Instructions.Where(i=>i.OpCode==OpCodes.Ldstr).Select(i=>(string)i.Operand).ToHashSet();
         Require(new[]{"UnitSymbol","Flag","Flag2","unitnametext"}.All(roots.Contains) && !draw.Body.Instructions.Any(i=>i.Operand is MethodReference call && new[]{"SetPosition","SetRotation","SetParent","ApplyPose"}.Contains(call.Name)),"Visual symbol offsets escape their explicit drawing children.");
 
         Require(Calls(Method("End"),"MultiplayerCampaign","ClearWorld") && Calls(Method("ClearWorld"),"MultiplayerCampaign","ClearMotion") && Calls(Method("ClearMotion"),"MultiplayerCampaign","ClearPoseStream"),"Ending a session leaves pose histories or rendered offsets behind.");

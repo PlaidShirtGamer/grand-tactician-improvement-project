@@ -28,7 +28,7 @@ namespace GTIP
             if(!edge && (paused || now-lastMotionSend<.1f))return;
             // Never let a presentation stream fill the reliable command/data queue.
             // Retain unsent endpoints for the next frame instead of marking them sent.
-            if(transport.PendingOutgoing>8)return;
+            if(transport.PendingOutgoing>8){motionQueueDeferrals++;return;}
             var samples=new List<MpUnit>();
             foreach(var pair in units) {
                 var u=pair.Value;if(u==null || !u.gameObject.activeInHierarchy || !Visible(u))continue;
@@ -42,8 +42,11 @@ namespace GTIP
                 sentPoses[pair.Key]=new SentPose{Position=p,Yaw=yaw,Changed=changed?now:prior.Changed};
                 samples.Add(new MpUnit{id=pair.Key,parent=parent,side=u.alliance,tier=u.unittyp,x=p.x,y=p.y,z=p.z,yaw=yaw});
             }
-            if(samples.Count>0 || edge)Send(new MpMessage{kind="motion",session=session,sequence=++motionSequence,
-                baseRevision=snapshotRoster.Revision,date=now,paused=paused,units=samples.ToArray()});
+            if(samples.Count>0 || edge) {
+                Send(new MpMessage{kind="motion",session=session,sequence=++motionSequence,
+                    baseRevision=snapshotRoster.Revision,date=now,paused=paused,units=samples.ToArray()});
+                ObserveMotionPacing(now,now,paused,samples.Count);
+            }
             lastMotionSend=now;previousMotionPaused=paused;sentMotion=true;
         }
         void RecordPose(int id,float time,float x,float y,float z)
@@ -55,6 +58,8 @@ namespace GTIP
         {
             MpMotionRules.Validate(value,appliedMotionRevision);
             if(value.sequence<=receivedMotionSequence)return;
+            poseVersion++;
+            ObserveMotionPacing(value.date,Time.realtimeSinceStartup,value.paused,value.units.Length);
             receivedMotionSequence=value.sequence;poseClock.Observe(value.date,Time.realtimeSinceStartup);
             foreach(var sample in value.units) {
                 // A frame can wait behind a newer lifecycle transaction. A removed,
@@ -67,6 +72,7 @@ namespace GTIP
         void RecordReliableMotion(MpStateRow[] rows,float capturedAt,int revision)
         {
             appliedMotionRevision=revision;
+            poseVersion++;
             poseClock.Observe(capturedAt,Time.realtimeSinceStartup);
             foreach(var row in rows)if(row.Kind==4 && !row.Deleted) {
                 var state=ReadData<MpFormationState>(row);
@@ -74,11 +80,13 @@ namespace GTIP
             }
             var removed=new List<int>();foreach(int id in poseHistory.Keys)if(!units.ContainsKey(id))removed.Add(id);
             foreach(int id in removed)poseHistory.Remove(id);
+            PruneMotionVisuals();
         }
         void ClearPoseStream()
         {
             sentPoses.Clear();poseHistory.Clear();poseClock.Clear();lastMotionSend=0;sentMotion=false;
             previousMotionPaused=false;motionSequence=receivedMotionSequence=appliedMotionRevision=0;
+            ClearMotionPacing();
         }
     }
 }

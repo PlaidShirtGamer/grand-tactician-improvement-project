@@ -52,7 +52,7 @@ namespace GTIP
                 for(int i=0;i<roster.Length;i++)if(roster[i]!=null){GameVars.alliance[i].unitlist.Clear();GameVars.alliance[i].unitlist.AddRange(roster[i]);GameVars.alliance[i].lastmonthunitsformed.Clear();GameVars.alliance[i].lastmonthunitsformed.AddRange(formed[i]);}
                 var preview=mp.nativePreview;
                 if(preview!=null) {
-                    preview.transform.SetParent(mp.transform,true);
+                    IsolateRecruitPreview(preview);
                     foreach(var line in UnityEngine.Object.FindObjectsOfType<Frontline2>())line.RemoveObjectFromFrontline(preview.gameObject);
                     foreach(var renderer in preview.GetComponentsInChildren<Renderer>(true))renderer.enabled=false;
                     foreach(var collider in preview.GetComponentsInChildren<Collider>(true))collider.enabled=false;
@@ -107,9 +107,8 @@ namespace GTIP
             var preview=IsReplica && instance!=null && target==instance.previewPanel?instance.nativePreview:null;
             int id=changeChosen>=0?changeChosen:NativeAccess.Get<int>(target,"currentcommanderchosen");
             if(preview==null || id!=preview.commander || id<0 || id>=GameVars.commander.Count){NativeAccess.Call(target,"GTIP_Original_ReplicaCommanderPreview",changeChosen);return;}
-            var officer=GameVars.commander[id];var prior=officer.currentcommand;
-            try {officer.currentcommand=preview;NativeAccess.Call(target,"GTIP_Original_ReplicaCommanderPreview",changeChosen);}
-            finally {officer.currentcommand=prior;}
+            var officer=GameVars.commander[id];
+            WithRecruitPreviewCommander(target,preview,officer,()=>NativeAccess.Call(target,"GTIP_Original_ReplicaCommanderPreview",changeChosen));
         }
         public static void ReplicaMainPanelClose(CampaignMainPanel target)
         {

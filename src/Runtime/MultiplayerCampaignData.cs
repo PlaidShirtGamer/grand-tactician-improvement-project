@@ -139,8 +139,10 @@ namespace GTIP
                 int rankField=Array.FindIndex(DataSchemas[2].Fields,f=>f.Name=="rank");
                 bool promotionChanged=received.Changes.Any(r=>r.Kind==2 && !r.Deleted && r.Id<GameVars.commander.Count && GameVars.commander[r.Id].rank!=(int)r.Values[rankField]);
                 ApplyWorldBuildings(received.Rows,received.Changes);
+                double worldReadyMs=applyTimer.Elapsed.TotalMilliseconds;
                 bool incremental=TryApplyScalarDelta(received.Changes);
                 if(!incremental) ApplyLifecycleData(received.Rows);
+                double lifecycleReadyMs=applyTimer.Elapsed.TotalMilliseconds;
                 ApplyWorldAfterUnits(received.Rows,received.Changes);
                 ApplyBuildingEconomy(received.Changes);
                 ApplyMapPaths(received.Changes);
@@ -149,15 +151,20 @@ namespace GTIP
                 if(received.Changes.Any(r=>r.Kind==4))ApplyMapPoses(received.Rows);
                 ApplyControls(received.Changes);ApplyPolicies(received.Changes);ApplyProjects(received.Rows);ApplyAlerts(received.Changes);
                 ApplyNewspaper(received.Changes);
-                ApplyGoods(received.Changes);ApplyMapNotices(received.Changes);
+                ApplyGoods(received.Changes);ApplyMapNotices(received.Changes,incomingDataSerial==1);
                 ApplyBattles(received.Rows,received.Changes);
                 ApplyEngagement(received.Rows,received.Changes);
                 if(promotionChanged)officerViewDirty=true;
                 if(received.Changes.Any(r=>r.Kind==7 || r.Kind==8))ApplyDispatches(received.Rows);
+                double adaptersReadyMs=applyTimer.Elapsed.TotalMilliseconds;
+                RefreshReplicaPresentation(received.Rows);
+                double viewsReadyMs=applyTimer.Elapsed.TotalMilliseconds;
                 VerifyAppliedScalars(incremental?received.Changes:received.Rows);
                 AuditNativeMap(received.Rows,incomingDataSerial,true);
+                double verifiedMs=applyTimer.Elapsed.TotalMilliseconds;
                 RecordReliableMotion(received.Rows,incomingCaptureTime,incomingDataSerial);
                 if(incomingDataSerial==1 || incomingDataSerial%30==0)LogDiagnostic("Replication apply: revision="+incomingDataSerial+", changed="+received.Changes.Length+", incremental="+incremental+", mainThreadMs="+applyTimer.Elapsed.TotalMilliseconds.ToString("F1"));
+                if(incomingDataSerial==1 || incomingDataSerial%30==0)LogDiagnostic("Replication apply phases: worldMs="+worldReadyMs.ToString("F1")+", lifecycleMs="+(lifecycleReadyMs-worldReadyMs).ToString("F1")+", adaptersMs="+(adaptersReadyMs-lifecycleReadyMs).ToString("F1")+", rosterUiMs="+(viewsReadyMs-adaptersReadyMs).ToString("F1")+", readbackMs="+(verifiedMs-viewsReadyMs).ToString("F1")+", motionMs="+(applyTimer.Elapsed.TotalMilliseconds-verifiedMs).ToString("F1"));
                 var appliedBaseline=Baseline;var rows=received.Rows;int revision=incomingDataSerial;string hash=incomingStateHash;
                 commitTask=System.Threading.Tasks.Task.Run(()=>appliedBaseline.Commit(revision,rows,hash));
             }
@@ -256,6 +263,7 @@ namespace GTIP
             dataBaseline=null;pendingDataRows=null;pendingStateHash=null;incomingStateHash=null;incomingBaseRevision=0;
             prepareTask=null;commitTask=null;receiveTask=null;
             snapshotRoster.Clear();
+            rosterUiPending=false;
             incomingCaptureTime=0;
         }
         bool TryApplyScalarDelta(MpStateRow[] changes)

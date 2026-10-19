@@ -10,6 +10,7 @@ namespace GTIP
             bool preview=NativeRecruitOpen && nativePreview!=null && CampaignMainPanel.dummyregiment==nativePreview;
             var unit=preview?nativePreview:(Regiment)NativeAccess.Call(main,"GetUsedUnit",false,0);
             if(unit==null || (!preview && (CampaignMainPanel.dummyregiment!=null || unit.alliance!=guestSide || !ids.ContainsKey(unit))))return false;
+            if(preview)IsolateRecruitPreview(unit);
             // Palette objects are siblings of UnitInfoPanel inside Panel_Main. Dispatch the
             // exact native controls directly, including controls omitted from panel.buttons.
             // Existing formations are edited on the host; only the dummy is edited locally.
@@ -53,6 +54,7 @@ namespace GTIP
             if(!IsReplica || !NativeRecruitOpen || target!=previewPanel)return false;
             // UpdateOOBs(true,true) reinitializes RecruitingList through its filters,
             // clearing chosenstate and interrupting an in-progress guest recruitment.
+            IsolateRecruitPreview(nativePreview);
             NativeAccess.Get<RecruitingList>(target,"recruitinglist")?.UpdateList();
             target.UpdateUnitData();
             return true;
