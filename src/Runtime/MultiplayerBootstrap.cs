@@ -12,7 +12,7 @@ namespace GTIP
         byte[] outgoingCheckpoint;
         MemoryStream incomingCheckpoint;
         int checkpointSize;
-        float bootstrapStarted, lastKeepAlive;
+        float bootstrapStarted;
         bool replicaReady;
         void CreateHostCheckpoint()
         {
@@ -120,7 +120,8 @@ namespace GTIP
             // Waiting for a player is not a campaign transfer. Start the deadline on join.
             if(host && phase=="waiting") return;
             if(Time.realtimeSinceStartup-bootstrapStarted>300) throw new TimeoutException("Campaign transfer/load timed out.");
-            if(Time.realtimeSinceStartup-lastKeepAlive>1) { lastKeepAlive=Time.realtimeSinceStartup; Send(new MpMessage{kind="keepalive",session=session}); }
+            // The transport worker supplies liveness even while Unity loading
+            // blocks Update. These main-thread deadlines still require progress.
             if(!host && phase=="loading" && Ready && GameVars.frame>60 && SceneManagement.batchoperation.Count==0) {
                 GameVars.SetGameSpeed(0,manualset:true);
                 BuildManifest(); SaveReplicaState(); root=BattleUnits.unitfolder; officers=GameVars.commander;

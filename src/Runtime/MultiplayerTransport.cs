@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -9,6 +10,10 @@ namespace GTIP
     // One peer, trusted LAN/VPN only. All Unity access is confined to the main-thread adapter.
     public sealed class MpTransport : IDisposable
     {
+        // Exact, protocol-versioned control frame. No session/campaign mutation is
+        // encoded here; anything except this exact frame reaches normal validation.
+        static readonly string heartbeat=MpCodec.Encode(new MpMessage{kind="transport-heartbeat"});
+        const double HeartbeatSeconds=1;
         readonly MpFrameQueue incoming = new MpFrameQueue();
         readonly MpFrameQueue outgoing = new MpFrameQueue();
         readonly object gate = new object();
@@ -16,6 +21,9 @@ namespace GTIP
         TcpClient client;
         volatile bool closed, connected;
         string failure;
+        int heartbeatsSent,heartbeatsReceived;
+        public int HeartbeatsSent => Volatile.Read(ref heartbeatsSent);
+        public int HeartbeatsReceived => Volatile.Read(ref heartbeatsReceived);
         public int PendingIncoming => incoming.Count;
         public int PendingOutgoing => outgoing.Count;
         public int PeakIncoming => incoming.Peak;
@@ -46,7 +54,12 @@ namespace GTIP
         }
         void Start(Action action)
         {
-            new Thread(() => { try { action(); } catch (Exception e) { if (!closed) { failure = e.GetType().Name + ": " + e.Message; Dispose(); } } }) { IsBackground = true, Name = "GTIP multiplayer" }.Start();
+            new Thread(() => { try { action(); } catch (Exception e) { if (!closed) { failure = DescribeFailure(e); Dispose(); } } }) { IsBackground = true, Name = "GTIP multiplayer" }.Start();
+        }
+        static string DescribeFailure(Exception error)
+        {
+            var socket=error as SocketException??error.InnerException as SocketException;
+            return error.GetType().Name+(socket==null?"":" (socket="+socket.SocketErrorCode+")")+": "+error.Message.Replace("\0","").Trim();
         }
         void Open(TcpClient peer)
         {
@@ -55,13 +68,21 @@ namespace GTIP
             peer.NoDelay = true; peer.ReceiveTimeout = 15000; peer.SendTimeout = 5000;
             var stream = peer.GetStream(); connected = true;
             Start(() => {
+                long lastWrite=Stopwatch.GetTimestamp();
                 while (!closed) {
-                    if (outgoing.TryTake(out var text)) MpRules.WriteFrame(stream, text);
+                    if (outgoing.TryTake(out var text)) {
+                        MpRules.WriteFrame(stream,text);lastWrite=Stopwatch.GetTimestamp();
+                    } else if((Stopwatch.GetTimestamp()-lastWrite)/(double)Stopwatch.Frequency>=HeartbeatSeconds) {
+                        // Unity can stop calling Update while it loads a campaign.
+                        // Socket liveness must be independent of that main thread.
+                        MpRules.WriteFrame(stream,heartbeat);Interlocked.Increment(ref heartbeatsSent);lastWrite=Stopwatch.GetTimestamp();
+                    }
                     else Thread.Sleep(10);
                 }
             });
             while (!closed) {
                 var text = MpRules.ReadFrame(stream);
+                if(string.Equals(text,heartbeat,StringComparison.Ordinal)) {Interlocked.Increment(ref heartbeatsReceived);continue;}
                 // A native state application may hold Unity's thread for seconds.
                 // Bound memory and let TCP exert backpressure until it can drain.
                 if(!incoming.AddWaiting(text))break;

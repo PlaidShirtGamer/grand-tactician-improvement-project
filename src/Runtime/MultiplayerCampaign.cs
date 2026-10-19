@@ -81,8 +81,8 @@ namespace GTIP
             bool wasHost = transport != null && host;
             bool exitReplica=transport!=null && !host && (hasLiveData || replicaMutated) && root==BattleUnits.unitfolder;
             if (transport != null) {
-                LogDiagnostic(reason);
-                LogDiagnostic("Transport queues: peakIncoming="+transport.PeakIncoming+", pendingIncoming="+transport.PendingIncoming+", pendingOutgoing="+transport.PendingOutgoing+", clocksCoalescedIn="+transport.CoalescedIncoming+", clocksCoalescedOut="+transport.CoalescedOutgoing);
+                LogDiagnostic(reason+" Phase="+phase);
+                LogDiagnostic("Transport queues: peakIncoming="+transport.PeakIncoming+", pendingIncoming="+transport.PendingIncoming+", pendingOutgoing="+transport.PendingOutgoing+", clocksCoalescedIn="+transport.CoalescedIncoming+", clocksCoalescedOut="+transport.CoalescedOutgoing+", heartbeatsSent="+transport.HeartbeatsSent+", heartbeatsReceived="+transport.HeartbeatsReceived);
                 Application.runInBackground = previousBackground;
             }
             DestroyRecruitPreview();previewPanel=null;previewCommander=-1;
@@ -166,6 +166,7 @@ namespace GTIP
                     connectedAt = Time.realtimeSinceStartup; helloSent = true;
                     if (!host) Send(new MpMessage { kind = "join", token = token, text = MpBuild.Version });
                 }
+                if(host && phase=="waiting" && Time.realtimeSinceStartup-connectedAt>30)throw new TimeoutException("Connected peer did not submit a join request.");
                 if(phase!="live") { BootstrapTick(); return; }
                 DataTick();
                 if(!host) {GuestMapInput();GuestTimeKeys();}

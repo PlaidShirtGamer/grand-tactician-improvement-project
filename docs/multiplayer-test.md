@@ -1,3 +1,23 @@
+# GTIP MP Test v0.30 — transport liveness while Unity loads a checkpoint
+
+Both copies require **v0.30 / protocol 22**. In the latest v0.29 attempt, the guest verified the complete checkpoint and began loading at `23:52:25 UTC`. The host closed first at `23:52:59 UTC` with a socket read timeout; the guest subsequently observed EOF. Neither side reached the loaded/ready handshake. Queue peaks were only 2 on the host and 14 on the guest, and the Unity log contained no relevant exception. This failure occurred during native campaign loading, before initial state replication.
+
+The previous keepalive was emitted by `BootstrapTick` on Unity's main thread. A loading operation that held that thread could stop outgoing keepalives long enough to hit the transport's 15-second read timeout, even while the process and its receiver were still running. The transport writer now emits a protocol-versioned heartbeat after one second without an application write, using monotonic elapsed time and no Unity calls. The receiver recognizes only the exact valid heartbeat frame after the existing bounded frame read and consumes it without adding to the application queue. Other frames retain normal ordering and validation. Main-thread bootstrap heartbeat generation was removed.
+
+The 15-second no-traffic socket timeout, five-second send timeout, 300-second campaign transfer/load deadline, and 30-second campaign revision deadline remain enabled. A connected peer must also submit its initial join request within 30 seconds, so transport heartbeats cannot keep an unstarted host handshake open indefinitely. Heartbeats indicate transport liveness, not successful campaign loading. Session-end diagnostics now include the application phase, heartbeat counts and socket error code; embedded NUL padding is removed from native error messages.
+
+Verification: **521 multiplayer model/protocol/TCP checks** pass, including **19 heartbeat checks** that leave both application callers idle for 18 seconds, beyond the existing socket timeout. Both workers keep the connection alive without filling application queues; a silent raw peer still times out, reliable checkpoint/readiness messages remain ordered, modified heartbeat frames retain normal validation, and peer closure still reports EOF. The **26 cursor checks**, native bridge/boundary, editor/hierarchy/AI suites and native schema/synthetic snapshots covering **34 schemas / 628 fields** also pass. Staging verifies **110 hooks/changes**. These checks do not exercise native Unity campaign loading.
+
+Installed in both desktop test copies with matching SHA-256 hashes: patched game `281182598C01AD6B8E976DBB1203D85AAB5653289A07F714D0A4D3810696BEB1`; runtime `8D186F7F93335D5192545D21FDFEA3B8F8EFB83558B312B5C24722B487E60AA8`. The installed runtime passes native schema/snapshot checks; existing installer backups were retained.
+
+## Connected test for v0.30
+
+1. Restart both games and join **GT MP Test** from the guest main menu. Allow the guest to finish loading while switching focus between the game windows as needed. Confirm the host logs `Guest loaded and matched host checkpoint` and the revision 1 receipt, then keep the campaign paused for a minute.
+2. Check both players can resume/pause and interact after loading. If loading genuinely stalls, its existing five-minute deadline still applies; a transport heartbeat does not accept an incomplete campaign or bypass its checksums/manifest.
+3. If the session closes again, retain both new logs. The phase, socket error and heartbeat counts distinguish missing network traffic from an application progress deadline. Connected Unity loading remains unverified.
+
+## Earlier build: v0.29
+
 # GTIP MP Test v0.29 — guest cursor focus and menu recovery
 
 Both copies require **v0.29 / protocol 21**. The latest v0.28 session stayed connected through revision 150 and continued accepting clicks/time controls. It ended when the host explicitly disconnected; the guest receive queue peaked at 31, with no queue-overflow failure. The latest Unity log contained no relevant exception. Existing logs did not record cursor lock/focus, so they cannot establish exactly which event centered the cursor.

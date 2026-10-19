@@ -7,6 +7,7 @@ void Reject(Action action, string name) { bool rejected = false; try { action();
 var schema=MpStateSchema.Scalars(typeof(StateFixture));
 checks+=FingerprintChecks.Run();
 checks+=TransportQueueChecks.Run();
+checks+=TransportHeartbeatChecks.Run();
 Check(MpConstructionRules.Funded(true,false,false,-10),"Native army placement is independent of civilian debt-rating gates");
 Check(!MpConstructionRules.Funded(false,false,false,0),"Civilian treasury construction retains its native rating gate");
 Check(MpConstructionRules.Funded(false,false,true,0),"Fully funded company upgrades remain available at low debt ratings");
