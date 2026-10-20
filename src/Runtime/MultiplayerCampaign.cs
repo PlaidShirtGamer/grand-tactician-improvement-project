@@ -85,7 +85,7 @@ namespace GTIP
                 LogDiagnostic("Transport queues: peakIncoming="+transport.PeakIncoming+", pendingIncoming="+transport.PendingIncoming+", pendingOutgoing="+transport.PendingOutgoing+", clocksCoalescedIn="+transport.CoalescedIncoming+", clocksCoalescedOut="+transport.CoalescedOutgoing+", heartbeatsSent="+transport.HeartbeatsSent+", heartbeatsReceived="+transport.HeartbeatsReceived);
                 Application.runInBackground = previousBackground;
             }
-            DestroyRecruitPreview();previewPanel=null;previewCommander=-1;
+            DestroyRecruitPreview();previewPanel=null;previewCommander=-1;ClearRecruitRequest();pendingUniforms.Clear();
             transport?.Dispose(); transport = null; authenticated = false; helloSent = false; snapshot = null;
             ClearData(false);
             ClearMovement();
@@ -253,6 +253,7 @@ namespace GTIP
             } else if (value.kind == "result") {
                 pendingPromotions.Remove(value.sequence);
                 orderStatus = "Order " + value.sequence + ": " + value.text; LogDiagnostic(orderStatus);
+                HandleRecruitResult(value.sequence,value.text);
             }
             else throw new InvalidOperationException("Unexpected message.");
         }

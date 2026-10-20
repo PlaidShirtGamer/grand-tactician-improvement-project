@@ -59,7 +59,7 @@ namespace GTIP
                     if(mp.previewCommander>=0 && mp.previewCommander<GameVars.commander.Count)preview.commander=mp.previewCommander;
                     if(preview.commander<0 || preview.commander>=GameVars.commander.Count)preview.commander=0;
                     NativeAccess.Set(target,"currentcommanderchosen",preview.commander);
-                    target.UpdateUnitData();
+                    RestoreRecruitPreviewPanel(target,preview);
                 }
             }
         }
@@ -86,13 +86,17 @@ namespace GTIP
         {
             if(!IsReplica){NativeAccess.Call(target,"GTIP_Original_ReplicaRecruitCommit");return;}
             var mp=instance;var u=mp?.nativePreview;if(u==null || !LiveSession)return;
+            if(mp.recruitPendingSequence!=0)return;
             var parent=NativeAccess.Get<Regiment>(target,"unittorecruitfor");
             if(parent==null || !mp.ids.TryGetValue(parent,out int id))return;
             var draft=new MpRecruitDraft{Parent=id,State=u.state,Type=u.unittyp,Horse=u.ishorseartillery,SizeLevel=NativeAccess.Get<int>(target,"recruitingsizelevel"),RecruitType=u.recruitingtype,
                 Commander=mp.previewCommander,Name=u.name,Uniform=u.uniformset,Colors=ColorData(u.componentcolor[1]).Concat(ColorData(u.componentcolor[0])).ToArray()};
             draft.Validate();
-            mp.Send(new MpMessage{kind="recruit",session=mp.session,sequence=++mp.guestSequence,blob=MpStateCodec.Encode(RecruitSchema,new[]{new MpStateRow{Values=RecruitSchema[0].Capture(draft)}}),text=draft.Commander<0?"":OfficerCommandIdentity(draft.Commander)});
-            mp.orderStatus="Recruitment request sent to host.";mp.LogDiagnostic(mp.orderStatus);ReplicaRecruitCancel(target,true);
+            var request=new MpMessage{kind="recruit",session=mp.session,sequence=++mp.guestSequence,blob=MpStateCodec.Encode(RecruitSchema,new[]{new MpStateRow{Values=RecruitSchema[0].Capture(draft)}}),text=draft.Commander<0?"":OfficerCommandIdentity(draft.Commander)};
+            if(mp.BeginRecruitRequest(target,u,request)) {
+                mp.orderStatus="Recruitment request sent to host.";
+                mp.LogDiagnostic(mp.orderStatus+" sequence="+request.sequence+", state="+draft.State+", type="+draft.Type+", sizeLevel="+draft.SizeLevel+", recruits="+u.strength+", recruitType="+draft.RecruitType);
+            }
         }
         public static void ReplicaCommanderAssign(CommandersList target)
         {
@@ -125,17 +129,32 @@ namespace GTIP
             if(!units.TryGetValue(d.Parent,out var parent) || parent==null || parent.alliance!=guestSide || parent.unittyp<14 || parent.unittyp==17 || parent.inbattle || parent.onretreat)throw new InvalidOperationException("Recruitment parent is unavailable.");
             if(d.State>=GameVars.nation.Length)throw new InvalidOperationException("Unknown state.");
             var nation=GameVars.nation[d.State];var alliance=GameVars.alliance[guestSide];int size=BattleUnits.GetMaxUnitSize(guestSide,d.Type,d.SizeLevel,d.Horse);
-            if(!nation.recruitable || nation.averageposition==Vector3.zero || size<=0 || !nation.HasEnoughRecruits(size,d.RecruitType,guestSide) || !alliance.IsRatingOkForRecruitment() || (d.Horse && !alliance.IsHorseArtilleryAvailable()))throw new InvalidOperationException("Native recruitment requirements are not met.");
+            LogDiagnostic("Guest recruitment draft: sequence="+request.sequence+", parent="+d.Parent+", state="+d.State+"/"+nation.name+", type="+d.Type+", sizeLevel="+d.SizeLevel+", recruits="+size+", recruitType="+d.RecruitType+", pool="+nation.GetRecruitAmounts(d.RecruitType,guestSide)+", rating="+alliance.currentrating);
+            // Single-brigade native recruitment deliberately includes off-map home states.
+            // averageposition==zero is not an eligibility failure (RecruitingList.Initialize
+            // defaults showstatesoffmap:true); retain the same native pool/rating checks.
+            if(!nation.recruitable)throw new InvalidOperationException("The selected home state cannot recruit units.");
+            if(size<=0)throw new InvalidOperationException("The selected unit type has no available recruitment size.");
+            if(!nation.HasEnoughRecruits(size,d.RecruitType,guestSide))throw new InvalidOperationException("Not enough "+(d.RecruitType==0?"volunteers":"draftees")+" in "+nation.name+": "+nation.GetRecruitAmounts(d.RecruitType,guestSide)+" available, "+size+" required.");
+            if(!alliance.IsRatingOkForRecruitment())throw new InvalidOperationException("The nation's credit rating is too low to recruit new units.");
+            if(d.Horse && !alliance.IsHorseArtilleryAvailable())throw new InvalidOperationException("Horse artillery is not available under current policies.");
             if(d.Commander>=0 && (OfficerCommandIdentity(d.Commander)!=request.text || !EditorFormationOperations.Commanders(guestSide,d.Type,null).Contains(d.Commander)))throw new InvalidOperationException("Selected officer is no longer eligible.");
             var created=EditorFormationOperations.Engine.CreateUnitDefault(parent,d.State,d.Type,d.Horse,d.Colors==null?default(Color):FromColor(d.Colors),d.Colors==null?default(Color):FromColor(d.Colors,4),d.Uniform,d.RecruitType,guestSide,sizeoverride:size);
             if(created==null)throw new InvalidOperationException("Native recruitment failed.");
             if(d.Commander>=0)GameVars.commander[d.Commander].AssignCommando(created);
             if(!string.IsNullOrWhiteSpace(d.Name))created.name=d.Name;
-            BattleUnits.RecruitUnit(created);RefreshHostIds();RefreshReplicaRosterUi();LogDiagnostic("Native guest recruitment: formation="+Id(created)+", parent="+d.Parent+", recruits="+size);
+            BattleUnits.RecruitUnit(created);RefreshHostIds();
+            // Creation is already committed. A local host-panel repaint cannot turn its
+            // receipt into a refusal and invite a second recruitment of the same draft.
+            try {RefreshReplicaRosterUi();}catch(Exception error){LogDiagnostic("Host recruitment UI refresh deferred: "+error);}
+            LogDiagnostic("Native guest recruitment: formation="+Id(created)+", parent="+d.Parent+", recruits="+size);
         }
         void DrawGuestDialogs()
         {
-            if(!IsReplica || !guestFileMenu)return;
+            if(!IsReplica)return;
+            string notice=RecruitNotice;
+            if(NativeRecruitOpen && notice.Length>0)GUI.Box(new Rect((Screen.width-560)/2,110,560,64),notice);
+            if(!guestFileMenu)return;
             var rect=new Rect((Screen.width-520)/2,(Screen.height-230)/2,520,230);GUI.Box(rect,"");GUILayout.BeginArea(new Rect(rect.x+12,rect.y+12,496,206));
             GUILayout.Label("Multiplayer campaign files");GUILayout.Label("Save a new checkpoint on the host, or disconnect to load another campaign locally.");
             if(GUILayout.Button("Save a new checkpoint on the host",GUILayout.Height(32))){SubmitGlobal("save-checkpoint",0);guestFileMenu=false;}

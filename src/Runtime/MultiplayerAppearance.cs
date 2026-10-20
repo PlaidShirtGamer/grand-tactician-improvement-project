@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
 
@@ -6,11 +7,33 @@ namespace GTIP
 {
     public sealed partial class MultiplayerCampaign
     {
+        sealed class PendingUniform {public int Value;public float Until;}
+        readonly Dictionary<Regiment,PendingUniform> pendingUniforms=new Dictionary<Regiment,PendingUniform>();
+        void PreviewExistingUniformStep(Regiment unit,int direction)
+        {
+            int authority=unit.uniformset;
+            try {
+                unit.uniformset=PreviewUniformValue(unit);
+                unit.AdjustUniformSet(direction);
+                pendingUniforms[unit]=new PendingUniform{Value=unit.uniformset,Until=UnityEngine.Time.realtimeSinceStartup+3};
+            } finally {unit.uniformset=authority;}
+        }
+        int PreviewUniformValue(Regiment unit)
+        {
+            if(!pendingUniforms.TryGetValue(unit,out var pending))return unit.uniformset;
+            if(pending.Value==unit.uniformset || UnityEngine.Time.realtimeSinceStartup>pending.Until){pendingUniforms.Remove(unit);return unit.uniformset;}
+            return pending.Value;
+        }
         bool ExecuteAppearanceAction(string action,MpMessage request,string detail)
         {
             if(action!="uniform-step" && action!="uniform-color")return false;
-            if(!units.TryGetValue(request.unit,out var unit) || unit==null || unit.alliance!=guestSide || !unit.gameObject.activeInHierarchy || unit.unittyp>13)
-                throw new InvalidOperationException("Formation uniform is unavailable.");
+            if(!units.TryGetValue(request.unit,out var unit) || unit==null)
+                throw new InvalidOperationException("Formation uniform unavailable: id="+request.unit+" is absent from the synchronized roster.");
+            // Military management includes inactive subordinate regiments. Native palette
+            // and uniform callbacks do not require an active campaign-map GameObject.
+            if(unit.alliance!=guestSide || unit.unittyp>13)
+                throw new InvalidOperationException("Formation uniform unavailable: id="+request.unit+", name="+unit.name+", type="+unit.unittyp+", side="+unit.alliance+", requestedSide="+guestSide+", active="+unit.gameObject.activeInHierarchy);
+            int selectedColor=-1,selectedComponent=-1;
             if(action=="uniform-step") {
                 if(request.x!=-1 && request.x!=1)throw new InvalidOperationException("Invalid uniform direction.");
                 // The native operation chooses from this unit's policy/state-specific list.
@@ -26,9 +49,26 @@ namespace GTIP
                 // Apply the same component change as the native palette; avoid resetting the
                 // other component or introducing arbitrary colors outside the native palette.
                 unit.componentcolor[component]=value;
+                selectedColor=color;selectedComponent=component;
             }
-            LogDiagnostic("Native guest appearance: unit="+request.unit+", action="+action);
+            try {RefreshHostAppearance(unit,selectedComponent,selectedColor);}
+            catch(Exception error){LogDiagnostic("Host appearance panel refresh failed after accepting unit="+request.unit+": "+error);}
+            LogDiagnostic("Native guest appearance: unit="+request.unit+", action="+action+", type="+unit.unittyp+", active="+unit.gameObject.activeInHierarchy+", uniform="+unit.uniformset);
             return true;
+        }
+        void RefreshHostAppearance(Regiment unit,int component,int color)
+        {
+            if(IsReplica || ui==null || ui.panelhandler==null || ui.selectedunitreg!=unit || CampaignMainPanel.dummyregiment!=null)return;
+            var main=NativeAccess.Get<CampaignMainPanel>(ui.panelhandler,"campaignmainpanel");
+            if(main==null || !main.isActiveAndEnabled || NativeAccess.Get<Regiment>(main,"lastusedunit")!=unit)return;
+            if(component>=0) {
+                var palettes=NativeAccess.Get<Palette[]>(main,"palette");
+                // Native UpdateSoldierPicture writes open palette selections into the
+                // unit. Move that local selection to the accepted absolute palette index
+                // before a redraw can write the host's stale selection back over it.
+                if(palettes!=null && component<palettes.Length && palettes[component]!=null)palettes[component].currentcolorchosen=color;
+            }
+            main.UpdateUnitInfoPanel();
         }
         public static void ReplicaSoldierPicture(CampaignMainPanel target)
         {
@@ -39,6 +79,7 @@ namespace GTIP
             // Native rendering writes palette selections into Regiment and can normalize an
             // unsupported uniform ID. Render with a disposable copy, then retain host state.
             try {
+                unit.uniformset=instance.PreviewUniformValue(unit);
                 if(original!=null)unit.componentcolor=(Color[])original.Clone();
                 NativeAccess.Call(target,"GTIP_Original_ReplicaSoldierPicture");
             } finally {unit.componentcolor=original;unit.uniformset=uniform;}

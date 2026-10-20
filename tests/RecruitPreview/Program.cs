@@ -122,15 +122,70 @@ CampaignMainPanel.dummyregiment=preview;mp.Preview=preview;field.text="Draft reg
 MultiplayerCampaign.ReplicaUnitName(panel);
 Check(preview.name=="Draft regiment" && mp.Requests.Count==requests,"Recruiting dummy names remain local until the recruitment commit");
 var officer=new GameVars.Commander {currentcommand=authority};
+bool radiusFailed=false;officer.currentcommand=preview;
+try {officer.GetTooltipInfo();}catch(NullReferenceException){radiusFailed=true;}
+Check(radiusFailed,"The native commander attribute path reproduces UnitIsInsideRadius failing on an isolated parent without a Regiment");
+officer.currentcommand=authority;
 mp.RenderCommander(panel,preview,officer,()=>Check(officer.currentcommand==preview && officer.GetTooltipInfo()=="Native recruiting army","Preview commander rendering uses the local dummy with native-safe ancestry"));
-Check(officer.currentcommand==authority,"Preview commander rendering restores the authoritative officer command reference");
+Check(officer.currentcommand==authority && preview.transform.parent==mp.transform,"Preview commander rendering restores the authoritative officer command reference and isolated dummy parent");
+panel.Ui.selectedunitreg=null;int selectionCalls=panel.Ui.SelectionCalls;
+var priorSelectionList=panel.Ui.Selection.ToArray();
+mp.RenderCommander(panel,preview,officer,()=>Check(panel.GetUsedUnit()==preview && panel.Ui.selectedunitreg==preview && panel.Ui.SelectionCalls==selectionCalls,"A null native selection uses a temporary dummy read reference, avoiding GetUsedUnit's fallback SelectUnit descendant scan"));
+Check(panel.Ui.selectedunitreg==null && panel.Ui.Selection.SequenceEqual(priorSelectionList) && !panel.Ui.Selection.Contains(preview),"Commander rendering restores the null selection without adding the temporary dummy to native selection lists");
+mp.RenderCommander(panel,preview,officer,()=>mp.RenderCommander(panel,preview,officer,()=>Check(officer.GetTooltipInfo()=="Native recruiting army","Nested pane and commander rendering retain the valid native parent for the full attribute calculation")));
+Check(preview.transform.parent==mp.transform && officer.currentcommand==authority,"Nested commander rendering restores its exact prior ownership at each scope");
 Reject(()=>mp.RenderCommander(panel,preview,officer,()=>throw new InvalidOperationException("Native display failure")),"The preview commander context propagates display errors to the caller");
-Check(officer.currentcommand==authority,"Even a failed native display restores the authoritative officer command reference");
+Check(officer.currentcommand==authority && preview.transform.parent==mp.transform && panel.Ui.selectedunitreg==null,"Even a failed native display restores the authoritative officer command reference, isolated parent and null selection");
 preview.FailTooltip=true;Reject(()=>preview.GetUnitTooltipInfo(true),"Native tooltip failure still propagates out of the ancestry scope");preview.FailTooltip=false;
 Check(preview.transform.parent==mp.transform,"Even a failed native tooltip restores the isolated preview hierarchy");
 panel.RecruitParent=null;mp.RepairPreview(panel,preview);
 Check(preview.transform.parent==mp.transform && preview.GetUnitTooltipInfo(true).content=="","A vanished recruiting parent uses the native Units folder only during tooltip rendering and remains isolated afterward");
 Check(parent.GetUnitTooltipInfo(true).content=="","Registered formation tooltips retain their original native ancestry");
+
+mp.Open=true;mp.Preview=preview;CampaignMainPanel.dummyregiment=preview;
+GameVars.commander[0].currentcommand=null;preview.commander=0;panel.CurrentCommander=0;
+panel.RecruitParent=parent;
+try {panel.SwitchCommanderPanel(0);}catch(NullReferenceException){}
+Check(panel.CurrentPane==1 && panel.CommanderAttributes,"The native pane operation reproduces commander attributes replacing the recruiting unit page when the restored officer has no command");
+mp.RestorePreview(panel,preview);
+Check(panel.CurrentPane==0 && !panel.CommanderAttributes && !panel.CommanderHistory,"The production preview finalizer restores the complete unit page rather than only updating its text");
+Check(GameVars.commander[0].currentcommand==null,"Preview panel normalization does not assign the dummy to an authoritative officer");
+GameVars.commander.Add(new GameVars.Commander {currentcommand=authority});
+int switches=panel.PaneSwitches;
+for(int rapid=0;rapid<30;rapid++) {
+    preview.commander=rapid%2;
+    panel.CurrentCommander=1-preview.commander;
+    panel.CurrentPane=rapid%3;panel.CommanderAttributes=true;panel.CommanderHistory=true;
+    mp.RestorePreview(panel,preview);
+    if(panel.CurrentPane!=0 || panel.CommanderAttributes || panel.CommanderHistory || panel.CurrentCommander!=preview.commander)
+        throw new Exception("Rapid state replacement retained a stale commander pane");
+}
+Check(panel.PaneSwitches==switches+30,"Every rapid preview replacement selects the unit pane with its own current commander");
+Check(GameVars.commander[0].currentcommand==null && GameVars.commander[1].currentcommand==authority && preview.transform.parent==mp.transform,"Rapid preview redraws restore both free and assigned officers and keep the dummy outside native roster scans");
+
+panel.List.chosenstate=9;preview.uniformset=8;preview.componentcolor[1]=new Color(2);panel.NormalizeUniformOnDraw=false;panel.paletteactive=false;
+requests=mp.Requests.Count;int cancellations=panel.Cancellations;
+Check(mp.Begin(panel,preview,101) && mp.Requests.Count==requests+1,"A recruitment commit submits exactly one host request while retaining its local draft");
+Check(mp.Preview==preview && CampaignMainPanel.dummyregiment==preview && panel.Cancellations==cancellations && mp.Notice.Contains("Waiting"),"The recruiting form stays open with a visible pending status until host confirmation");
+Check(!mp.Begin(panel,preview,102) && mp.Requests.Count==requests+1,"A repeated Recruit click cannot submit the same pending draft twice");
+mp.Result(99,"Order submitted to native campaign rules.");
+Check(mp.Notice.Contains("Waiting") && panel.Cancellations==cancellations,"An unrelated order receipt cannot close a pending recruiting form");
+mp.Result(101,"Order rejected: Not enough volunteers in Iowa: 500 available, 1000 required.");
+Check(mp.Open && mp.Preview==preview && CampaignMainPanel.dummyregiment==preview && panel.Cancellations==cancellations,"A rejected recruitment retains the editable native preview instead of discarding the form");
+Check(panel.List.chosenstate==9 && preview.uniformset==8 && preview.componentcolor[1].Id==2,"A recruitment rejection preserves chosen home state, uniform and colors");
+Check(mp.Notice.Contains("500 available, 1000 required") && panel.CurrentPane==0,"The specific host refusal is visible while the correctly normalized recruiting form remains usable");
+Check(mp.Begin(panel,preview,103),"A corrected draft can be submitted again after a rejection");
+mp.Result(103,"Order submitted to native campaign rules.");
+Check(!mp.Open && mp.Preview==null && panel.Cancellations==cancellations+1,"Only the matching successful receipt closes the committed recruiting draft");
+mp.Open=true;mp.Preview=preview;CampaignMainPanel.dummyregiment=preview;
+Check(mp.Begin(panel,preview,104),"A second recruitment can start without reopening a connection");
+var replacement=new Regiment {commander=0,uniformset=2};mp.Preview=replacement;CampaignMainPanel.dummyregiment=replacement;
+mp.Result(104,"Order submitted to native campaign rules.");
+Check(mp.Open && mp.Preview==replacement && panel.Cancellations==cancellations+1,"Confirmation for an older state preview cannot close a replacement draft created while the request was pending");
+Check(mp.Begin(panel,replacement,105),"A replacement draft is eligible for its own distinct recruitment request");
+mp.ClearRequest();
+Check(mp.Notice=="" && mp.Begin(panel,replacement,106),"Session teardown clears pending recruitment ownership and notices before the next session");
+mp.ClearRequest();
 Console.WriteLine($"Recruit preview, appearance and names: {checks} checks passed using the production bridges and native-operation doubles; not a live Unity test.");
 
 public sealed class Transform
@@ -140,9 +195,10 @@ public sealed class Transform
     public string name="Node";
     public void SetParent(Transform value,bool preserveWorldPosition){Parent=value;}
     public TMPro.TMP_InputField Field;
+    public Regiment Unit;
     public bool IsChildOf(Transform other)=>ReferenceEquals(this,other) || Parent!=null && Parent.IsChildOf(other);
     public Transform Find(string path)=>this;
-    public T GetComponent<T>() where T:class=>Field as T;
+    public T GetComponent<T>() where T:class=>(Field as T)??(Unit as T);
 }
 public sealed class GameObject {public bool activeInHierarchy=true;public Transform transform=new Transform();}
 public sealed class ButtonTooltip
@@ -156,15 +212,16 @@ public sealed class ButtonTooltip
 }
 public sealed class Regiment
 {
-    public Regiment(){All.Add(this);}
+    public Regiment(){All.Add(this);transform.Unit=this;}
     public static readonly List<Regiment> All=new List<Regiment>();
     public int uniformset,recruitingtype,LastUniformDirection;
     public string name {get=>gameObject.transform.name;set=>gameObject.transform.name=value;}
-    public int alliance,unittyp;
+    public int alliance,unittyp,commander;
     public int strength=100;
     public Regiment[] allattachedunits=Array.Empty<Regiment>();
     public bool FailTooltip;
     public int AggregateUpdates;
+    public float commanderrange=10;
     public GameObject gameObject=new GameObject();
     public Transform transform=>gameObject.transform;
     public Color[] componentcolor={new Color(0),new Color(0)};
@@ -189,6 +246,13 @@ public sealed class Regiment
         return new UnitTooltipInfo {content=string.Join(" / ",names)};
     }
     public void UpdateAllAttachedUnits(){allattachedunits=All.Where(r=>r.transform.IsChildOf(transform)).ToArray();}
+    public bool UnitIsInsideRadius(int type)
+    {
+        var current=transform.parent;
+        // Native IL_008f dereferences the parent Regiment's commanderrange when the
+        // immediate parent is not named Units; a MultiplayerCampaign object has none.
+        return current.name!="Units" && current.GetComponent<Regiment>().commanderrange>=0;
+    }
 }
 public static class BattleUnits
 {
@@ -198,7 +262,17 @@ public static class BattleUnits
 }
 public static class GameVars
 {
-    public sealed class Commander {public Regiment currentcommand;public string GetTooltipInfo()=>currentcommand==null?"":currentcommand.GetUnitTooltipInfo(true).content;}
+    public static readonly List<Commander> commander=new List<Commander>{new Commander()};
+    public sealed class Commander
+    {
+        public Regiment currentcommand;
+        public string GetTooltipInfo()
+        {
+            if(currentcommand==null)return "";
+            currentcommand.UnitIsInsideRadius(1);
+            return currentcommand.GetUnitTooltipInfo(true).content;
+        }
+    }
 }
 public sealed class RecruitingList
 {
@@ -208,11 +282,15 @@ public sealed class RecruitingList
 }
 public sealed class CampaignMainPanel
 {
+    public GameObject UniformTextObjUnitPanel=new GameObject();
     public static Regiment dummyregiment;
     public Transform transform=new Transform();
     public bool isActiveAndEnabled=true,paletteactive,NormalizeUniformOnDraw;
     public int LastRenderedColor;
+    public int CurrentCommander,CurrentPane,PaneSwitches,Cancellations;
+    public bool CommanderAttributes,CommanderHistory;
     public Regiment Used;
+    public BattleUI Ui;
     public Palette[] Palettes={new Palette(),new Palette()};
     public TMPro.TMP_InputField Field=new TMPro.TMP_InputField();
     public RecruitingList List=new RecruitingList();
@@ -222,6 +300,23 @@ public sealed class CampaignMainPanel
     public void UpdateUnitInfoPanel(){InfoRefreshes++;RecruitEnabled=dummyregiment==null || dummyregiment.recruitingtype==0;if(dummyregiment!=null){dummyregiment.GetUnitTooltipInfo(true);UnitTooltipDraws++;}MultiplayerCampaign.ReplicaSoldierPicture(this);}
     public void UpdateUnitData(){DataRefreshes++;if(dummyregiment!=null){new GameVars.Commander {currentcommand=dummyregiment}.GetTooltipInfo();CommanderTooltipDraws++;}UpdateUnitInfoPanel();}
     public void ActivatePalette(bool value=true){paletteactive=value;}
+    public Regiment GetUsedUnit()
+    {
+        // The real getter selects an OOB fallback first, then returns dummyregiment.
+        if(Ui.selectedunitreg==null && Used!=null)Ui.SelectUnit(Used);
+        return dummyregiment??Ui.selectedunitreg;
+    }
+    // Native SwitchCommanderPanel forces pane 1 when the chosen officer has no command,
+    // then updates commander/unit information. This is the rapid state-click regression.
+    public void SwitchCommanderPanel(int selected)
+    {
+        PaneSwitches++;
+        GetUsedUnit();
+        CurrentPane=GameVars.commander[CurrentCommander].currentcommand==null?1:selected;
+        CommanderAttributes=CurrentPane==1;CommanderHistory=CurrentPane==2;
+        paletteactive=false;
+        UpdateUnitData();
+    }
 }
 public sealed class Palette
 {
@@ -239,7 +334,18 @@ public sealed class PanelHandler
     public Panel[] panel={new Panel()};
     public CampaignMainPanel Main;
 }
-public sealed class BattleUI {public PanelHandler panelhandler;}
+public sealed class BattleUI
+{
+    public PanelHandler panelhandler;
+    public Regiment selectedunitreg;
+    public int SelectionCalls;
+    public List<Regiment> Selection=new List<Regiment>();
+    public void SelectUnit(Regiment unit)
+    {
+        selectedunitreg=unit;SelectionCalls++;
+        Selection=Regiment.All.Where(r=>r.transform.IsChildOf(unit.transform)).ToList();
+    }
+}
 public sealed class Vessel {public string name;}
 public sealed class FleetInfoPanel {public Vessel chosenvessel;public string manualname="";}
 namespace UnityEngine
@@ -275,7 +381,7 @@ namespace GTIP
         static MultiplayerCampaign instance;
         public MultiplayerCampaign(){instance=this;}
         public Transform transform=new Transform {name="MultiplayerCampaign"};
-        public CampaignMainPanel Panel {get=>previewPanel;set{previewPanel=value;ui=new BattleUI {panelhandler=new PanelHandler{Main=value}};ui.panelhandler.panel[0].go.transform.Field=value.Field;}}
+        public CampaignMainPanel Panel {get=>previewPanel;set{previewPanel=value;ui=new BattleUI {panelhandler=new PanelHandler{Main=value}};value.Ui=ui;ui.panelhandler.panel[0].go.transform.Field=value.Field;}}
         public Regiment Preview {get=>nativePreview;set=>nativePreview=value;}
         public bool Open;
         CampaignMainPanel previewPanel;
@@ -293,16 +399,29 @@ namespace GTIP
         bool NativeRecruitOpen=>Open;
         public bool Apply(ButtonTooltip button)=>GuestRecruitPreviewAction(button);
         public void RepairPreview(CampaignMainPanel target,Regiment preview)=>IsolateRecruitPreview(preview);
+        public void RestorePreview(CampaignMainPanel target,Regiment preview)=>RestoreRecruitPreviewPanel(target,preview);
         public void RenderCommander(CampaignMainPanel target,Regiment preview,GameVars.Commander officer,Action draw)=>WithRecruitPreviewCommander(target,preview,officer,draw);
         public bool Refresh(CampaignMainPanel panel)=>RefreshRecruitPreviewRosterUi(panel);
+        void Send(MpMessage value)=>Requests.Add(value);
+        public bool Begin(CampaignMainPanel target,Regiment preview,int sequence)=>BeginRecruitRequest(target,preview,new MpMessage {sequence=sequence,text="recruit"});
+        public void Result(int sequence,string result)=>HandleRecruitResult(sequence,result);
+        public void ClearRequest()=>ClearRecruitRequest();
+        public string Notice=>RecruitNotice;
+        static void ReplicaRecruitCancel(CampaignMainPanel target,bool updatePanels){target.Cancellations++;instance.Open=false;instance.nativePreview=null;CampaignMainPanel.dummyregiment=null;}
         void LogDiagnostic(string value){}
     }
     public static class NativeAccess
     {
+        public static void Set(object target,string name,object value)
+        {
+            if(target is CampaignMainPanel panel && name=="currentcommanderchosen"){panel.CurrentCommander=(int)value;return;}
+            throw new InvalidOperationException("Unexpected native field "+name);
+        }
         public static T Get<T>(object target,string name)
         {
             object value;
             if(target is CampaignMainPanel panel && name=="recruitinglist")value=panel.List;
+            else if(target is CampaignMainPanel selected && name=="bui")value=selected.Ui;
             else if(target is CampaignMainPanel recruit && name=="unittorecruitfor")value=recruit.RecruitParent;
             else if(target is CampaignMainPanel colors && name=="palette")value=colors.Palettes;
             else if(target is PanelHandler handler && name=="campaignmainpanel")value=handler.Main;
@@ -327,5 +446,5 @@ namespace GTIP
             throw new InvalidOperationException("Unexpected native method "+name);
         }
     }
-    public sealed class MpMessage {public int unit;public float x;public string text;}
+    public sealed class MpMessage {public int unit,sequence;public float x;public string text;}
 }

@@ -65,7 +65,9 @@ namespace GTIP
                 DLC_WL.PromotionEffects(officer);c.UpdateRankToFit(null,false,1);c.refreshcommand=false;
                 officerViewDirty=true;return true;
             }
-            if(!units.TryGetValue(request.unit,out var unit) || unit==null || unit.alliance!=guestSide || !unit.gameObject.activeInHierarchy)throw new InvalidOperationException("Formation unavailable.");
+            // Native management can address inactive subordinate regiments. Map
+            // movement eligibility is checked separately by Controllable below.
+            if(!units.TryGetValue(request.unit,out var unit) || unit==null || unit.alliance!=guestSide || !BattleUnits.completeunitlist.Contains(unit))throw new InvalidOperationException("Formation unavailable.");
             var engine=EditorFormationOperations.Engine;
             if(action=="unit-name") {if(detail.Length<1 || detail.Length>100 || detail.IndexOfAny(new[]{'\r','\n','\0'})>=0)throw new InvalidOperationException("Invalid formation name.");unit.name=detail;return true;}
             if(action=="weapon-assign") {

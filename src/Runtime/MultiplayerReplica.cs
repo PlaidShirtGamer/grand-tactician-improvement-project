@@ -140,28 +140,6 @@ namespace GTIP
             }
             originalPositions.Clear(); originalRotations.Clear(); originalActive.Clear();
         }
-        void ApplyReplica(MpMessage value)
-        {
-            if(value.campaign!=manifest) throw new InvalidOperationException("Host campaign manifest changed; reload the same checkpoint on both clients.");
-            var seen=new HashSet<int>();
-            foreach(var state in value.units) {
-                if(!seen.Add(state.id) || !units.TryGetValue(state.id,out var unit) || unit==null || unit.alliance!=state.side || unit.unittyp!=state.tier)
-                    throw new InvalidOperationException("Snapshot formation does not match the loaded checkpoint: "+state.id);
-            }
-            foreach(var state in value.units.OrderBy(s=>Depth(units[s.id]))) {
-                var unit=units[state.id]; ApplyPose(unit,new Vector3(state.x,state.y,state.z),Quaternion.Euler(0,state.yaw,0));
-            }
-            foreach(var pair in units) {
-                // Full host snapshots determine which native formations are visible. Never retain stale enemies.
-                if(pair.Value!=null) {
-                    replicaVisibility[pair.Value]=seen.Contains(pair.Key);
-                    // An invisible parent's transform still carries visible subordinate units.
-                    // Visibility belongs to renderers/icons, not the whole hierarchy node.
-                    pair.Value.gameObject.SetActive(originalActive[pair.Value]);
-                }
-            }
-            message="Native map synchronized | "+value.units.Length+" formations | host "+(value.paused?"paused":"running");
-        }
         static void ApplyPose(Regiment unit,Vector3 position,Quaternion rotation)
         {
             var oldPosition=unit.transform.position; var deltaRotation=rotation*Quaternion.Inverse(unit.transform.rotation);

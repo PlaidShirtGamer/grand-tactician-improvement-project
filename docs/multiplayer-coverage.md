@@ -21,6 +21,17 @@ Keep three contracts explicit:
 
 These checks cover the named boundaries, not every native control. The connected column is deliberately pending until observed in Unity. Record failures by contract and source method, then fix the shared boundary and add a regression for that contract rather than adding another button-name exception.
 
+## Follow-up coverage for v0.35
+
+The v0.34 connected report confirms recruiting uniform selection works, while existing-unit appearance, rapid state changes, repeat recruitment and a later position check exposed additional contracts:
+
+| Contract | Added coverage | Remaining connected comparison |
+|---|---|---|
+| Military management is broader than active map units | Inactive owned regiment appearance; native eligible uniforms; palette feedback with matching/stale host selection; authority restored after guest render | Recolor/cycle attached regiments with both host palette states; caption visibility still needs visual confirmation |
+| Commander statistics need native ancestry too | `UnitIsInsideRadius` parent/influence lookup within the preview commander context; unit-pane normalization; parent/officer/selection restoration; null-selection fallback cannot retain the attached preview | Rapid state/type switches, including different unassigned officers; inspect Player.log as well as MP logs |
+| A recruiting click is an intent awaiting a result | Pending draft retained, duplicate click suppression, matching result only, rejected draft retained, visible refusal, supported off-map-state eligibility | Repeated recruitment and legitimate pool/credit failures with choices retained |
+| One writer owns logical poses | Production legacy-view adapter tested against the observed 1973/493 case and a newer same-roster view followed by scalar-only state; map visibility/metadata retained | Recruited-unit movement/pauses across multiple revisions; failed coordinates are now preserved |
+
 ## Repeatable connected scenario
 
 Use the same paused save and matching local display settings. Join, exercise the six rows above, then leave the recruiting UI open while the campaign creates an officer and unit and resolves a battle. Compare state and visible behavior immediately and after one update. Repeat at low and high compression, switch paper/3D maps, disconnect and reconnect. Preserve both logs, including the first exception stack and the new motion/apply-phase diagnostics. A release passes this scenario only when those observations are recorded; synthetic tests do not substitute for it.

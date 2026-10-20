@@ -17,7 +17,7 @@ namespace GTIP
             switch(button.name) {
                 case "476_PrevSoldier":case "477_NextSoldier":
                     int direction=button.name=="476_PrevSoldier"?-1:1;
-                    if(preview)unit.AdjustUniformSet(direction);else RequestNative("uniform-step",ids[unit],direction);
+                    if(preview)unit.AdjustUniformSet(direction);else {PreviewExistingUniformStep(unit,direction);RequestNative("uniform-step",ids[unit],direction);}
                     break;
                 case "475_SwitchRecruitType":
                     if(!preview)return false;
@@ -40,7 +40,7 @@ namespace GTIP
             // Native uniform selection retains state/policy eligibility. This refresh also
             // checks the chosen recruiting pool and disables Recruit when it is insufficient.
             main.UpdateUnitInfoPanel();
-            LogDiagnostic("Guest uniform/recruit control: "+button.name+", preview="+preview+", uniform="+unit.uniformset+", recruits="+unit.recruitingtype);
+            LogDiagnostic("Guest uniform/recruit control: "+button.name+", preview="+preview+", id="+(ids.TryGetValue(unit,out int shownId)?shownId:0)+", type="+unit.unittyp+", active="+unit.gameObject.activeInHierarchy+", palette="+main.paletteactive+", uniformLabel="+(main.UniformTextObjUnitPanel!=null && main.UniformTextObjUnitPanel.activeInHierarchy)+", uniform="+unit.uniformset+", recruits="+unit.recruitingtype);
             return true;
         }
         static bool IsUnitPalette(CampaignMainPanel main,Palette palette)
@@ -56,7 +56,7 @@ namespace GTIP
             // clearing chosenstate and interrupting an in-progress guest recruitment.
             IsolateRecruitPreview(nativePreview);
             NativeAccess.Get<RecruitingList>(target,"recruitinglist")?.UpdateList();
-            target.UpdateUnitData();
+            RestoreRecruitPreviewPanel(target,nativePreview);
             return true;
         }
     }

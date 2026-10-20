@@ -25,7 +25,13 @@ namespace GTIP
             var states=rows.Where(r=>r.Kind==4).ToDictionary(r=>r.Id,ReadData<MpFormationState>);
             if(readback)foreach(var pair in states) {
                 var p=units[pair.Key].transform.position;var s=pair.Value;
-                if(Mathf.Abs(p.x-s.X)>.1f || Mathf.Abs(p.z-s.Z)>.1f)throw new InvalidDataException("Native map position diverged: formation="+pair.Key+" revision="+revision);
+                if(!MpRules.Finite(p.x) || !MpRules.Finite(p.y) || !MpRules.Finite(p.z) || Mathf.Abs(p.x-s.X)>.1f || Mathf.Abs(p.z-s.Z)>.1f) {
+                    string Coordinate(float value)=>value.ToString("R",CultureInfo.InvariantCulture);
+                    string failure="Native map position diverged: formation="+pair.Key+" revision="+revision+
+                        " expected=("+Coordinate(s.X)+","+Coordinate(s.Y)+","+Coordinate(s.Z)+") actual=("+Coordinate(p.x)+","+Coordinate(p.y)+","+Coordinate(p.z)+") parent="+s.Parent;
+                    LogDiagnostic(failure);WriteMapPoseFailure(rows,states,pair.Key,revision);
+                    throw new InvalidDataException(failure);
+                }
             }
             if(diagnosticPath==null || (revision!=1 && revision%30!=0))return;
             var data=rows.Where(r=>r.Kind==3).ToDictionary(r=>r.Id);
@@ -42,6 +48,26 @@ namespace GTIP
             }
             try {File.WriteAllText(diagnosticPath+".state.csv",csv.ToString());}
             catch(Exception e){LogDiagnostic("Map audit file unavailable: "+e.Message);}
+        }
+        void WriteMapPoseFailure(MpStateRow[] rows,Dictionary<int,MpFormationState> states,int failed,int revision)
+        {
+            if(diagnosticPath==null)return;
+            try {
+                var names=rows.Where(r=>r.Kind==3).ToDictionary(r=>r.Id,r=>r.Name??"");
+                var csv=new StringBuilder("revision,id,name,parent,nativeParent,active,expectedX,expectedY,expectedZ,actualX,actualY,actualZ,cachedX,cachedY,cachedZ,blockX,blockY,blockZ\n");
+                string F(float value)=>value.ToString("R",CultureInfo.InvariantCulture);
+                string Position(Vector3 value)=>F(value.x)+","+F(value.y)+","+F(value.z);
+                var seen=new HashSet<int>();int id=failed;
+                while(id!=0 && seen.Count<128 && seen.Add(id) && states.TryGetValue(id,out var state) && units.TryGetValue(id,out var unit)) {
+                    var cached=NativeAccess.Get<Vector3>(unit,"currentgameobjectposition");
+                    string block=unit.blockobject!=null && unit.blockobject.Length>0 && unit.blockobject[0]!=null?Position(unit.blockobject[0].transform.position):",,";
+                    csv.Append(revision).Append(',').Append(id).Append(",\"").Append(names.TryGetValue(id,out var name)?name.Replace("\"","\"\""):"").Append("\",")
+                        .Append(state.Parent).Append(',').Append(ParentId(unit)).Append(',').Append(unit.gameObject.activeSelf).Append(',')
+                        .Append(Position(new Vector3(state.X,state.Y,state.Z))).Append(',').Append(Position(unit.transform.position)).Append(',').Append(Position(cached)).Append(',').Append(block).Append('\n');
+                    id=state.Parent;
+                }
+                File.WriteAllText(diagnosticPath+".pose-failure.csv",csv.ToString());
+            } catch(Exception error){LogDiagnostic("Map pose failure detail unavailable: "+error.Message);}
         }
     }
 }

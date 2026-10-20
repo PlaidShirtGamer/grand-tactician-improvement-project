@@ -24,6 +24,12 @@ if ($LASTEXITCODE -ne 0) { throw 'Campaign camera rotation lock checks failed' }
 
 dotnet run --project (Join-Path $PSScriptRoot 'tests/MotionPresentation/MotionPresentation.csproj') -c Release -p:UseSharedCompilation=false
 if ($LASTEXITCODE -ne 0) { throw 'Guest motion presentation checks failed' }
+
+dotnet run --project (Join-Path $PSScriptRoot 'tests/Appearance/Appearance.csproj') -c Release -p:UseSharedCompilation=false
+if ($LASTEXITCODE -ne 0) { throw 'Guest existing-unit appearance checks failed' }
+
+dotnet run --project (Join-Path $PSScriptRoot 'tests/SnapshotPresentation/SnapshotPresentation.csproj') -c Release -p:UseSharedCompilation=false
+if ($LASTEXITCODE -ne 0) { throw 'Snapshot pose ownership checks failed' }
 dotnet run --project (Join-Path $PSScriptRoot 'tests/Traversal/Traversal.csproj') -c Release -p:UseSharedCompilation=false
 if ($LASTEXITCODE -ne 0) { throw 'Traversal tests failed' }
 dotnet run --project (Join-Path $PSScriptRoot 'tests/Formation/Formation.csproj') -c Release -p:UseSharedCompilation=false
