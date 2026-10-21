@@ -67,13 +67,24 @@ namespace GTIP
             if(preview==null)return;
             int commander=preview.commander;
             if(commander<0 || commander>=GameVars.commander.Count)return;
-            NativeAccess.Set(target,"currentcommanderchosen",commander);
             // SwitchCommanderPanel(0) changes to the commander page if the chosen
             // officer has no current command. Preview transactions intentionally restore
             // that authoritative reference, so supply it only for this native redraw.
             // Re-run the complete pane switch after state selection; UpdateUnitData alone
             // cannot hide an already-open commander attributes/history pane.
-            WithRecruitPreviewCommander(target,preview,GameVars.commander[commander],()=>target.SwitchCommanderPanel(0));
+            try {
+                preview.UpdateCommanderPicture();
+                NativeAccess.Set(target,"currentcommanderchosen",commander);
+                WithRecruitPreviewCommander(target,preview,GameVars.commander[commander],()=>target.SwitchCommanderPanel(0));
+            }
+            finally {
+                // Native ShowSubPanels applies this serialized mask after its pane switch.
+                // Showing the pane again clears button activation, while reinforcement
+                // refresh returns early during recruitment. Reapply the same mask after
+                // our redraw so existing-unit replenishment controls stay hidden.
+                if(IsReplica && (target.contentselection==10 || target.contentselection==11) && CampaignMainPanel.dummyregiment==preview && target.ObjectsToDeactivateForRecruiting!=null)
+                    foreach(var control in target.ObjectsToDeactivateForRecruiting)if(control!=null)control.SetActive(false);
+            }
         }
     }
 }

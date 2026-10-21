@@ -30,6 +30,19 @@ static class AppearanceGraphChecks
         var uniforms=native.MainModule.Types.Single(t=>t.Name=="CampaignMainPanel").NestedTypes.Single(t=>t.Name=="UniformSet").Methods.Single(m=>m.IsConstructor);
         Check(Calls(uniforms,"Policy","GetStatusByPolicyID") && uniforms.Body.Instructions.Any(i=>i.Operand is FieldReference f && f.Name=="state"),
             "Native uniform eligibility no longer includes policy and state rules.");
+        var panelLookup=uniforms.Body.Instructions.SingleOrDefault(i=>IsCall(i,"GameObject","Find") && i.Previous.OpCode==OpCodes.Ldstr && (string)i.Previous.Operand=="UI/Panel_Main");
+        Check(panelLookup!=null && panelLookup.Next.Operand is GenericInstanceMethod getPanel && getPanel.Name=="GetComponent" && getPanel.GenericArguments.Single().Name=="CampaignMainPanel",
+            "Native UniformSet no longer unconditionally resolves its panel through the active-only GameObject.Find lookup.");
+        Check(new[]{"InfantryImagesUnion","CavalryImagesUnion","ArtilleryImagesUnion","InfantryImagesConfederacy","CavalryImagesConfederacy","ArtilleryImagesConfederacy"}.All(name=>
+            uniforms.Body.Instructions.Any(i=>i.OpCode==OpCodes.Ldfld && i.Operand is FieldReference f && f.Name==name)),
+            "Native UniformSet no longer uses the resolved panel's original per-side sprite arrays.");
+        var panelFallback=Bridge("ReplicaUniformPanel");
+        Check(panelFallback.Parameters.Count==1 && panelFallback.Parameters[0].ParameterType.FullName=="UnityEngine.GameObject" && panelFallback.ReturnType.FullName=="UnityEngine.GameObject" &&
+            Calls(panelFallback,"MultiplayerCampaign","get_LiveSession") && Text(panelFallback,"campaignmainpanel") && Text(panelFallback,"Panel_Main") && Calls(panelFallback,"NativeAccess","Get"),
+            "Inactive native uniform panel resolution must retain native results and use only the live session's correctly named cached panel.");
+        Check(!Calls(panelFallback,"GameObject","Find") && !Calls(panelFallback,"GameObject","SetActive") && !Calls(panelFallback,"CampaignMainPanel","OnEnable") &&
+            panelFallback.Body.Instructions.All(i=>i.OpCode!=OpCodes.Stfld && i.OpCode!=OpCodes.Stsfld && i.OpCode!=OpCodes.Newobj),
+            "Uniform panel fallback must not search for another UI, activate a hidden host panel, or modify native selection state.");
         var attachments=Native("Regiment","UpdateAllAttachedUnits");
         Check(attachments.Body.Instructions.Any(i=>i.Operand is GenericInstanceMethod call && call.Name=="GetComponentsInChildren" && call.GenericArguments.Single().Name=="Regiment" && i.Previous.OpCode==OpCodes.Ldc_I4_1),
             "Native managed regiment attachment lists no longer include inactive subordinates.");
@@ -73,6 +86,6 @@ static class AppearanceGraphChecks
             new[]{"unit-name","weapon-assign"}.All(name=>management.Body.Instructions.Take(commandGate).Any(i=>i.OpCode==OpCodes.Ldstr && (string)i.Operand==name)),
             "Inactive managed-unit naming/equipment must precede the separate movement eligibility gate.");
         Check(Calls(Bridge("Controllable"),"GameObject","get_activeInHierarchy"),"Campaign movement must still require an active map unit.");
-        Console.WriteLine($"Native appearance graph: {checks} checks; inactive managed regiments, native uniform/label eligibility, open-palette feedback prevention and compiled rendering restoration verified. No Unity gameplay exercised.");
+        Console.WriteLine($"Native appearance graph: {checks} checks; inactive panel constructor dependency, cached lookup isolation, managed regiments, native uniform/label eligibility, palette feedback and rendering restoration verified. No Unity gameplay exercised.");
     }
 }

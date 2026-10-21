@@ -28,11 +28,26 @@ static class RecruitContractChecks
         var restore=Bridge("RestoreRecruitPreviewPanel");
         Check(Calls(restore,"WithRecruitPreviewCommander") && Methods(mp).Where(m=>m.Name.Contains("RestoreRecruitPreviewPanel")).Any(m=>Calls(m,"SwitchCommanderPanel")),
             "A changed recruiting state must normalize the whole native unit pane in scoped preview-officer context.");
+        var subpanels=Native("CampaignMainPanel","ShowSubPanels");
+        Check(subpanels.Body.Instructions.Any(i=>i.OpCode==OpCodes.Ldfld && i.Operand is FieldReference f && f.Name=="ObjectsToDeactivateForRecruiting") &&
+            subpanels.Body.Instructions.Any(i=>i.Operand is MethodReference m && m.Name=="SetActive" && i.Previous?.OpCode==OpCodes.Ldc_I4_0),
+            "Native recruiting layout no longer applies its serialized existing-unit control mask.");
+        var reinforcement=Native("CampaignMainPanel","UpdateReinforcementButtons");
+        var recruitingMode=reinforcement.Body.Instructions.Single(i=>i.OpCode==OpCodes.Ldfld && i.Operand is FieldReference f && f.Name=="contentselection");
+        Check(recruitingMode.Next.OpCode==OpCodes.Ldc_I4_S && Convert.ToInt32(recruitingMode.Next.Operand)==10 &&
+            recruitingMode.Next.Next.OpCode.FlowControl==FlowControl.Cond_Branch && recruitingMode.Next.Next.Next.OpCode==OpCodes.Ret &&
+            !reinforcement.Body.Instructions.Any(i=>i.Offset<recruitingMode.Offset && i.Operand is MethodReference m && m.Name=="SetButtonsCondition"),
+            "Native reinforcement controls no longer return before button updates during recruitment; review stale activation handling.");
+        var maskCleanup=restore.Body.ExceptionHandlers.Single(h=>h.HandlerType==ExceptionHandlerType.Finally);
+        bool InMaskCleanup(Instruction i)=>i.Offset>=maskCleanup.HandlerStart.Offset && (maskCleanup.HandlerEnd==null || i.Offset<maskCleanup.HandlerEnd.Offset);
+        Check(restore.Body.Instructions.Any(i=>InMaskCleanup(i) && i.OpCode==OpCodes.Ldfld && i.Operand is FieldReference f && f.Name=="ObjectsToDeactivateForRecruiting") &&
+            restore.Body.Instructions.Any(i=>InMaskCleanup(i) && i.Operand is MethodReference m && m.Name=="SetActive"),
+            "Recruit preview redraw must reapply the native visibility mask even when the redraw throws.");
         var commit=Bridge("ReplicaRecruitCommit");
         Check(Calls(commit,"BeginRecruitRequest") && !Calls(commit,"ReplicaRecruitCancel"),"Guest draft must remain open until the matching host result.");
         Check(Calls(Bridge("Handle"),"HandleRecruitResult") && Calls(Bridge("End"),"ClearRecruitRequest"),"Recruitment receipts and session cleanup are not integrated with the live session.");
         Check(Calls(Bridge("HandleRecruitResult"),"ReplicaRecruitCancel") && Calls(Bridge("HandleRecruitResult"),"RestoreRecruitPreviewPanel") && Calls(Bridge("DrawGuestDialogs"),"get_RecruitNotice"),
             "Recruitment result must support success cleanup, rejected draft retention and visible pending/refusal feedback.");
-        Console.WriteLine($"Native recruitment contract: {checks} checks; off-map state parity, native pane context, retained drafts and matching host receipts verified.");
+        Console.WriteLine($"Native recruitment contract: {checks} checks; native control masks, off-map state parity, pane context, retained drafts and matching host receipts verified.");
     }
 }

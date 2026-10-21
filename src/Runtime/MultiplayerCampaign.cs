@@ -85,7 +85,7 @@ namespace GTIP
                 LogDiagnostic("Transport queues: peakIncoming="+transport.PeakIncoming+", pendingIncoming="+transport.PendingIncoming+", pendingOutgoing="+transport.PendingOutgoing+", clocksCoalescedIn="+transport.CoalescedIncoming+", clocksCoalescedOut="+transport.CoalescedOutgoing+", heartbeatsSent="+transport.HeartbeatsSent+", heartbeatsReceived="+transport.HeartbeatsReceived);
                 Application.runInBackground = previousBackground;
             }
-            DestroyRecruitPreview();previewPanel=null;previewCommander=-1;ClearRecruitRequest();pendingUniforms.Clear();
+            DestroyRecruitPreview();previewPanel=null;previewCommander=-1;ClearRecruitRequest();pendingUniforms.Clear();ClearCommanderPortraits();
             transport?.Dispose(); transport = null; authenticated = false; helloSent = false; snapshot = null;
             ClearData(false);
             ClearMovement();
@@ -226,7 +226,7 @@ namespace GTIP
                 if (value.kind == "ping") return;
                 string label=value.kind=="native-action"?value.kind+"/"+(value.text??"").Split('|')[0]:value.kind;
                 try { remoteIntent=true;Execute(value); LogDiagnostic("Guest order "+value.sequence+" accepted: "+label+" target="+value.unit); Send(new MpMessage { kind = "result", session = session, sequence = value.sequence, text = "Order submitted to native campaign rules. Readiness, terrain and order delay still apply." }); }
-                catch (Exception error) { LogDiagnostic("Guest order "+value.sequence+" rejected: "+label+": "+error.Message); Send(new MpMessage { kind = "result", session = session, sequence = value.sequence, text = "Order rejected: " + error.Message }); }
+                catch (Exception error) { LogDiagnostic("Guest order "+value.sequence+" rejected: "+label+": "+error); Send(new MpMessage { kind = "result", session = session, sequence = value.sequence, text = "Order rejected: " + error.Message }); }
                 finally {remoteIntent=false;}
             } else if(value.kind=="clock") {
                 if(!MpRules.NewClock(value.sequence,receivedClockSequence))return;

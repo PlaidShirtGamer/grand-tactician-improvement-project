@@ -9,6 +9,23 @@ var hostUnit=new Regiment {unittyp=0,uniformset=0};hostUnit.gameObject.activeInH
 var guest=new MultiplayerCampaign(guestUnit,true);var host=new MultiplayerCampaign(hostUnit,false);
 var guestPanel=guest.Panel;var hostPanel=host.Panel;
 ButtonTooltip Control(string name,Palette palette=null)=>new ButtonTooltip {name=name,transform=new Transform{Parent=guestPanel.transform},Palette=palette};
+host.Activate();hostPanel.gameObject.activeInHierarchy=false;hostPanel.isActiveAndEnabled=false;
+Regiment.UseUniformLookupHook=false;bool hiddenLookupFailed=false;
+try{host.Execute(new MpMessage{unit=42,x=1,text="uniform-step|"});}catch(NullReferenceException){hiddenLookupFailed=true;}
+Check(hiddenLookupFailed && hostUnit.uniformset==0,"The native UniformSet constructor reproduces the hidden host panel lookup failure before changing the uniform");
+Regiment.UseUniformLookupHook=true;host.Execute(new MpMessage{unit=42,x=1,text="uniform-step|"});
+Check(hostUnit.uniformset==2 && !hostPanel.gameObject.activeInHierarchy && !hostPanel.isActiveAndEnabled && hostPanel.gameObject.Activations==0,
+    "Remote native uniform eligibility resolves the cached inactive panel without activating or redrawing the host UI");
+var found=new GameObject {name="Native result"};MultiplayerCampaign.LiveSession=false;
+Check(ReferenceEquals(MultiplayerCampaign.ReplicaUniformPanel(found),found),"A native lookup result is preserved outside a multiplayer session");
+Check(MultiplayerCampaign.ReplicaUniformPanel(null)==null,"The inactive panel fallback stays disabled without a live session");
+MultiplayerCampaign.LiveSession=true;host.SetCachedPanel(null);
+Check(MultiplayerCampaign.ReplicaUniformPanel(null)==null,"A missing cached panel does not fabricate a native UI object");
+host.SetCachedPanel(hostPanel);hostPanel.gameObject.name="Other panel";
+Check(MultiplayerCampaign.ReplicaUniformPanel(null)==null,"The fallback rejects a cached object with the wrong native panel identity");
+hostPanel.gameObject.name="Panel_Main";MultiplayerCampaign.ClearInstance();
+Check(MultiplayerCampaign.ReplicaUniformPanel(null)==null,"A disconnected controller cannot supply an inactive panel fallback");
+host.Activate();hostPanel.gameObject.activeInHierarchy=true;hostPanel.isActiveAndEnabled=true;hostUnit.uniformset=0;
 guest.Activate();
 Check(guest.Click(Control("947_RecolorUniform")) && guestPanel.paletteactive && guestPanel.UniformLabel.activeSelf && guestPanel.UniformArrowsEnabled,
     "Native information refresh exposes the Uniform label and arrows for a managed inactive regiment");
@@ -68,10 +85,17 @@ Check(guestPanel.RenderedUniform==0 && guest.PendingCount==0,"An expired or reje
 guestPanel.ThrowRender=true;var retained=guestUnit.componentcolor;
 Reject(()=>guestPanel.UpdateUnitInfoPanel(),"display failure");guestPanel.ThrowRender=false;
 Check(ReferenceEquals(guestUnit.componentcolor,retained) && guestUnit.uniformset==0,"Failed native replica rendering restores exact authoritative color and uniform state");
-Console.WriteLine($"Appearance: {checks} checks using production appearance/control bridges and native palette feedback doubles. Not a live Unity test.");
+Console.WriteLine($"Appearance: {checks} checks using production appearance/control bridges, inactive native panel lookup and palette feedback doubles. Not a live Unity test.");
 
 public sealed class Transform {public Transform Parent;public bool IsChildOf(Transform p)=>ReferenceEquals(this,p) || Parent!=null && Parent.IsChildOf(p);}
-public sealed class GameObject {public bool activeInHierarchy=true,activeSelf=true;public Transform transform=new Transform();public void SetActive(bool value){activeSelf=value;}}
+public sealed class GameObject
+{
+    public static GameObject NativePanel;public string name;public object Component;public int Activations;
+    public bool activeInHierarchy=true,activeSelf=true;public Transform transform=new Transform();
+    public static GameObject Find(string path)=>path=="UI/Panel_Main" && NativePanel?.activeInHierarchy==true?NativePanel:null;
+    public T GetComponent<T>() where T:class=>Component as T;
+    public void SetActive(bool value){activeSelf=value;Activations++;}
+}
 public sealed class ButtonTooltip
 {
     public string name;public int state;public bool isActiveAndEnabled=true;public Transform transform;
@@ -81,8 +105,17 @@ public sealed class Regiment
 {
     public int alliance,unittyp,uniformset,recruitingtype;public string name="Managed regiment";
     public GameObject gameObject=new GameObject();public Color[] componentcolor={Palette.Colors[0],Palette.Colors[0],new Color(9)};
-    public int[] Eligible={0,2,8};
-    public void AdjustUniformSet(int direction){int index=Array.IndexOf(Eligible,uniformset);uniformset=Eligible[(Math.Max(0,index)+direction+Eligible.Length)%Eligible.Length];}
+    public int[] Eligible={0,2,8};public static bool UseUniformLookupHook=true;
+    public void AdjustUniformSet(int direction)
+    {
+        // Match the native UniformSet constructor's unconditional Find + GetComponent
+        // dependency before consulting the policy/state-specific eligible list.
+        var found=GameObject.Find("UI/Panel_Main");
+        if(UseUniformLookupHook)found=MultiplayerCampaign.ReplicaUniformPanel(found);
+        var panel=found.GetComponent<CampaignMainPanel>();
+        _=panel.NativeSpriteCount;
+        int index=Array.IndexOf(Eligible,uniformset);uniformset=Eligible[(Math.Max(0,index)+direction+Eligible.Length)%Eligible.Length];
+    }
 }
 public sealed class Palette
 {
@@ -96,9 +129,11 @@ public sealed class Palette
 public sealed class CampaignMainPanel
 {
     public static Regiment dummyregiment;
+    public GameObject gameObject;public int NativeSpriteCount=>11;
     public Transform transform=new Transform();public bool isActiveAndEnabled=true,paletteactive,ThrowRender,UniformArrowsEnabled;
     public Regiment LastUsed;public Palette[] Palettes={new Palette(),new Palette()};public int Draws,RenderedUniform;
     public Color[] RenderedColors;public GameObject UniformTextObjUnitPanel=new GameObject();public GameObject UniformLabel=>UniformTextObjUnitPanel;
+    public CampaignMainPanel(){gameObject=new GameObject{name="Panel_Main",Component=this};}
     public void ActivatePalette(bool active=true){paletteactive=active;for(int i=0;i<2;i++)Palettes[i].currentcolorchosen=LastUsed.componentcolor[i].Id;}
     public void UpdateUnitInfoPanel(){MultiplayerCampaign.ReplicaSoldierPicture(this);UniformLabel.SetActive(paletteactive);UniformArrowsEnabled=paletteactive;}
     public void OriginalSoldierPicture()
@@ -119,7 +154,8 @@ namespace GTIP
     public sealed class MpMessage {public int unit;public float x;public string text;}
     public sealed partial class MultiplayerCampaign
     {
-        static MultiplayerCampaign instance;public static bool IsReplica;
+        static MultiplayerCampaign instance;public static bool IsReplica;static bool session=true;
+        public static bool LiveSession {get=>instance!=null && session;set=>session=value;}
         readonly bool replica;int guestSide=0;
         readonly Dictionary<int,Regiment> units=new Dictionary<int,Regiment>();readonly Dictionary<Regiment,int> ids=new Dictionary<Regiment,int>();
         BattleUI ui;CampaignMainPanel previewPanel=null;Regiment nativePreview=null;
@@ -131,7 +167,9 @@ namespace GTIP
         {
             this.replica=replica;units[42]=unit;ids[unit]=42;ui=new BattleUI{selectedunitreg=unit,panelhandler=new PanelHandler{Main=new CampaignMainPanel{LastUsed=unit}}};
         }
-        public void Activate(){instance=this;IsReplica=replica;}
+        public void Activate(){instance=this;IsReplica=replica;GameObject.NativePanel=Panel.gameObject;}
+        public void SetCachedPanel(CampaignMainPanel value){ui.panelhandler.Main=value;}
+        public static void ClearInstance(){instance=null;}
         public void Select(Regiment unit){ui.selectedunitreg=unit;}
         public bool Click(ButtonTooltip button)=>GuestRecruitPreviewAction(button);
         public bool Execute(MpMessage request){var parts=request.text.Split('|');return ExecuteAppearanceAction(parts[0],request,parts.Length>1?parts[1]:"");}

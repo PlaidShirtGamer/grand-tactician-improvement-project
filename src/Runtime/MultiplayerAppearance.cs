@@ -7,6 +7,15 @@ namespace GTIP
 {
     public sealed partial class MultiplayerCampaign
     {
+        public static GameObject ReplicaUniformPanel(GameObject nativePanel)
+        {
+            // UniformSet uses Find("UI/Panel_Main") even when only calculating the
+            // eligible uniform list. Find excludes inactive objects; remote host orders
+            // must use the already initialized panel without opening the host's UI.
+            if(nativePanel!=null || !LiveSession || instance.ui==null || instance.ui.panelhandler==null)return nativePanel;
+            var cached=NativeAccess.Get<CampaignMainPanel>(instance.ui.panelhandler,"campaignmainpanel");
+            return cached!=null && cached.gameObject!=null && cached.gameObject.name=="Panel_Main"?cached.gameObject:nativePanel;
+        }
         sealed class PendingUniform {public int Value;public float Until;}
         readonly Dictionary<Regiment,PendingUniform> pendingUniforms=new Dictionary<Regiment,PendingUniform>();
         void PreviewExistingUniformStep(Regiment unit,int direction)

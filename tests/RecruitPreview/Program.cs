@@ -150,6 +150,7 @@ Check(panel.CurrentPane==1 && panel.CommanderAttributes,"The native pane operati
 mp.RestorePreview(panel,preview);
 Check(panel.CurrentPane==0 && !panel.CommanderAttributes && !panel.CommanderHistory,"The production preview finalizer restores the complete unit page rather than only updating its text");
 Check(GameVars.commander[0].currentcommand==null,"Preview panel normalization does not assign the dummy to an authoritative officer");
+Check(preview.LastPortraitCommander==preview.commander && preview.PortraitRefreshes>0 && authority.PortraitRefreshes==0,"The recruiting preview refreshes its native commander portrait without repainting an authoritative formation");
 GameVars.commander.Add(new GameVars.Commander {currentcommand=authority});
 int switches=panel.PaneSwitches;
 for(int rapid=0;rapid<30;rapid++) {
@@ -163,6 +164,27 @@ for(int rapid=0;rapid<30;rapid++) {
 Check(panel.PaneSwitches==switches+30,"Every rapid preview replacement selects the unit pane with its own current commander");
 Check(GameVars.commander[0].currentcommand==null && GameVars.commander[1].currentcommand==authority && preview.transform.parent==mp.transform,"Rapid preview redraws restore both free and assigned officers and keep the dummy outside native roster scans");
 
+mp.RenderCommander(panel,preview,GameVars.commander[preview.commander],()=>panel.ShowSubPanels());
+Check(panel.ObjectsToDeactivateForRecruiting.All(control=>!control.activeInHierarchy),"Native recruiting ShowSubPanels hides its serialized existing-unit controls after switching the unit pane");
+mp.RenderCommander(panel,preview,GameVars.commander[preview.commander],()=>panel.SwitchCommanderPanel(0));
+Check(panel.ObjectsToDeactivateForRecruiting.All(control=>control.activeInHierarchy) && panel.ReinforcementEarlyReturns>0,"Repeating the native pane switch reproduces stale reinforcement controls because native reinforcement refresh returns early in recruitment");
+mp.RestorePreview(panel,preview);
+Check(panel.ObjectsToDeactivateForRecruiting.All(control=>!control.activeInHierarchy),"The production recruiting redraw reapplies the native serialized mask after the pane switch");
+Check(panel.UnrelatedUnitControl.activeInHierarchy && panel.UniformTextObjUnitPanel.activeInHierarchy,"Recruiting visibility restoration leaves unrelated unit and uniform controls available");
+for(int rapid=0;rapid<20;rapid++) {
+    panel.List.chosenstate=rapid%2==0?9:11;
+    mp.RestorePreview(panel,preview);
+    mp.Refresh(panel);
+    if(panel.ObjectsToDeactivateForRecruiting.Any(control=>control.activeInHierarchy))throw new Exception("A rapid state or live roster redraw exposed existing-unit reinforcement controls");
+}
+Check(panel.ObjectsToDeactivateForRecruiting.All(control=>!control.activeInHierarchy),"Rapid state changes and live roster refreshes retain the recruiting-only control visibility");
+panel.FailPaneRefresh=true;
+Reject(()=>mp.RestorePreview(panel,preview),"A native pane redraw error remains visible to the caller");panel.FailPaneRefresh=false;
+Check(panel.ObjectsToDeactivateForRecruiting.All(control=>!control.activeInHierarchy) && preview.transform.parent==mp.transform,"A failed recruiting redraw still hides existing-unit controls and restores isolated preview ownership");
+panel.contentselection=0;mp.RestorePreview(panel,preview);
+Check(panel.ObjectsToDeactivateForRecruiting.All(control=>control.activeInHierarchy),"The recruiting mask does not hide native reinforcement controls in the existing-unit view");
+panel.contentselection=10;
+
 panel.List.chosenstate=9;preview.uniformset=8;preview.componentcolor[1]=new Color(2);panel.NormalizeUniformOnDraw=false;panel.paletteactive=false;
 requests=mp.Requests.Count;int cancellations=panel.Cancellations;
 Check(mp.Begin(panel,preview,101) && mp.Requests.Count==requests+1,"A recruitment commit submits exactly one host request while retaining its local draft");
@@ -174,6 +196,7 @@ mp.Result(101,"Order rejected: Not enough volunteers in Iowa: 500 available, 100
 Check(mp.Open && mp.Preview==preview && CampaignMainPanel.dummyregiment==preview && panel.Cancellations==cancellations,"A rejected recruitment retains the editable native preview instead of discarding the form");
 Check(panel.List.chosenstate==9 && preview.uniformset==8 && preview.componentcolor[1].Id==2,"A recruitment rejection preserves chosen home state, uniform and colors");
 Check(mp.Notice.Contains("500 available, 1000 required") && panel.CurrentPane==0,"The specific host refusal is visible while the correctly normalized recruiting form remains usable");
+Check(panel.ObjectsToDeactivateForRecruiting.All(control=>!control.activeInHierarchy),"A rejected recruitment keeps the recruiting form free of existing-unit reinforcement controls");
 Check(mp.Begin(panel,preview,103),"A corrected draft can be submitted again after a rejection");
 mp.Result(103,"Order submitted to native campaign rules.");
 Check(!mp.Open && mp.Preview==null && panel.Cancellations==cancellations+1,"Only the matching successful receipt closes the committed recruiting draft");
@@ -200,7 +223,7 @@ public sealed class Transform
     public Transform Find(string path)=>this;
     public T GetComponent<T>() where T:class=>(Field as T)??(Unit as T);
 }
-public sealed class GameObject {public bool activeInHierarchy=true;public Transform transform=new Transform();}
+public sealed class GameObject {public string name="";public bool activeInHierarchy=true;public Transform transform=new Transform();public void SetActive(bool value){activeInHierarchy=value;}}
 public sealed class ButtonTooltip
 {
     public string name;
@@ -221,6 +244,7 @@ public sealed class Regiment
     public Regiment[] allattachedunits=Array.Empty<Regiment>();
     public bool FailTooltip;
     public int AggregateUpdates;
+    public int PortraitRefreshes,LastPortraitCommander=-1;
     public float commanderrange=10;
     public GameObject gameObject=new GameObject();
     public Transform transform=>gameObject.transform;
@@ -246,6 +270,7 @@ public sealed class Regiment
         return new UnitTooltipInfo {content=string.Join(" / ",names)};
     }
     public void UpdateAllAttachedUnits(){allattachedunits=All.Where(r=>r.transform.IsChildOf(transform)).ToArray();}
+    public void UpdateCommanderPicture(){PortraitRefreshes++;LastPortraitCommander=commander;}
     public bool UnitIsInsideRadius(int type)
     {
         var current=transform.parent;
@@ -282,13 +307,16 @@ public sealed class RecruitingList
 }
 public sealed class CampaignMainPanel
 {
+    public GameObject gameObject=new GameObject {name="Panel_Main"};
     public GameObject UniformTextObjUnitPanel=new GameObject();
+    public GameObject UnrelatedUnitControl=new GameObject();
+    public GameObject[] ObjectsToDeactivateForRecruiting={new GameObject(),new GameObject(),new GameObject(),new GameObject()};
     public static Regiment dummyregiment;
     public Transform transform=new Transform();
     public bool isActiveAndEnabled=true,paletteactive,NormalizeUniformOnDraw;
     public int LastRenderedColor;
-    public int CurrentCommander,CurrentPane,PaneSwitches,Cancellations;
-    public bool CommanderAttributes,CommanderHistory;
+    public int CurrentCommander,CurrentPane,PaneSwitches,Cancellations,contentselection=10,ReinforcementEarlyReturns;
+    public bool CommanderAttributes,CommanderHistory,FailPaneRefresh;
     public Regiment Used;
     public BattleUI Ui;
     public Palette[] Palettes={new Palette(),new Palette()};
@@ -297,7 +325,7 @@ public sealed class CampaignMainPanel
     public int InfoRefreshes,DataRefreshes,UnitTooltipDraws,CommanderTooltipDraws;
     public Regiment RecruitParent;
     public bool RecruitEnabled;
-    public void UpdateUnitInfoPanel(){InfoRefreshes++;RecruitEnabled=dummyregiment==null || dummyregiment.recruitingtype==0;if(dummyregiment!=null){dummyregiment.GetUnitTooltipInfo(true);UnitTooltipDraws++;}MultiplayerCampaign.ReplicaSoldierPicture(this);}
+    public void UpdateUnitInfoPanel(){InfoRefreshes++;RecruitEnabled=dummyregiment==null || dummyregiment.recruitingtype==0;if(dummyregiment!=null){dummyregiment.GetUnitTooltipInfo(true);UnitTooltipDraws++;}MultiplayerCampaign.ReplicaSoldierPicture(this);UpdateReinforcementButtons();}
     public void UpdateUnitData(){DataRefreshes++;if(dummyregiment!=null){new GameVars.Commander {currentcommand=dummyregiment}.GetTooltipInfo();CommanderTooltipDraws++;}UpdateUnitInfoPanel();}
     public void ActivatePalette(bool value=true){paletteactive=value;}
     public Regiment GetUsedUnit()
@@ -314,8 +342,23 @@ public sealed class CampaignMainPanel
         GetUsedUnit();
         CurrentPane=GameVars.commander[CurrentCommander].currentcommand==null?1:selected;
         CommanderAttributes=CurrentPane==1;CommanderHistory=CurrentPane==2;
+        // ShowPanel -> UpdatePanelButtonStates -> ClearButtonStates reactivates all
+        // buttons, including buttons hidden by an earlier ShowSubPanels recruiting mask.
+        foreach(var control in ObjectsToDeactivateForRecruiting)control.SetActive(true);
+        if(FailPaneRefresh)throw new InvalidOperationException("Native pane redraw failure");
         paletteactive=false;
         UpdateUnitData();
+    }
+    public void ShowSubPanels()
+    {
+        SwitchCommanderPanel(0);
+        if((contentselection==10 || contentselection==11) && List.chosenstate>=0)
+            foreach(var control in ObjectsToDeactivateForRecruiting)control.SetActive(false);
+    }
+    void UpdateReinforcementButtons()
+    {
+        if(contentselection==10){ReinforcementEarlyReturns++;return;}
+        foreach(var control in ObjectsToDeactivateForRecruiting)control.SetActive(true);
     }
 }
 public sealed class Palette
@@ -378,6 +421,7 @@ namespace GTIP
     public sealed partial class MultiplayerCampaign
     {
         public static bool IsReplica;
+        public static bool LiveSession=true;
         static MultiplayerCampaign instance;
         public MultiplayerCampaign(){instance=this;}
         public Transform transform=new Transform {name="MultiplayerCampaign"};
@@ -395,7 +439,7 @@ namespace GTIP
         void RequestNative(string action,int target=0,float value=0,string detail="")=>Requests.Add(new MpMessage {text=action+(detail.Length>0?"|"+detail:""),unit=target,x=value});
         public void Register(Regiment unit,int id){ids[unit]=id;units[id]=unit;}
         public bool Execute(MpMessage message){var parts=message.text.Split('|');return ExecuteAppearanceAction(parts[0],message,parts.Length>1?parts[1]:"");}
-        public static bool IsRecruitPreview(Regiment unit)=>unit!=null && unit==instance.nativePreview;
+        bool buildingPreview=false;
         bool NativeRecruitOpen=>Open;
         public bool Apply(ButtonTooltip button)=>GuestRecruitPreviewAction(button);
         public void RepairPreview(CampaignMainPanel target,Regiment preview)=>IsolateRecruitPreview(preview);

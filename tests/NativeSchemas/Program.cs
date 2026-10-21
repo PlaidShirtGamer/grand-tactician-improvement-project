@@ -26,6 +26,8 @@ AppearanceGraphChecks.Run(gamePath,runtimePath);
 SnapshotPoseChecks.Run(gamePath,runtimePath);
 RecruitContractChecks.Run(gamePath,runtimePath);
 RecruitCommanderContextChecks.Run(gamePath,runtimePath);
+CommanderPortraitChecks.Run(gamePath,runtimePath);
+RecruitTransferBoundaryChecks.Run(gamePath,runtimePath);
 int fields=0;
 foreach(var schema in schemas)fields+=((Array)schema!.GetType().GetField("Fields")!.GetValue(schema)!).Length;
 var game=AssemblyLoadContext.Default.LoadFromAssemblyPath(gamePath);

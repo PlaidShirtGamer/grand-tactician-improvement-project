@@ -6,5 +6,6 @@
     <Compile Include="../../src/Runtime/MultiplayerNames.cs" Link="MultiplayerNames.cs" />
     <Compile Include="../../src/Runtime/MultiplayerRecruitPreviewHierarchy.cs" Link="MultiplayerRecruitPreviewHierarchy.cs" />
     <Compile Include="../../src/Runtime/MultiplayerRecruitRequest.cs" Link="MultiplayerRecruitRequest.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerRecruitPreviewIdentity.cs" Link="MultiplayerRecruitPreviewIdentity.cs" />
   </ItemGroup>
 </Project>

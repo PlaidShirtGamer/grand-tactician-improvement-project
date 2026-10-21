@@ -7,6 +7,7 @@ namespace GTIP
         bool rosterUiPending;
         void RefreshReplicaPresentation(MpStateRow[] rows)
         {
+            RefreshReplicaCommanderPortraits();
             if(!rosterUiPending)return;
             rosterUiPending=false;
             MpPresentationFence.Refresh(RefreshReplicaRosterUi,()=> {

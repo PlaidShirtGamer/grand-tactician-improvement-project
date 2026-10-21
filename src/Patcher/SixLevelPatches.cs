@@ -47,6 +47,16 @@ internal static class SixLevelPatches
         Wrap("CampaignMainPanel", "UpdateCreateCorpsButton", "UpgradeButtons");
         Wrap("CampaignMainPanel", "UpdateSoldierPicture", "ReplicaSoldierPicture", "MultiplayerCampaign");
         Wrap("Regiment", "GetUnitTooltipInfo", "ReplicaUnitTooltip", "MultiplayerCampaign");
+        var uniformCtor=module.Types.Single(t=>t.Name=="CampaignMainPanel").NestedTypes.Single(t=>t.Name=="UniformSet").Methods.Single(m=>m.IsConstructor);
+        var uniformLookup=uniformCtor.Body.Instructions.Single(i=>i.OpCode==OpCodes.Call && i.Operand is MethodReference call && call.DeclaringType.FullName=="UnityEngine.GameObject" && call.Name=="Find" &&
+            i.Previous.OpCode==OpCodes.Ldstr && (string)i.Previous.Operand=="UI/Panel_Main");
+        if(uniformLookup.Next.Operand is not GenericInstanceMethod uniformComponent || uniformComponent.Name!="GetComponent" || uniformComponent.GenericArguments.Single().Name!="CampaignMainPanel")
+            throw new InvalidOperationException("Native uniform panel lookup shape changed.");
+        var uniformPanelHook=Helper("MultiplayerCampaign","ReplicaUniformPanel");
+        if(uniformPanelHook.ReturnType.FullName!="UnityEngine.GameObject" || uniformPanelHook.Parameters.Count!=1 || uniformPanelHook.Parameters[0].ParameterType.FullName!="UnityEngine.GameObject")
+            throw new InvalidOperationException("Uniform panel fallback signature changed.");
+        uniformCtor.Body.GetILProcessor().InsertAfter(uniformLookup,Instruction.Create(OpCodes.Call,uniformPanelHook));
+        hooks.Add("CampaignMainPanel.UniformSet panel lookup");
         Wrap("ToolsUnitList", "CreateList", "Sidebar", "HierarchySidebar");
         Wrap("BattleUnits", "GetUnitVisibilityStateOnCampaignMap", "Visibility", first: "Regiment");
         Wrap("ArmyGroup", "CreateNewArmyGroup", "CreateArmyGroup");
@@ -257,6 +267,12 @@ internal static class SixLevelPatches
     }
     internal static void Verify(AssemblyDefinition game)
     {
+        var uniformCtor=game.MainModule.Types.Single(t=>t.Name=="CampaignMainPanel").NestedTypes.Single(t=>t.Name=="UniformSet").Methods.Single(m=>m.IsConstructor);
+        var uniformPanelHooks=uniformCtor.Body.Instructions.Where(i=>i.Operand is MethodReference call && call.DeclaringType.FullName=="GTIP.MultiplayerCampaign" && call.Name=="ReplicaUniformPanel").ToArray();
+        if(uniformPanelHooks.Length!=1 || uniformPanelHooks[0].Previous.Operand is not MethodReference uniformFind || uniformFind.DeclaringType.FullName!="UnityEngine.GameObject" || uniformFind.Name!="Find" ||
+            uniformPanelHooks[0].Previous.Previous.OpCode!=OpCodes.Ldstr || (string)uniformPanelHooks[0].Previous.Previous.Operand!="UI/Panel_Main" ||
+            uniformPanelHooks[0].Next.Operand is not GenericInstanceMethod uniformComponent || uniformComponent.Name!="GetComponent" || uniformComponent.GenericArguments.Single().Name!="CampaignMainPanel")
+            throw new InvalidOperationException("Native uniform panel fallback verification failed.");
         var officerList = game.MainModule.Types.Single(t => t.Name == "CommandersList").Methods.Single(m => m.Name == "UpdateList");
         if (officerList.Body.Instructions.Count(i => i.Operand is MethodReference r && r.DeclaringType.FullName == "GTIP.OfficerVisibility" && r.Name == "HideDummy") != 1 ||
             officerList.Body.Instructions.Count(i => i.OpCode == OpCodes.Ldfld && i.Operand is FieldReference f && f.Name == "usedummyphoto") != 1)

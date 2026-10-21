@@ -32,6 +32,15 @@ The v0.34 connected report confirms recruiting uniform selection works, while ex
 | A recruiting click is an intent awaiting a result | Pending draft retained, duplicate click suppression, matching result only, rejected draft retained, visible refusal, supported off-map-state eligibility | Repeated recruitment and legitimate pool/credit failures with choices retained |
 | One writer owns logical poses | Production legacy-view adapter tested against the observed 1973/493 case and a newer same-roster view followed by scalar-only state; map visibility/metadata retained | Recruited-unit movement/pauses across multiple revisions; failed coordinates are now preserved |
 
+## Follow-up coverage for v0.36
+
+| Contract | Added coverage | Remaining connected comparison |
+|---|---|---|
+| A native eligible-uniform calculation can need an inactive panel | Actual UniformSet constructor lookup audit; null native lookup falls back to the initialized live-session panel without activation; found/offline/disconnected/wrong-panel cases preserved | Edit uniforms with host military closed, then open on same/different unit; compare persisted colors too |
+| Showing a pane can reactivate masked controls | Native recruiting serialized mask reapplied after the protected pane switch, including failed draws, rapid state changes and rejected drafts | Recruiting shows no existing-unit reinforcement or replenishment controls |
+| Commander name and portrait have separate native state | Exact native portrait identity and formation object tracked; picture cache refreshed before nonstructural early return; unchanged images not reloaded | Replace commanders and compare name/photo without reopening; also change preview commanders |
+| Draft creation cannot authorize simulation on existing units | Actual production preview predicate linked into boundary tests; observed inactive transfer displacement and scalar-restore gap reproduced; registered targets excluded during creation | Repeated recruitment with unrelated transferring units and OOB/tooltips visible; strict position checks remain enabled |
+
 ## Repeatable connected scenario
 
 Use the same paused save and matching local display settings. Join, exercise the six rows above, then leave the recruiting UI open while the campaign creates an officer and unit and resolves a battle. Compare state and visible behavior immediately and after one update. Repeat at low and high compression, switch paper/3D maps, disconnect and reconnect. Preserve both logs, including the first exception stack and the new motion/apply-phase diagnostics. A release passes this scenario only when those observations are recorded; synthetic tests do not substitute for it.

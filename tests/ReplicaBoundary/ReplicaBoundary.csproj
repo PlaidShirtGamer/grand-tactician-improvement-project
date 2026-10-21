@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <ItemGroup><Compile Include="../../src/Runtime/MultiplayerGroupStats.cs" Link="MultiplayerGroupStats.cs" /><Compile Include="../../src/Runtime/MultiplayerRosterStatistics.cs" Link="MultiplayerRosterStatistics.cs" /><Compile Include="../../src/Runtime/MultiplayerFleetStatistics.cs" Link="MultiplayerFleetStatistics.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../src/Runtime/MultiplayerRecruitPreviewIdentity.cs" Link="MultiplayerRecruitPreviewIdentity.cs" /></ItemGroup>
 </Project>

@@ -15,7 +15,6 @@ namespace GTIP
         bool guestFileMenu,buildingPreview;
         bool NativeRecruitOpen => previewPanel!=null && previewPanel.gameObject.activeInHierarchy && (previewPanel.contentselection==10 || nativePreview!=null);
         bool GuestDialogOpen => guestFileMenu;
-        public static bool IsRecruitPreview(Regiment unit) => instance!=null && (instance.nativePreview==unit && unit!=null || instance.buildingPreview);
         public static void ReplicaRecruitDialog(CampaignMainPanel target,Regiment parent)
         {
             if(!IsReplica){NativeAccess.Call(target,"GTIP_Original_ReplicaRecruitDialog",parent);return;}
@@ -103,7 +102,7 @@ namespace GTIP
             if(!IsReplica){NativeAccess.Call(target,"GTIP_Original_ReplicaCommanderAssign");return;}
             var mp=instance;var unit=NativeAccess.Get<Regiment>(target,"chosenunit");int commander=target.selectedcommanderid;
             if(mp==null || unit==null || commander<0 || commander>=GameVars.commander.Count)return;
-            if(unit==mp.nativePreview){mp.previewCommander=commander;unit.commander=commander;NativeAccess.Set(mp.previewPanel,"currentcommanderchosen",commander);return;}
+            if(unit==mp.nativePreview){mp.previewCommander=commander;unit.commander=commander;RestoreRecruitPreviewPanel(mp.previewPanel,unit);return;}
             if(mp.ids.ContainsKey(unit)){mp.guestSelection=unit;mp.SubmitGuestOrder("commander",new Vector3(commander,0,0));}
         }
         public static void ReplicaCommanderPreview(CampaignMainPanel target,int changeChosen)
