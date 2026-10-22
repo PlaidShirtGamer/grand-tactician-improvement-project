@@ -41,6 +41,16 @@ The v0.34 connected report confirms recruiting uniform selection works, while ex
 | Commander name and portrait have separate native state | Exact native portrait identity and formation object tracked; picture cache refreshed before nonstructural early return; unchanged images not reloaded | Replace commanders and compare name/photo without reopening; also change preview commanders |
 | Draft creation cannot authorize simulation on existing units | Actual production preview predicate linked into boundary tests; observed inactive transfer displacement and scalar-restore gap reproduced; registered targets excluded during creation | Repeated recruitment with unrelated transferring units and OOB/tooltips visible; strict position checks remain enabled |
 
+## Follow-up coverage for v0.37
+
+| Contract | Added coverage | Remaining connected comparison |
+|---|---|---|
+| Existing OOB labels follow commander state | Native label formatting reused in place, matching registration/panel ownership validated, getter cache restored; no selection/filter/scroll rebuild | Replace Wessels with Runyon and compare icon label with detail pane without reopening |
+| Recruitment need not announce a pending request | Waiting popup removed; pending ownership and duplicate suppression retained; actual refusal feedback preserved | Consecutive valid recruitment and genuine refusals |
+| Newspaper receipt does not prove visibility | Actual panel-owned controller, completed content and active/fade visibility checks, deferred retries and same-edition panel restoration; local preference and dismissal respected | Policy completion with Military/recruiting open; dismiss/re-enable/next issue, compare actual rendering |
+
+The old v0.36 newspaper log confirms a native display call, not the cause of the reported invisible issue. The new ownership and visibility checks cover reproducible failure modes; the connected report remains necessary to establish whether that incident is resolved.
+
 ## Repeatable connected scenario
 
 Use the same paused save and matching local display settings. Join, exercise the six rows above, then leave the recruiting UI open while the campaign creates an officer and unit and resolves a battle. Compare state and visible behavior immediately and after one update. Repeat at low and high compression, switch paper/3D maps, disconnect and reconnect. Preserve both logs, including the first exception stack and the new motion/apply-phase diagnostics. A release passes this scenario only when those observations are recorded; synthetic tests do not substitute for it.

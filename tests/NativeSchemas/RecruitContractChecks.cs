@@ -47,7 +47,7 @@ static class RecruitContractChecks
         Check(Calls(commit,"BeginRecruitRequest") && !Calls(commit,"ReplicaRecruitCancel"),"Guest draft must remain open until the matching host result.");
         Check(Calls(Bridge("Handle"),"HandleRecruitResult") && Calls(Bridge("End"),"ClearRecruitRequest"),"Recruitment receipts and session cleanup are not integrated with the live session.");
         Check(Calls(Bridge("HandleRecruitResult"),"ReplicaRecruitCancel") && Calls(Bridge("HandleRecruitResult"),"RestoreRecruitPreviewPanel") && Calls(Bridge("DrawGuestDialogs"),"get_RecruitNotice"),
-            "Recruitment result must support success cleanup, rejected draft retention and visible pending/refusal feedback.");
+            "Recruitment result must support success cleanup, rejected draft retention and visible refusal feedback.");
         Console.WriteLine($"Native recruitment contract: {checks} checks; native control masks, off-map state parity, pane context, retained drafts and matching host receipts verified.");
     }
 }

@@ -188,6 +188,7 @@ namespace GTIP
             if(main!=null)
                 NativeAccess.Call(target,"GTIP_Original_ReplicaUiLate");
             instance.RefreshGuestBattleControls();
+            instance.RefreshGuestNewspaper();
         }
         public static void RepairShortcutFocus()
         {

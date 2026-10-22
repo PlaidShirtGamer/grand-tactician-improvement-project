@@ -102,5 +102,6 @@ namespace GTIP
         void LogDiagnostic(string text)=>Diagnostics.Add(text);
         object DataTarget(MpStateRow row)=>null;
         void RefreshReplicaRosterUi(){RosterDraws++;PortraitsReadyAtRosterDraw=units.Values.Where(u=>u!=null).All(u=>u.commanderpic!=null);}
+        void RefreshReplicaOobLabels(){}
     }
 }

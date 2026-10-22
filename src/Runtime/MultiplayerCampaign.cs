@@ -90,7 +90,7 @@ namespace GTIP
             ClearData(false);
             ClearMovement();
             panelPause.Clear();blockPanelResume=false;pendingPromotions.Clear();officerViewDirty=false;
-            newsBarrier.Clear();newspaperState=new MpNewspaperState();guestNewsSerial=0;guestNewsClosed=false;guestFileMenu=false;
+            newsBarrier.Clear();newspaperState=new MpNewspaperState();ClearNewspaperPresentation();guestFileMenu=false;
             financeViews.Clear();replicaAlerts.Clear();alertPositions.Clear();lastAlertCounts="";ClearMapNotices();replicaVisibility.Clear();ClearDispatchState();ClearWorld();
             clockSequence=receivedClockSequence=0;
             replicaMutated=false;

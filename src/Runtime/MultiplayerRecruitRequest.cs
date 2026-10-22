@@ -11,7 +11,7 @@ namespace GTIP
         string recruitNotice="";
         float recruitNoticeUntil;
 
-        string RecruitNotice => recruitPendingSequence!=0?"Recruitment request sent. Waiting for the host...":Time.realtimeSinceStartup<recruitNoticeUntil?recruitNotice:"";
+        string RecruitNotice => Time.realtimeSinceStartup<recruitNoticeUntil?recruitNotice:"";
         bool BeginRecruitRequest(CampaignMainPanel target,Regiment preview,MpMessage request)
         {
             // Keep the local draft until its own receipt arrives. Repeated clicks may not

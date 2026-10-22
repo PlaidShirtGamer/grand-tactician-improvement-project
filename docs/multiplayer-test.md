@@ -1,3 +1,27 @@
+# GTIP MP Test v0.37 — commander labels, quieter recruitment and newspaper visibility
+
+Both copies require **v0.37 / protocol 28**. Restart both games before joining.
+
+Existing military OOB labels now update when authoritative state arrives, using native `GetUnitSymbolData` formatting for commander names and abbreviations. The v0.36 detail pane and portrait could update while an already-created division icon retained its old text until the OOB was rebuilt. The new path updates only existing, matching native text objects; it preserves selection, filters, scroll and hierarchy layout. The symbol getter's campaign cache write is restored in `finally`, and structural transactions retain their existing full refresh.
+
+The generic “Recruitment request sent. Waiting for the host...” popup is removed. Pending ownership, duplicate-click protection and matching-result handling remain; actual refusal reasons still appear and retain the editable draft.
+
+The October 22, 12:08–12:19 a.m. CDT session (`20261022-050806` host / `20261022-050813` guest) records issue 1 opening on the host at 12:14:43 and a guest “displayed” log at 12:14:47. That old message only proved the native display method returned. Both saved newspaper settings are enabled, and source inspection did not establish a specific Military/recruiting callback that hid this issue. The exact observed visibility failure remains unproven.
+
+Guest newspaper presentation now binds the controller on the actual newspaper panel, distinguishes receipt from completed native content and visible panel state, and checks again after native UI late updates. Initialization failures remain pending and retry without advancing the native edition counter. An undismissed prepared issue can restore its native panel without rebuilding its article. Explicit dismissal remains acknowledged once and cannot reopen; local newspaper suppression skips rendering and acknowledges the issue so it cannot leave the host waiting. Session/options menus retain priority. Diagnostics now include article identity, panel/parent path, state, alpha and canvas order. The generic native policy/historical/battle newspaper path remains in use; no policy-title allowlist was added.
+
+Verification: **21 OOB-label**, **32 newspaper-presentation**, **98 recruitment/appearance/name** and **23 portrait** checks pass using production adapters and native/UI doubles. The **736 multiplayer model/protocol/TCP checks** pass. Native checks bind **43 schemas / 774 fields**, including **9 OOB-label** and **8 newspaper-contract** checks against actual original/compiled metadata. Staging in `artifacts/mp037` verifies **126 hooks/changes and 113 preserved methods**. Actual connected Unity rendering remains the acceptance comparison below.
+
+Installed in both desktop test copies with matching SHA-256 hashes: patched game `7BB8F2EF9C7D05F9A25901A28BF7EC6188BD8918B3369524D2013B3225FE9C9E`; runtime `BF6820BA2396FEC85CA10C24B3D1F4051A77513B17E31DF6F6A9FB2EEDFE5FDC`. The installed runtime passes the complete native schema, graph, snapshot and presentation checks. Existing installer backups are retained.
+
+## Connected test for v0.37
+
+1. Replace Wessels with Runyon (or another officer) on the guest while viewing the division in the OOB. Confirm its label updates alongside the detail pane without reopening, and selection, filters and scroll stay unchanged.
+2. Recruit consecutive units on the guest. Confirm the waiting popup is absent, repeated clicks do not create duplicates, and genuine refusals still show their reason without losing choices.
+3. Complete a policy with both games connected, including with the guest military/recruiting panel open. Confirm the policy newspaper is visible, can be dismissed once, and the host resumes only after the required acknowledgements. Also test the local deactivate-newspapers option and subsequent issues.
+
+## Earlier build: v0.36
+
 # GTIP MP Test v0.36 — native uniform lookup, recruiting isolation and commander portraits
 
 Both copies require **v0.36 / protocol 27**. Restart both games before joining. This build follows the October 20, 10:47–10:57 p.m. CDT session (`20261021-034740` host and `20261021-034745` guest log names use UTC).

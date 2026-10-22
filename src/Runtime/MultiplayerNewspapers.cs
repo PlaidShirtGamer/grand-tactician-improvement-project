@@ -13,10 +13,25 @@ namespace GTIP
         bool newsCanResume;
         int guestNewsSerial;
         bool guestNewsClosed;
+        Newspaper guestNewspaper;
+        int guestNewsPrepared,guestNewsDisplayed;
+        bool guestNewsPresenting,guestNewsDeferred,guestNewsRepairLogged;
+        float guestNewsRetryAt;
+        void ClearNewspaperPresentation()
+        {
+            guestNewspaper=null;guestNewsSerial=guestNewsPrepared=guestNewsDisplayed=0;
+            guestNewsClosed=guestNewsPresenting=guestNewsDeferred=guestNewsRepairLogged=false;guestNewsRetryAt=0;
+        }
+        static string NewspaperHeadline(MpNewspaperState state)=>string.Join(" | ",state.Headlines??Array.Empty<string>());
         public static void ReplicaNewspaperShow(Newspaper target,string[] headlines,string prosa,int imgid,string imageheadline,string location,Tools.Date datefrom,bool dontcontinue)
         {
             var mp=instance;
             if(mp!=null && mp.host && mp.transport!=null && mp.phase=="live" && mp.authenticated) {
+                // UpdateShow silently returns for this local option. Such a call
+                // cannot create a multiplayer dismissal barrier for an unseen issue.
+                if(GameVars.debug_deactivatenewspapermessages) {
+                    NativeAccess.Call(target,"GTIP_Original_ReplicaNewspaperShow",headlines,prosa,imgid,imageheadline,location,datefrom,dontcontinue);return;
+                }
                 if(mp.newsBarrier.Waiting)throw new InvalidOperationException("Newspaper queue advanced before both acknowledgements.");
                 // Native Close resumes the stored speed, not a fixed speed, and observes
                 // dontcontinue, the stay-paused preference and other open modal panels.
@@ -27,7 +42,7 @@ namespace GTIP
                 mp.newspaperState=new MpNewspaperState{Serial=serial,Active=true,Headlines=headlines?.ToArray(),Prosa=prosa,Image=imgid,ImageHeadline=imageheadline??"",Location=location??"",
                     Day=datefrom==null?clock.day:(int)datefrom.day,Month=datefrom==null?clock.month:(int)datefrom.month,Year=datefrom==null?clock.year:(int)datefrom.year};
                 NativeAccess.Call(target,"GTIP_Original_ReplicaNewspaperShow",headlines,prosa,imgid,imageheadline,location,datefrom,true);
-                mp.LogDiagnostic("Newspaper opened: issue="+serial+"; storedSpeed="+mp.newsResumeSpeed+"; canResume="+mp.newsCanResume+"; waiting for both players.");return;
+                mp.LogDiagnostic("Newspaper opened: issue="+serial+"; headline="+NewspaperHeadline(mp.newspaperState)+"; storedSpeed="+mp.newsResumeSpeed+"; canResume="+mp.newsCanResume+"; waiting for both players.");return;
             }
             if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaNewspaperShow",headlines,prosa,imgid,imageheadline,location,datefrom,dontcontinue);
         }
@@ -48,11 +63,10 @@ namespace GTIP
                 }
                 if(IsReplica) {
                     NativeAccess.Set(target,"dontcontinuespeed",true);
-                    if(!mp.guestNewsClosed && mp.guestNewsSerial>0) {
-                        mp.guestNewsClosed=true;
-                        mp.Send(new MpMessage{kind="news-ack",session=mp.session,unit=mp.guestNewsSerial});
-                        mp.orderStatus="Newspaper dismissed. Waiting for the host to dismiss it.";
-                    }
+                    // OnDisable also calls Close, including when another native
+                    // panel hides this one. Only a close of the active newspaper
+                    // is a player's dismissal; an implicit hide is recoverable.
+                    if(!mp.guestNewsPresenting && target.gameObject.activeInHierarchy)mp.AcknowledgeGuestNewspaper("dismissed");
                     NativeAccess.Call(target,"GTIP_Original_ReplicaNewspaperClose");return;
                 }
             }
@@ -87,15 +101,113 @@ namespace GTIP
             var row=rows.SingleOrDefault(r=>r.Kind==11);
             if(row==null)return;
             var state=ReadData<MpNewspaperState>(row);
-            if(state.Serial<guestNewsSerial || state.Serial<0 || (state.Active && (state.Serial==0 || state.Headlines==null || state.Headlines.Length>8 || state.Headlines.Any(h=>h==null) || state.Prosa==null || state.Day<1 || state.Month<1 || state.Month>12 || state.Year<1 || state.Year>9999 || state.Day>DateTime.DaysInMonth(state.Year,state.Month))))
+            if(state.Serial<guestNewsSerial || state.Serial<0 || (state.Active && (state.Serial==0 || state.Headlines==null || state.Headlines.Length>8 || state.Headlines.Any(h=>h==null) || state.Prosa==null || state.ImageHeadline==null || state.Location==null || state.Day<1 || state.Month<1 || state.Month>12 || state.Year<1 || state.Year>9999 || state.Day>DateTime.DaysInMonth(state.Year,state.Month))))
                 throw new InvalidDataException("Invalid newspaper state.");
             newspaperState=state;
-            if(!state.Active || guestNewsSerial==state.Serial)return;
-            var target=Resources.FindObjectsOfTypeAll<Newspaper>().FirstOrDefault(n=>n.gameObject.scene.IsValid());
-            if(target==null)throw new InvalidOperationException("Native newspaper controller unavailable.");
-            guestNewsSerial=state.Serial;guestNewsClosed=false;
-            NativeAccess.Call(target,"GTIP_Original_ReplicaNewspaperShow",state.Headlines,state.Prosa,state.Image,state.ImageHeadline,state.Location,new Tools.Date(state.Day,state.Month,state.Year),true);
-            LogDiagnostic("Host newspaper displayed: issue="+state.Serial);
+            if(!state.Active)return;
+            if(guestNewsSerial!=state.Serial) {
+                guestNewsSerial=state.Serial;guestNewsClosed=false;guestNewsDeferred=guestNewsRepairLogged=false;guestNewsRetryAt=0;
+                LogDiagnostic("Host newspaper received: issue="+state.Serial+"; headline="+NewspaperHeadline(state)+"; localDisabled="+GameVars.debug_deactivatenewspapermessages);
+            }
+            RefreshGuestNewspaper();
+        }
+        void AcknowledgeGuestNewspaper(string reason)
+        {
+            if(guestNewsClosed || guestNewsSerial<=0 || !newspaperState.Active || newspaperState.Serial!=guestNewsSerial)return;
+            guestNewsClosed=true;
+            Send(new MpMessage{kind="news-ack",session=session,unit=guestNewsSerial});
+            orderStatus="Newspaper dismissed. Waiting for the host to dismiss it.";
+            LogDiagnostic("Host newspaper acknowledged: issue="+guestNewsSerial+"; reason="+reason);
+        }
+        void DeferGuestNewspaper(string reason)
+        {
+            if(guestNewsDeferred)return;guestNewsDeferred=true;
+            LogDiagnostic("Host newspaper presentation pending: issue="+guestNewsSerial+"; "+reason);
+        }
+        static bool NewspaperContentPrepared(Newspaper target,MpNewspaperState state)
+        {
+            if(!Newspaper.newspapershown || target.ProsaT.text!=state.Prosa || target.ImageTitleT.text!=state.ImageHeadline || target.HeadlineT.Length<state.Headlines.Length)return false;
+            for(int i=0;i<target.HeadlineT.Length;i++)
+                if(target.HeadlineT[i]==null || target.HeadlineT[i].text!=(i<state.Headlines.Length?state.Headlines[i]:""))return false;
+            return true;
+        }
+        static bool NewspaperPanelOpen(PanelHandler handler,int id)=>id>=0 && id<handler.panel.Count && handler.panel[id].state>0;
+        static string NewspaperViewDiagnostic(PanelHandler handler,PanelHandler.Panel paper)
+        {
+            string path=paper.go.name;
+            for(var parent=paper.go.transform.parent;parent!=null;parent=parent.parent)path=parent.name+"/"+path;
+            var main=handler.cpanel_mainpanel>=0 && handler.cpanel_mainpanel<handler.panel.Count?handler.panel[handler.cpanel_mainpanel]:null;
+            string Order(PanelHandler.Panel p)=>p?.canvas==null?"none":p.canvas.sortingOrder+"/override="+p.canvas.overrideSorting;
+            return "view="+path+"; active="+paper.go.activeInHierarchy+"; panelState="+paper.state+"; alpha="+paper.alpha+
+                "; canvasAlpha="+(paper.canvasgroup==null?"none":paper.canvasgroup.alpha.ToString())+"; nativeShown="+Newspaper.newspapershown+
+                "; canvasOrder="+Order(paper)+"; militaryState="+(main==null?-1:main.state)+"; militaryCanvasOrder="+Order(main);
+        }
+        void RefreshGuestNewspaper()
+        {
+            if(!IsReplica || host || !authenticated || phase!="live" || !newspaperState.Active || guestNewsClosed || guestNewsSerial<=0)return;
+            if(GameVars.debug_deactivatenewspapermessages) {
+                AcknowledgeGuestNewspaper("local newspaper option disabled");return;
+            }
+            // A session/options menu may intentionally cover the native campaign
+            // UI. Resume presentation after it closes, without fighting that menu.
+            if(BlocksInput || CampaignEditor.BlocksInput || GuestDialogOpen)return;
+            var handler=ui?.panelhandler;
+            if(handler==null || handler.panel==null || handler.cpanel_newspaper<0 || handler.cpanel_newspaper>=handler.panel.Count) {
+                DeferGuestNewspaper("native panel controller unavailable");return;
+            }
+            if(NewspaperPanelOpen(handler,handler.cpanel_optionspanel) || NewspaperPanelOpen(handler,handler.panel_mainmenusmall))return;
+            var paper=handler.panel[handler.cpanel_newspaper];
+            if(paper.go==null) {DeferGuestNewspaper("native newspaper panel unavailable");return;}
+            // The panel owns the view to render. A scene-wide Resources search can
+            // also return an inactive/template controller that is not this panel.
+            if(guestNewspaper==null || guestNewspaper.gameObject!=paper.go)guestNewspaper=paper.go.GetComponent<Newspaper>();
+            if(guestNewspaper==null || paper.go==null) {DeferGuestNewspaper("native newspaper view unavailable");return;}
+            if(guestNewsPrepared!=guestNewsSerial) {
+                if(guestNewspaper.ProsaT==null || guestNewspaper.HeadlineT==null || guestNewspaper.DateT==null || guestNewspaper.VolumeT==null ||
+                    guestNewspaper.ProsaLocationT==null || guestNewspaper.ImageTitleT==null) {DeferGuestNewspaper("native newspaper text references unavailable");return;}
+                if(Time.realtimeSinceStartup<guestNewsRetryAt)return;
+                guestNewsRetryAt=Time.realtimeSinceStartup+1;
+                int number=NativeAccess.Get<int>(guestNewspaper,"runningnumber");
+                try {
+                    guestNewsPresenting=true;
+                    var state=newspaperState;
+                    NativeAccess.Call(guestNewspaper,"GTIP_Original_ReplicaNewspaperShow",state.Headlines,state.Prosa,state.Image,state.ImageHeadline,state.Location,new Tools.Date(state.Day,state.Month,state.Year),true);
+                    if(NativeAccess.Get<int>(guestNewspaper,"runningnumber")!=unchecked(number+1) || !NewspaperContentPrepared(guestNewspaper,state)) {
+                        NativeAccess.Set(guestNewspaper,"runningnumber",number);
+                        DeferGuestNewspaper("native UpdateShow did not prepare the received content");return;
+                    }
+                    guestNewsPrepared=guestNewsSerial;
+                } catch(Exception error) {
+                    NativeAccess.Set(guestNewspaper,"runningnumber",number);
+                    DeferGuestNewspaper("native view initialization failed: "+error.GetType().Name+": "+error.Message);return;
+                } finally {guestNewsPresenting=false;}
+            }
+            // Content is prepared once per serial. A native panel can be hidden by
+            // deferred window operations while its issue remains unacknowledged.
+            // Re-show that panel, never UpdateShow/UpdateCommon: the native volume
+            // number and article body must not advance for a visibility repair.
+            bool open=paper.go.activeInHierarchy && (paper.state==1 || paper.state==2) && paper.timeremaining>0;
+            bool transparent=paper.state==2 && (paper.alpha<=0 || paper.canvasgroup!=null && paper.canvasgroup.alpha<=0);
+            if(!open || !Newspaper.newspapershown || transparent) {
+                try {
+                    guestNewsPresenting=true;
+                    int previous=paper.state;bool active=paper.go.activeInHierarchy;
+                    handler.ShowPanel(handler.cpanel_newspaper,100000000f,skipbuttonstatusupdate:true,skipmouseoverclearing:true);
+                    NativeAccess.Set(guestNewspaper,"dontcontinuespeed",true);Newspaper.newspapershown=true;
+                    if(!guestNewsRepairLogged) {
+                        guestNewsRepairLogged=true;
+                        LogDiagnostic("Host newspaper visibility restored: issue="+guestNewsSerial+"; previousState="+previous+"; previouslyActive="+active);
+                    }
+                } catch(Exception error) {DeferGuestNewspaper("native panel restore failed: "+error.GetType().Name+": "+error.Message);return;}
+                finally {guestNewsPresenting=false;}
+            }
+            if(paper.go.activeInHierarchy && (paper.state==1 || paper.state==2) && paper.timeremaining>0 && Newspaper.newspapershown &&
+                paper.alpha>0 && (paper.canvasgroup==null || paper.canvasgroup.alpha>0)) {
+                if(guestNewsDisplayed!=guestNewsSerial) {
+                    guestNewsDisplayed=guestNewsSerial;
+                    LogDiagnostic("Host newspaper displayed: issue="+guestNewsSerial+"; headline="+NewspaperHeadline(newspaperState)+"; "+NewspaperViewDiagnostic(handler,paper));
+                }
+            } else DeferGuestNewspaper("waiting for native panel visibility; "+NewspaperViewDiagnostic(handler,paper));
         }
     }
 }

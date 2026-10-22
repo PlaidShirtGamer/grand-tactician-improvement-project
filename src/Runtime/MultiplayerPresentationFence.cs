@@ -8,7 +8,7 @@ namespace GTIP
         void RefreshReplicaPresentation(MpStateRow[] rows)
         {
             RefreshReplicaCommanderPortraits();
-            if(!rosterUiPending)return;
+            if(!rosterUiPending){RefreshReplicaOobLabels();return;}
             rosterUiPending=false;
             MpPresentationFence.Refresh(RefreshReplicaRosterUi,()=> {
                 foreach(var row in rows)if(row.Kind<=3 && !row.Deleted) {
