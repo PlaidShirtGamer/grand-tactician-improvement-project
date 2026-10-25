@@ -104,31 +104,6 @@ namespace GTIP
             if(selected!=null && selected.alliance==instance.guestSide && instance.ids.ContainsKey(selected))instance.guestSelection=selected;
             if(EventSystem.current==null || EventSystem.current.currentSelectedGameObject==null)GameVars.deactivateshortcuts=false;
         }
-        void ReplicaLocalClose(List<RaycastResult> hits,PanelHandler handler)
-        {
-            var tooltip=HitReplicaButton(hits);
-            var log=handler.panel[handler.panel_messagelog];
-            if(tooltip!=null && log.state>0 && tooltip.transform.IsChildOf(log.go.transform) &&
-                (tooltip.name=="018_ClosePanel" || tooltip.name=="400_ClosePanel")) {
-                handler.HidePanel(log);handler.SetButtonsCondition(handler.panel[handler.panel_messagesshown],0,108);return;
-            }
-            if(tooltip!=null && tooltip.CloseThisPanelIfPressed!=null) {
-                ModularUIFunctions.OpenClosePanelStatic(tooltip.CloseThisPanelIfPressed,false,true);return;
-            }
-            // Native X buttons use Unity onClick. Invoke only known local close actions.
-            var control=hits.Select(h=>h.gameObject.GetComponentInParent<UnityEngine.UI.Button>()).FirstOrDefault(b=>b!=null);
-            if(control==null)return;
-            for(int i=0;i<control.onClick.GetPersistentEventCount();i++) {
-                var receiver=control.onClick.GetPersistentTarget(i);
-                string method=control.onClick.GetPersistentMethodName(i);
-                if(receiver is Newspaper paper && method=="Close"){paper.Close();return;}
-                if((method=="ClosePanel" || method=="OpenClosePanel") && receiver is ModularUIFunctions) {
-                    var containing=handler.panel.FirstOrDefault(p=>p.go!=null && control.transform.IsChildOf(p.go.transform) && p.state>0);
-                    if(containing!=null && containing.go.GetComponent<Options>()==null) {handler.HidePanel(containing);return;}
-                }
-                if(receiver is Messages messages && method=="CloseMessage"){messages.CloseMessage();return;}
-            }
-        }
         void OptionsInput(PanelHandler handler)
         {
             // Unity objects can be destroyed while their managed reference remains non-null.

@@ -7,7 +7,7 @@ namespace GTIP
 {
     public sealed class MpFormationState
     {
-        public int Parent, Side, Tier, Commander, Garrison, ParentRegiment,Camp,Entrenchment,Fort,SupplyIip,Telegraph;
+        public int Parent, Side, Tier, Commander, Garrison, ParentRegiment,Camp,Entrenchment,Fort,SupplyIip,Telegraph,StatusTexture;
         public bool Active, Visible, Horse, Top, Detached;
         public float X,Y,Z,Yaw;
         public float[] Colors, Contract;
@@ -62,7 +62,7 @@ namespace GTIP
             foreach(var pair in formations) {
                 var s=pair.Value;
                 if(pair.Key<=0 || s==null || s.Side<0 || s.Side>5 || s.Tier<0 || s.Tier>18 || s.Commander<0 || s.Commander>=officerCount ||
-                    s.Garrison < -1 || s.Garrison>=buildings || s.Colors==null || s.Colors.Length!=8 || s.Contract==null || s.Contract.Length!=6 ||
+                    s.Garrison < -1 || s.Garrison>=buildings || s.StatusTexture<0 || s.StatusTexture>28 || s.Colors==null || s.Colors.Length!=8 || s.Contract==null || s.Contract.Length!=6 ||
                     (s.ParentRegiment!=0 && !formations.ContainsKey(s.ParentRegiment)))throw new InvalidDataException("Invalid formation creation record: "+pair.Key);
                 if(!MpRules.Finite(s.X)||!MpRules.Finite(s.Y)||!MpRules.Finite(s.Z)||!MpRules.Finite(s.Yaw))throw new InvalidDataException("Invalid lifecycle position.");
                 var seen=new HashSet<int>();int id=pair.Key;

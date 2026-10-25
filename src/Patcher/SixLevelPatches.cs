@@ -78,6 +78,9 @@ internal static class SixLevelPatches
         Wrap("CampaignController", "Update", "ReplicaCampaign", "MultiplayerCampaign");
         Wrap("BattleUnits", "Update", "ReplicaUnits", "MultiplayerCampaign");
         Wrap("Regiment", "Update", "ReplicaRegiment", "MultiplayerCampaign");
+        MapStatusIndexPatches.Apply(game);
+        hooks.Add("Regiment native map status selector");
+        Wrap("Regiment", "UpdateUnitIconTexture", "ReplicaMapStatusIcon", "MultiplayerCampaign");
         Wrap("Regiment", "UpdateGroupStrength", "ReplicaGroupStats", "MultiplayerCampaign");
         Wrap("Nation", "UpdateUnitStatistics", "ReplicaNationStats", "MultiplayerCampaign");
         Wrap("Nation", "UpdateRecruitData", "ReplicaNationRecruitData", "MultiplayerCampaign");
@@ -267,6 +270,7 @@ internal static class SixLevelPatches
     }
     internal static void Verify(AssemblyDefinition game)
     {
+        MapStatusIndexPatches.Verify(game);
         var uniformCtor=game.MainModule.Types.Single(t=>t.Name=="CampaignMainPanel").NestedTypes.Single(t=>t.Name=="UniformSet").Methods.Single(m=>m.IsConstructor);
         var uniformPanelHooks=uniformCtor.Body.Instructions.Where(i=>i.Operand is MethodReference call && call.DeclaringType.FullName=="GTIP.MultiplayerCampaign" && call.Name=="ReplicaUniformPanel").ToArray();
         if(uniformPanelHooks.Length!=1 || uniformPanelHooks[0].Previous.Operand is not MethodReference uniformFind || uniformFind.DeclaringType.FullName!="UnityEngine.GameObject" || uniformFind.Name!="Find" ||
@@ -297,7 +301,7 @@ internal static class SixLevelPatches
                 throw new InvalidOperationException("Serialized hook failed verification: " + original.FullName);
             originals++;
         }
-        if (originals != 113) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
+        if (originals != 114) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
         var suitability = game.MainModule.Types.Single(t => t.Name == "GameVars").NestedTypes.Single(t => t.Name == "Commander")
             .Methods.Single(m => m.Name == "CheckSuitableRank" && m.Parameters[0].ParameterType.FullName == "System.Int32");
         if (suitability.Body.Instructions.Count(i => i.Operand is MethodReference r &&

@@ -154,6 +154,7 @@ namespace GTIP
                 ApplyGoods(received.Changes);ApplyMapNotices(received.Changes,incomingDataSerial==1);
                 ApplyBattles(received.Rows,received.Changes);
                 ApplyEngagement(received.Rows,received.Changes);
+                ApplyMapStatus(received.Changes);
                 if(promotionChanged)officerViewDirty=true;
                 if(received.Changes.Any(r=>r.Kind==7 || r.Kind==8))ApplyDispatches(received.Rows);
                 double adaptersReadyMs=applyTimer.Elapsed.TotalMilliseconds;

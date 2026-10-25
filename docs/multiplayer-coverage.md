@@ -51,6 +51,15 @@ The v0.34 connected report confirms recruiting uniform selection works, while ex
 
 The old v0.36 newspaper log confirms a native display call, not the cause of the reported invisible issue. The new ownership and visibility checks cover reproducible failure modes; the connected report remains necessary to establish whether that incident is resolved.
 
+## Follow-up coverage for v0.38
+
+The v0.37 connected report confirms policy newspapers now appear, but exposed a missing explicit-dismissal route. The same comparison also identified different native status symbols beside campaign units.
+
+| Contract | Added coverage | Remaining connected comparison |
+|---|---|---|
+| Dismissing a newspaper is distinct from a passive panel hide | Actual guest close router exercises the native tooltip target and persistent callbacks; dismissal is recorded before the fade; foreground graphics consume clicks; unrelated controls cannot acknowledge a paper | Close policy and battle papers with the guest first and host first; verify they stay closed, later issues open and the campaign resumes only after both dismissals |
+| Map status depends on native references as well as scalar values | Host-native status choice is replicated for guest presentation; camp/entrenchment references created outside the global building list cannot silently change the displayed status | Compare stance, camp, entrenchment, low supply, combat and fleet status symbols at the same campaign time; repeat after joining an existing save and after new entrenchments form |
+
 ## Repeatable connected scenario
 
 Use the same paused save and matching local display settings. Join, exercise the six rows above, then leave the recruiting UI open while the campaign creates an officer and unit and resolves a battle. Compare state and visible behavior immediately and after one update. Repeat at low and high compression, switch paper/3D maps, disconnect and reconnect. Preserve both logs, including the first exception stack and the new motion/apply-phase diagnostics. A release passes this scenario only when those observations are recorded; synthetic tests do not substitute for it.

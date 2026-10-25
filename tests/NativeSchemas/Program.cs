@@ -17,6 +17,7 @@ SnapshotChecks.Run(runtime,schemas);
 BattleChecks.Run(gamePath,runtimePath,schemas);
 ProductionChecks.Run(gamePath,runtimePath,schemas);
 MapPresentationChecks.Run(gamePath,runtimePath,schemas);
+MapStatusIconChecks.Run(gamePath,runtimePath);
 PoseStreamChecks.Run(gamePath,runtimePath);
 CameraRotationChecks.Run(gamePath,runtimePath);
 PresentationFenceChecks.Run(runtimePath);

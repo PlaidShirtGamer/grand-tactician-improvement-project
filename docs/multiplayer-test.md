@@ -1,3 +1,25 @@
+# GTIP MP Test v0.38 — campaign status symbols and newspaper dismissal
+
+Both copies require **v0.38 / protocol 29**. Restart both games before joining.
+
+The crown-like marks in the October 25 comparison are native entrenchment status textures (23–25); the guest's side marks are campaign stance textures (17–18). Native status selection requires a non-null entrenchment building as well as the replicated entrenchment level. `Regiment.UpdateCampsAndEntrenchments` creates these buildings through `CBuilding.Place` with `newlycreated=false`, while that method adds them to the global building list only for `newlycreated=true`. Until a native rescan, the host can therefore hold an entrenchment reference outside the global list used by world replication. The guest received the level but lost that reference and selected a different status symbol.
+
+The host now captures its native status choice and the guest applies it to the existing unit status button. The selector is extracted from the original game's status-selection instructions, preserving the full precedence for stance, cavalry orders, camps, entrenchment, double quick, garrison, low supplies, fleets, combat and siege. Its UI gate and texture-writing tail are excluded. Offline/host rendering still uses the original method; the replica render wrapper uses the authoritative choice through later native redraws. This adds one validated formation field, with no synthetic buildings or guest simulation. Both screenshots also contain overlapping Smith's Division and 2nd Division labels; they do not establish that one formation changed alliance or color.
+
+The October 25 guest log records the policy newspaper visibly displayed at `05:41:40.638 UTC`, then visibility restored from native panel state 2 at `05:41:46.114 UTC`, with no dismissal acknowledgement. The actual X uses `ButtonTooltip.CloseThisPanelIfPressed` and a generic panel fade, bypassing `Newspaper.Close`. The v0.37 visibility repair interpreted that fade as an accidental hide and reopened the undismissed issue. The guest close router now records explicit newspaper dismissal before native cleanup. It handles the native tooltip and persistent callback routes, requires the control to belong to the newspaper, and consumes only the frontmost graphic hit so a covered X cannot dismiss a paper. Passive hides remain recoverable; duplicate acknowledgements, next-issue identity and the two-player pause barrier remain enforced.
+
+Verification: **46 map-status**, **49 newspaper-presentation** and **32 replica-boundary** checks pass. The selector checks interpret the actual native selection instructions, verify serialized clone parity and reject a deliberately changed entrenchment choice. The **736 multiplayer model/protocol/TCP checks** pass. Native checks bind **43 schemas / 775 fields**, including **8 map-status** and **10 newspaper-contract** checks. Staging in `artifacts/mp038-final` verifies **128 hooks/changes and 114 preserved methods**. These checks exercise production adapters and native metadata; actual Unity rendering/input still requires the connected comparison below.
+
+Installed in both desktop test copies with matching SHA-256 hashes: patched game `264B7CD358EE545B1186C15806944A4F4A160A3152F8DD373645610DDEE9AAE7`; runtime `254E58E5137E0D95D9B40FBDDA73A8FDAC1F116C7F741C43C63E0DA941E45E66`. Existing installer backups are retained.
+
+## Connected test for v0.38
+
+1. Compare the same formation and campaign time on host and guest. Check stance, fresh camps and entrenchments, cavalry orders, low supplies, combat/siege and fleet status symbols. Include loading a checkpoint and creating a new entrenchment afterward.
+2. Complete a policy with the guest military/recruiting panel open. Close the newspaper on the guest first, then the host; repeat in the other order. Confirm it stays closed locally and campaign speed resumes only after both dismissals. Repeat for a later paper and a battle report.
+3. Cover an unread paper with options/session UI and click there. Confirm the covered X does not dismiss it, the same issue returns after the covering panel closes, and the local deactivate-newspapers option still acknowledges without displaying.
+
+## Earlier build: v0.37
+
 # GTIP MP Test v0.37 — commander labels, quieter recruitment and newspaper visibility
 
 Both copies require **v0.37 / protocol 28**. Restart both games before joining.

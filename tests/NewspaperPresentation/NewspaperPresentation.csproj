@@ -2,6 +2,7 @@
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <ItemGroup>
     <Compile Include="../../src/Runtime/MultiplayerNewspapers.cs" Link="MultiplayerNewspapers.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerLocalClose.cs" Link="MultiplayerLocalClose.cs" />
     <Compile Include="../../src/Runtime/MultiplayerManagementModel.cs" Link="MultiplayerManagementModel.cs" />
   </ItemGroup>
 </Project>

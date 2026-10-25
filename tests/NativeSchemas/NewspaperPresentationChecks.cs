@@ -23,6 +23,13 @@ static class NewspaperPresentationChecks
             "Native edition counter no longer advances inside content preparation; review delivery retries.");
         Check(Calls(native.Methods.Single(m=>m.Name=="OnDisable"),"Close"),
             "Native newspaper deactivation no longer calls the shared Close path; review implicit-hide handling.");
+        var tooltipClose=game.MainModule.Types.Single(t=>t.Name=="ButtonTooltip").Methods.Single(m=>m.Name=="CheckButtonClose");
+        Check(tooltipClose.Body.Instructions.Any(i=>i.Operand is FieldReference f && f.Name=="CloseThisPanelIfPressed") && Calls(tooltipClose,"OpenClosePanelStatic"),
+            "Native close-toolbutton no longer uses the generic window-close intent rather than Newspaper.Close.");
+        var closeIntent=bridge.Methods.Single(m=>m.Name=="GuestNewspaperCloseIntent");
+        Check(Calls(bridge.Methods.Single(m=>m.Name=="ReplicaLocalClose"),"GuestNewspaperCloseIntent") &&
+            Calls(closeIntent,"AcknowledgeGuestNewspaper") && Calls(closeIntent,"ReplicaNewspaperClose"),
+            "The actual guest close-control router must acknowledge the newspaper before native cleanup rather than only fade its window.");
         var handler=game.MainModule.Types.Single(t=>t.Name=="PanelHandler");
         Check(handler.Methods.Any(m=>Literal(m,"UI/Newspaper") && Calls(m,"GetComponent")),
             "Native PanelHandler no longer binds the canonical UI/Newspaper component.");

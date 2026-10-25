@@ -20,7 +20,7 @@ namespace GTIP
             foreach(var b in BattleUnits.cbuildings)if(b!=null && b!=CBuilding.manualplacedbuilding){buildingIds[b]=++nextBuilding;worldBuildings[nextBuilding]=b;}
         }
         void ClearWorld()
-        {ClearMotion();ClearBuildingEconomy();buildingIds.Clear();worldBuildings.Clear();canonicalBuildingIndices.Clear();nextBuilding=0;buildingIdsInitialized=false;ClearBattles();ClearNaval();ClearEngagement();ClearSightings();bottomUnit=null;bottomState=0;buildingListView=null;railroadListView=null;weaponListViews=null;productionView=null;tradeView=null;financesView=null;weaponViewDirty=false;constructionPreferences.Clear();nameEdits.Clear();}
+        {ClearMotion();ClearMapStatus();ClearBuildingEconomy();buildingIds.Clear();worldBuildings.Clear();canonicalBuildingIndices.Clear();nextBuilding=0;buildingIdsInitialized=false;ClearBattles();ClearNaval();ClearEngagement();ClearSightings();bottomUnit=null;bottomState=0;buildingListView=null;railroadListView=null;weaponListViews=null;productionView=null;tradeView=null;financesView=null;weaponViewDirty=false;constructionPreferences.Clear();nameEdits.Clear();}
         int BuildingReference(CBuilding b) => b!=null && buildingIds.TryGetValue(b,out int id)?id:0;
         int CanonicalBuildingIndex(CBuilding b) => b!=null && canonicalBuildingIndices.TryGetValue(b,out int i)?i:-1;
         void BindCheckpointBuildings(Dictionary<int,MpBuildingRecord> states)

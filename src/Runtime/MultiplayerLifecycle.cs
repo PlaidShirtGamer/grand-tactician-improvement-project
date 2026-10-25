@@ -41,7 +41,7 @@ namespace GTIP
             var p=u.transform.position;var colors=u.componentcolor;
             return new MpFormationState {Parent=ParentId(u),Side=u.alliance,Tier=u.unittyp,Commander=u.commander,
                 Garrison=CanonicalBuildingIndex(u.garrisonreference),ParentRegiment=u.parentregiment==null?0:ReferenceId(u.parentregiment.GetComponent<Regiment>()),
-                Camp=BuildingReference(u.campbuilding),Entrenchment=BuildingReference(u.entrenchment),Fort=BuildingReference(u.fortinrange),
+                Camp=BuildingReference(u.campbuilding),Entrenchment=BuildingReference(u.entrenchment),Fort=BuildingReference(u.fortinrange),StatusTexture=NativeMapStatusIndex(u),
                 SupplyIip=u.closestiipforsupply==null?0:BattleUnits.iips.IndexOf(u.closestiipforsupply)+1,Telegraph=BuildingReference(u.hastelegraphconnection),
                 Active=u.gameObject.activeSelf,Visible=Visible(u),Horse=u.ishorseartillery,Top=u.istopunit,Detached=u.permanentlydetached,
                 X=p.x,Y=p.y,Z=p.z,Yaw=u.transform.eulerAngles.y,Colors=ColorData(colors!=null && colors.Length>1?colors[1]:Color.gray).Concat(ColorData(colors!=null && colors.Length>0?colors[0]:Color.gray)).ToArray(),Contract=DateData(u.contractdate)};

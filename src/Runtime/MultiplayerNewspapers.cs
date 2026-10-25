@@ -119,6 +119,18 @@ namespace GTIP
             orderStatus="Newspaper dismissed. Waiting for the host to dismiss it.";
             LogDiagnostic("Host newspaper acknowledged: issue="+guestNewsSerial+"; reason="+reason);
         }
+        bool GuestNewspaperCloseIntent(PanelHandler handler,GameObject target)
+        {
+            if(!IsReplica || host || !authenticated || phase!="live" || target==null || handler==null ||
+                handler.cpanel_newspaper<0 || handler.cpanel_newspaper>=handler.panel.Count || handler.panel[handler.cpanel_newspaper].go!=target)return false;
+            var paper=target.GetComponent<Newspaper>();
+            if(paper==null)return false;
+            // The native X can close through ButtonTooltip/ModularUIFunctions
+            // instead of Newspaper.Close. Record that explicit user intent now,
+            // before its generic canvas fade can be mistaken for a passive hide.
+            AcknowledgeGuestNewspaper("Close Panel control");
+            ReplicaNewspaperClose(paper);return true;
+        }
         void DeferGuestNewspaper(string reason)
         {
             if(guestNewsDeferred)return;guestNewsDeferred=true;
