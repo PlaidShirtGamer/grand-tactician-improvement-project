@@ -3,6 +3,11 @@ $ErrorActionPreference = 'Stop'
 $managed = Join-Path $GameInstall 'The Civil War (1861-1865)_Data/Managed'
 if (!$OriginalAssembly) { $OriginalAssembly = Join-Path $managed 'Assembly-CSharp.dll' }
 $OriginalAssembly = (Resolve-Path -LiteralPath $OriginalAssembly).Path
+
+foreach ($suite in @('TacticalLifecycle', 'TacticalCheckpoint', 'TacticalProtocol', 'TacticalDrain', 'TacticalAuthority', 'TacticalLoadPlan', 'TacticalFingerprint', 'TacticalRuntime', 'TacticalCommands')) {
+    dotnet run --project (Join-Path $PSScriptRoot "tests/$suite/$suite.csproj") -c Release -p:UseSharedCompilation=false
+    if ($LASTEXITCODE -ne 0) { throw "$suite checks failed" }
+}
 dotnet build (Join-Path $PSScriptRoot 'src/Patcher/Patcher.csproj') -c Release -p:UseSharedCompilation=false
 if ($LASTEXITCODE -ne 0) { throw 'Patcher build failed' }
 dotnet build (Join-Path $PSScriptRoot 'src/Runtime/Runtime.csproj') -c Release "-p:GameManagedDir=$managed" "-p:OriginalAssembly=$OriginalAssembly" -p:UseSharedCompilation=false

@@ -19,6 +19,7 @@ namespace GTIP
         public static bool IsReplica => instance != null && ((instance.transport != null && !instance.host && instance.replicaReady) || instance.leavingReplica);
         public static void ReplicaSpeed(float newspeed, bool overrideminmax, bool manualset)
         {
+            if(TacticalHolding){HoldTacticalClock();return;}
             if(IsReplica)return;
             var mp=instance;
             if(mp!=null && mp.transport!=null && mp.host) {
@@ -33,29 +34,32 @@ namespace GTIP
             NativeAccess.Call(typeof(GameVars), "GTIP_Original_ReplicaSpeed", newspeed, overrideminmax, manualset);
         }
         public static void ReplicaAutocalc(Autocalc target)
-        {if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaAutocalc");else instance.ReplicaAutocalcPresentation(target);}
+        {if(TacticalHolding)return;if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaAutocalc");else instance.ReplicaAutocalcPresentation(target);}
         public static void ReplicaSave(bool saveunits, bool saveobjects, bool savecommanders, bool savecampaigndata, bool isautosave, string manualsavename)
         {
             // Saving belongs to the host; a guest has only partially replicated campaign data.
-            if(!IsReplica) NativeAccess.Call(typeof(SceneManagement),"GTIP_Original_ReplicaSave",saveunits,saveobjects,savecommanders,savecampaigndata,isautosave,manualsavename);
+            if(TacticalHolding && !TacticalNativeWrite)return;
+            if(!IsReplica || TacticalNativeWrite) NativeAccess.Call(typeof(SceneManagement),"GTIP_Original_ReplicaSave",saveunits,saveobjects,savecommanders,savecampaigndata,isautosave,manualsavename);
         }
         public static void ReplicaCampaign(CampaignController target)
-        { if (!IsReplica) NativeAccess.Call(target, "GTIP_Original_ReplicaCampaign"); }
+        { if(TryTacticalCampaign(target))return;if (!IsReplica) NativeAccess.Call(target, "GTIP_Original_ReplicaCampaign"); }
         public static void ReplicaUnits(BattleUnits target)
-        { if (!IsReplica) NativeAccess.Call(target, "GTIP_Original_ReplicaUnits"); }
+        { if(TryTacticalUnits(target))return;if (!IsReplica) NativeAccess.Call(target, "GTIP_Original_ReplicaUnits"); }
         public static void ReplicaTown(Town target)
-        { if(!IsReplica || !NativeAccess.Get<bool>(target,"initialized"))NativeAccess.Call(target,"GTIP_Original_ReplicaTown"); }
+        { if(TacticalHolding){if(!NativeAccess.Get<bool>(target,"initialized"))InitializeTactical(()=>NativeAccess.Call(target,"Initialize"));return;}if(!IsReplica || !NativeAccess.Get<bool>(target,"initialized"))NativeAccess.Call(target,"GTIP_Original_ReplicaTown"); }
         public static void ReplicaIip(IIP target)
         {
+            if(TacticalHolding){if(!NativeAccess.Get<bool>(target,"initialized"))InitializeTactical(()=>NativeAccess.Call(target,"Initialize"));return;}
             if(!IsReplica || !NativeAccess.Get<bool>(target,"initialized"))NativeAccess.Call(target,"GTIP_Original_ReplicaIip");
             else if(Camera_Battlefield.IsCamUIUpdated())NativeAccess.Call(target,"UpdatePaperMapFacing");
         }
         public static void ReplicaBuilding(CBuilding target)
-        { if(!IsReplica || !NativeAccess.Get<bool>(target,"initialized"))NativeAccess.Call(target,"GTIP_Original_ReplicaBuilding"); }
+        { if(TacticalHolding){if(!NativeAccess.Get<bool>(target,"initialized"))InitializeTactical(()=>NativeAccess.Call(target,"Initialize"));return;}if(!IsReplica || !NativeAccess.Get<bool>(target,"initialized"))NativeAccess.Call(target,"GTIP_Original_ReplicaBuilding"); }
         public static void ReplicaGroupExperience(ArmyGroup target)
-        { if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaGroupExperience"); }
+        { if(!TacticalHolding && !IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaGroupExperience"); }
         public static void ReplicaRegiment(Regiment target)
         {
+            if(TryTacticalRegiment(target))return;
             if (!IsReplica) { NativeAccess.Call(target, "GTIP_Original_ReplicaRegiment"); return; }
             if(IsRecruitPreview(target))return;
             instance.RestoreMotionSymbols();

@@ -192,6 +192,7 @@ namespace GTIP
                 Send(new MpMessage{kind="data-offer",session=session,sequence=dataSerial,baseRevision=prepared.BaseRevision,stateHash=pendingStateHash,unit=outgoingData.Length,text=MpCheckpoint.Hash(outgoingData),date=prepared.CapturedAt});
                 return;
             }
+            if(TacticalHolding && Baseline.Revision>0)return;
             if(!host || outgoingData!=null || Time.realtimeSinceStartup-lastDataSend<0.25f)return;
             lastDataSend=Time.realtimeSinceStartup;dataStarted=lastDataSend;
             var timer=System.Diagnostics.Stopwatch.StartNew();

@@ -80,7 +80,8 @@ namespace GTIP
             if(Input.GetMouseButtonDown(0) && button!=null)instance.RequestTimeButton(button.name);
             bool movementAction=clicked && instance.GuestMovementAction(button);
             bool recruitAction=clicked && instance.GuestRecruitPreviewAction(button);
-            if(clicked && button!=null && button.state!=2 && !movementAction)instance.GuestUnitAction(button.name);
+            bool tacticalAction=clicked && instance.GuestTacticalManualButton(button);
+            if(clicked && button!=null && button.state!=2 && !movementAction && !tacticalAction)instance.GuestUnitAction(button.name);
             bool logEntry=button!=null && button.name.Length>=14 && button.name.Substring(3,9)=="_LogEntry";
             bool recruitment=button!=null && instance.NativeRecruitOpen && (button.name.StartsWith("474_RecruitingRow") || button.name.StartsWith("480_Color") ||
                 new[]{"475_SwitchRecruitType","476_PrevSoldier","477_NextSoldier","478_Left","479_Right","590_RecruitInfantry","591_RecruitCavalry","592_RecruitArtillery","593_RecruitHorseArtillery","481_Recruit","482_Cancel","514_Cancel","575_InitialBrigadeSize","947_RecolorUniform"}.Contains(button.name));
@@ -92,7 +93,7 @@ namespace GTIP
                     if(b==button && b.isActiveAndEnabled) { if(!b.mouseonobject || !b.mouseonobject2)b.ActivateMouseOnObject(); }
                     else if(b.mouseonobject || b.mouseonobject2)b.DeactivateMouseOnObject();
                 }
-            bool left=allowed && !movementAction && !recruitAction && !dispatchAction && button.name!="108_MessageLog" && Input.GetMouseButtonDown(0), right=false, twice=false;
+            bool left=allowed && !movementAction && !recruitAction && !dispatchAction && !tacticalAction && button.name!="108_MessageLog" && Input.GetMouseButtonDown(0), right=false, twice=false;
             handler.UpdatePanel(ref left,ref right,ref twice);
             if(clicked)instance.ReplicaLocalClose(hits,handler);
             instance.OptionsInput(handler);
@@ -157,6 +158,7 @@ namespace GTIP
         }
         public static void ReplicaUiLate(BattleUI target)
         {
+            if(TacticalHolding)return;
             if(!IsReplica){NativeAccess.Call(target,"GTIP_Original_ReplicaUiLate");return;}
             if(BlocksInput || target.panelhandler==null)return;
             var main=NativeAccess.Get<CampaignMainPanel>(target.panelhandler,"campaignmainpanel");

@@ -92,6 +92,7 @@ namespace GTIP
         void LateUpdate()
         {
             cursorGuard.Repair("late update");
+            if(TacticalHolding){HoldTacticalClock();return;}
             if(transport==null || !authenticated || phase!="live")return;
             RefreshEconomyViews();
             if(host) {

@@ -218,11 +218,13 @@ namespace GTIP
         {
             var panel=AutoresolvePanel.autoresolvepanel;
             if(panel==null || !panel.isActiveAndEnabled)return;
-            // These active-battle commands do not have a multiplayer command
-            // route yet. Their native callback guards also reject guest mutation.
-            foreach(var button in new[]{panel.BT_PlayManually,panel.BT_AutoAssault,panel.BT_Retreat})if(button!=null) {
+            // Manual play sends a validated intent to the host. Assault and
+            // retreat retain their existing native guest mutation guards.
+            if(panel.BT_PlayManually!=null && AutoresolvePanel.autocalcrefopen!=null)
+                panel.BT_PlayManually.SetState(TacticalManualEligible(AutoresolvePanel.autocalcrefopen,guestSide)?0:2);
+            foreach(var button in new[]{panel.BT_AutoAssault,panel.BT_Retreat})if(button!=null) {
                 button.SetState(2);button.ShowTooltipForDeactivated(true);
-                button.ExchangeTooltipText("Host battle command","The host controls retreat, assault and manual battle launch during an active battle.");
+                button.ExchangeTooltipText("Host battle command","The host controls retreat and assault during an active battle.");
             }
         }
         void AddBattleEvent(Autocalc a,int kind,int purpose,bool active,Vector3 position)
@@ -239,13 +241,13 @@ namespace GTIP
         public static void ReplicaBattleStart(Autocalc target)
         {if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaBattleStart");}
         public static void ReplicaBattleMonument(BattleMonument target)
-        {if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaBattleMonument");else NativeAccess.Call(target,"UpdateBalanceBar");}
+        {if(TacticalHolding)return;if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaBattleMonument");else NativeAccess.Call(target,"UpdateBalanceBar");}
         public static void ReplicaAutocalcRetreat(Autocalc target,bool playerside)
         {if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaAutocalcRetreat",playerside);}
         public static void ReplicaAutocalcStance(Autocalc target,int stance,bool playerside)
         {if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaAutocalcStance",stance,playerside);}
         public static void ReplicaAutocalcManual(Autocalc target,bool launchedbyplayer)
-        {if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaAutocalcManual",launchedbyplayer);}
+        {if(TacticalHolding)return;if(IsReplica){if(launchedbyplayer)instance?.RequestTacticalManual(target);return;}NativeAccess.Call(target,"GTIP_Original_ReplicaAutocalcManual",launchedbyplayer);}
         public static void ReplicaBattleSound(SoundEngine target,int soundobjectid,bool activate,bool checktimer)
         {
             var mp=instance;bool observe=mp!=null && mp.host && mp.transport!=null && mp.phase=="live";

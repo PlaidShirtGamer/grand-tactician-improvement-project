@@ -92,6 +92,61 @@ MultiplayerCampaign.Preview=null;MultiplayerCampaign.ReplicaGroupStats(creating,
 Check(NativeAccess.Calls==before+2,"A closed draft no longer authorizes native aggregate simulation");
 MultiplayerCampaign.IsReplica=false;mp.BuildingPreview=true;MultiplayerCampaign.ReplicaGroupStats(unrelated,true,true,null);
 Check(NativeAccess.Calls==before+3 && hidden.X<1273.537f,"Host and offline native transfers remain active regardless of preview identity restrictions");
+
+// A paused tactical handoff applies to both peers, independently of campaign
+// replica status. Only the narrow native-construction scope may rebuild caches.
+foreach(bool guest in new[]{false,true}) {
+    mp=new MultiplayerCampaign();MultiplayerCampaign.IsReplica=guest;
+    MultiplayerCampaign.TacticalHolding=true;MultiplayerCampaign.TacticalInitializing=false;
+    string role=guest?"Guest":"Host";
+    var heldChild=new Regiment{Active=false,Morale=.4f,Readiness=.5f,Condition=.6f,
+        X=10,Y=1,Z=2,TransferX=10,TransferY=1,TransferZ=2,TransferTargetX=20,TransferTargetY=1,TransferTargetZ=2,TransferStep=.5f};
+    var heldGroup=new Regiment{Children=new[]{heldChild},GroupMorale=.4f};
+    var heldDraft=new Regiment();
+    var heldNation=new GameVars.Nation{menfielded=42};
+    var heldFleet=new Fleet();
+    mp.Register(heldChild,18);mp.Register(heldGroup,610);
+    MultiplayerCampaign.Preview=heldDraft;mp.applyingNaval=true;
+    before=NativeAccess.Calls;
+    MultiplayerCampaign.ReplicaGroupStats(heldGroup,true,true,null);
+    MultiplayerCampaign.ReplicaNationStats(heldNation,9);
+    MultiplayerCampaign.ReplicaNationRecruitData(heldNation);
+    MultiplayerCampaign.ReplicaFleetStats(heldFleet,true);
+    Check(NativeAccess.Calls==before && heldChild.X==10 && heldChild.Morale==.4f && heldChild.Readiness==.5f && heldChild.Condition==.6f,
+        role+" held tooltip refresh cannot enter aggregate simulation or move an inactive registered subordinate");
+    Check(heldNation.menfielded==42 && heldNation.Volunteers==1000 && heldFleet.Cache==42 && heldFleet.VesselStrength==7,
+        role+" held nation and fleet refresh retain authoritative pools and caches even during a naval transaction");
+    MultiplayerCampaign.ReplicaGroupStats(heldDraft,true,true,null);
+    Check(NativeAccess.Calls==before,
+        role+" a recruit-preview identity cannot authorize simulation during a tactical hold");
+
+    mp.applyingNaval=false;MultiplayerCampaign.TacticalInitializing=true;
+    MultiplayerCampaign.ReplicaGroupStats(heldGroup,true,true,null);
+    Check(NativeAccess.Calls==before+1 && heldChild.X==10.5f && heldChild.Morale>.4f && heldChild.Readiness>.5f && heldChild.Condition>.6f,
+        role+" explicit native scene construction can initialize registered aggregate caches and transfer state");
+    Check(NativeAccess.LastMethod=="GTIP_Original_ReplicaGroupStats" &&
+        (bool)NativeAccess.LastArguments[0] && (bool)NativeAccess.LastArguments[1] && NativeAccess.LastArguments[2]==null,
+        role+" native construction preserves all aggregate calculation arguments");
+    MultiplayerCampaign.ReplicaNationStats(heldNation,9);
+    Check(heldNation.menfielded==43 && NativeAccess.LastMethod=="GTIP_Original_ReplicaNationStats" && (int)NativeAccess.LastArguments[0]==9,
+        role+" native scene construction initializes the selected nation's fielded-men cache");
+    MultiplayerCampaign.ReplicaNationRecruitData(heldNation);
+    Check(heldNation.Volunteers==999 && NativeAccess.LastMethod=="GTIP_Original_ReplicaNationRecruitData" && NativeAccess.LastArguments.Length==0,
+        role+" native scene construction initializes recruitment pools through the native parameterless entry");
+    MultiplayerCampaign.ReplicaFleetStats(heldFleet,false);
+    Check(NativeAccess.Calls==before+4 && heldFleet.Cache==43 && heldFleet.VesselStrength==8 &&
+        NativeAccess.LastMethod=="GTIP_Original_ReplicaFleetStats" && !(bool)NativeAccess.LastArguments[0],
+        role+" native scene construction initializes fleet caches with the original force-update flag");
+
+    mp.applyingNaval=true;MultiplayerCampaign.TacticalInitializing=false;
+    MultiplayerCampaign.ReplicaGroupStats(heldGroup,true,true,null);
+    MultiplayerCampaign.ReplicaNationStats(heldNation,9);
+    MultiplayerCampaign.ReplicaNationRecruitData(heldNation);
+    MultiplayerCampaign.ReplicaFleetStats(heldFleet,true);
+    Check(NativeAccess.Calls==before+4 && heldChild.X==10.5f && heldNation.menfielded==43 && heldNation.Volunteers==999 && heldFleet.Cache==43 && heldFleet.VesselStrength==8,
+        role+" ending native construction immediately revokes all held aggregate, nation and fleet mutation permission");
+}
+MultiplayerCampaign.TacticalHolding=false;MultiplayerCampaign.TacticalInitializing=false;
 Console.WriteLine($"Replica boundary: {checks} checks passed using the production bridge and native-operation doubles; not a live Unity test.");
 
 public static class GameVars {public sealed class Nation {public int menfielded;public int Volunteers=1000;}}
@@ -115,7 +170,7 @@ namespace GTIP
 {
     public sealed partial class MultiplayerCampaign
     {
-        public static bool IsReplica;
+        public static bool IsReplica,TacticalHolding,TacticalInitializing;
         public static MultiplayerCampaign instance;
         public bool applyingNaval;
         public MultiplayerCampaign(){instance=this;}

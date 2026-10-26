@@ -8,7 +8,8 @@ namespace GTIP
             // condition and campaign readiness, so it is not a presentation refresh.
             // Replicas already receive its aggregate outputs from the host.
             // Recruitment previews run inside the existing save/restore transaction.
-            if(IsReplica && !IsRecruitPreview(target))return;
+            if(TacticalHolding && !TacticalInitializing)return;
+            if(IsReplica && !TacticalInitializing && !IsRecruitPreview(target))return;
             NativeAccess.Call(target,"GTIP_Original_ReplicaGroupStats",overridecalc,ignoreactivestate,ignoreactivestateonlyforthisunit);
         }
     }

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><NoWarn>CS0169;CS0414;CS0649</NoWarn></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/Runtime/MultiplayerTacticalRuntime.cs" Link="MultiplayerTacticalRuntime.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerTacticalDrain.cs" Link="MultiplayerTacticalDrain.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerTacticalSession.cs" Link="MultiplayerTacticalSession.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerTacticalModel.cs" Link="MultiplayerTacticalModel.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerProtocol.cs" Link="MultiplayerProtocol.cs" />
+    <Compile Include="../../src/Runtime/MultiplayerCodec.cs" Link="MultiplayerCodec.cs" />
+  </ItemGroup>
+</Project>

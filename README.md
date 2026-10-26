@@ -1,4 +1,6 @@
-> **mp-test branch: GTIP MP Test v0.39.** Multiplayer versioning is independent of base GTIP.
+> **battle-mp development: v0.40 / protocol 31.** An opt-in shared, paused campaign → battle → campaign scene test is wired to Play Battle. Both players wait behind a shared loading barrier. Combat is still disabled; return restores the pre-battle campaign. See the [battle implementation status](docs/battle-multiplayer.md). Native Unity acceptance is pending. Current installations retain the campaign baseline.
+>
+> **Campaign baseline: GTIP MP Test v0.39.** Multiplayer versioning is independent of base GTIP.
 > Guests join from the main menu and receive a host checkpoint. Experimental campaign adapters cover formations, sightings, construction, ships, weapons and native engagement choices, with guest actions validated on the host.
 > See [multiplayer test instructions](docs/multiplayer-test.md). Complete state replication and versus remain unfinished.
 > The installer and build kit include the supplied `Ride to Death` [main-menu music](docs/main-menu-music.md).

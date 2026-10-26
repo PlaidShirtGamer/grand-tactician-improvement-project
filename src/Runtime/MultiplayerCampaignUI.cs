@@ -12,13 +12,15 @@ namespace GTIP
         void BlockInput()
         {
             cursorGuard.Repair("multiplayer menu");
-            if (blockedModules.Length != 0) return;
             var events = EventSystem.current;
             if(events!=null) events.SetSelectedGameObject(null);
-            blockedModules = events == null ? new BaseInputModule[0] : events.GetComponents<BaseInputModule>().Where(m => m.enabled).ToArray();
+            // Rebuilds replace EventSystem too. Retain the old ownership until it
+            // is destroyed, and capture any newly enabled native input modules.
+            var current=events==null?new BaseInputModule[0]:events.GetComponents<BaseInputModule>().Where(m=>m.enabled).ToArray();
+            blockedModules=blockedModules.Where(m=>m!=null).Concat(current).Distinct().ToArray();
             foreach (var module in blockedModules) module.enabled = false;
         }
-        void RestoreInput() {cursorGuard.Repair("input restore"); if (IsReplica) return; foreach (var module in blockedModules) if (module != null) module.enabled = true; blockedModules = new BaseInputModule[0]; }
+        void RestoreInput() {cursorGuard.Repair("input restore"); if (IsReplica || TacticalHolding) return; foreach (var module in blockedModules) if (module != null) module.enabled = true; blockedModules = new BaseInputModule[0]; }
         void ClosePanel()
         {
             panel=false;
@@ -33,8 +35,8 @@ namespace GTIP
         void OnGUI()
         {
             if (!panel) {
-                DrawGuestCommands();
-                DrawGuestDialogs();
+                DrawTacticalLoading();
+                if(!TacticalHolding){DrawGuestCommands();DrawGuestDialogs();}
                 if (transport != null) DrawCompactStatus();
                 return;
             }
@@ -49,6 +51,11 @@ namespace GTIP
             if (GUILayout.Button("Close (F9 / Esc)", GUILayout.Width(130))) { ClosePanel(); }
             GUILayout.EndHorizontal();
             if (transport == null) {
+                if(tacticalFailureHeld) {
+                    GUILayout.Label("The tactical transition stopped. The native world remains paused and held.");
+                    if(host && tacticalReturnArchive!=null && GUILayout.Button("Restore pre-battle campaign offline"))Try(RecoverTacticalCampaign);
+                    GUILayout.Label(message);GUILayout.EndArea();GUI.color=oldColor;GUI.matrix=oldMatrix;return;
+                }
                 GUILayout.Label("Host a loaded campaign. Guests join from the main menu and receive an isolated host checkpoint.");
                 GUILayout.Space(12);
                 GUILayout.Label("Trusted LAN/VPN only: this prototype uses a session key over unencrypted TCP. No ports or firewall rules are opened automatically.");
@@ -63,7 +70,12 @@ namespace GTIP
                 GUILayout.Label("Hosting " + mode + " | Host: " + SideName(hostSide) + " | Guest: " + SideName(guestSide));
                 GUILayout.Label("Session key (share with your guest)"); GUILayout.TextField(token);
                 GUILayout.Label("Listening address: " + address + ":" + port);
-                GUILayout.Label("Close F9 to use the native campaign. Both players can request time changes, campaign orders, construction and engagement choices; the host validates and executes them. Saving belongs to the host. Tactical battle synchronization remains unfinished. Closing a connection pauses the host campaign.");
+                if(!TacticalHolding)tacticalProofEnabled=GUILayout.Toggle(tacticalProofEnabled,"Enable shared battle loading test (paused; battle discarded on return)");
+                if(TacticalHolding) {
+                    GUILayout.Label("Shared battle test: "+tacticalStage+". Combat and battle orders are held on both computers.");
+                    if(tacticalStage=="paused" && GUILayout.Button("Return both players to pre-battle campaign (discard test battle)"))Try(ReturnTacticalCampaign);
+                }
+                GUILayout.Label("Close F9 to use the native campaign. Either player can select Play Battle. With the shared loading test enabled, both enter a loading screen and wait for both battle scenes to be verified. Combat is not enabled yet.");
                 if (GUILayout.Button("End session and pause campaign")) End("Session ended. Campaign paused.");
             } else {
                 GUILayout.BeginHorizontal(); GUILayout.Label("Guest: " + SideName(guestSide) + " | " + mode + (snapshot == null ? " | connecting" : snapshot.paused ? " | HOST PAUSED" : " | running"));

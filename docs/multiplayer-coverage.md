@@ -64,6 +64,19 @@ The v0.37 connected report confirms policy newspapers now appear, but exposed a 
 
 The v0.38 live failure exposed an incorrect prefab assumption: the newspaper X has a native `ClosePanel` component, no Unity UI Button, and no tooltip close target. Asset inspection also places it outside the panel's usual `Background` button registry. The new bridge intercepts `ClosePanel.CheckInteraction`'s actual `DoClosePanel` target and preserves its original native cleanup. Regression cases must use this serialized component shape and exercise both accepted mouse and menu-key closes, native update order, unrelated controls, passive hides, session cleanup and the shared pause barrier. Actual connected dismissal remains pending until observed in Unity; earlier synthetic close-callback passes did not establish it.
 
+## Tactical development coverage for v0.40
+
+The local `battle-mp` candidate adds an opt-in paused scene proof; the installed campaign baseline is unchanged. See [tactical implementation status](battle-multiplayer.md) for the exact scope and activation steps. Combat and battle orders remain disabled.
+
+| Contract | Automated evidence | Connected comparison still required |
+|---|---|---|
+| Either peer requests the same manual battle | Existing guest engagement intent plus active-land-battle request validation; native host battlefield selection preserved; no guest-local battle creation | Select Play Battle from host, then repeat from guest, using both the engagement prompt and an existing eligible battle |
+| A fast peer cannot expose its scene early | Immediate opaque shared hold; final FIFO campaign fence; exact native load ticket; initialized-world/content digest; both-ready reveal; slow archive/native-load cases | Make either peer load slowly; verify both remain covered and neither can use the campaign or battlefield until readiness completes |
+| Paused loading has one guarded authority boundary | Production regiment/controller/object/weather/physics bridges, native metadata and compiled guard checks; initialized state restored before attestation | Compare participants, positions/facing, formation sections, strength/equipment/ammo/objectives and camera without combat or orders |
+| Return and failure never calculate guest results | Both load the authoritative pre-battle archive; identities and replication baselines rebuilt; generation rejects stale campaign frames; guest exits to menu and host can recover offline | Return, repeat battle entry, disconnect during each load stage and recover; confirm the pre-battle campaign is restored and paused on both peers |
+
+All four connected comparisons remain pending. The first proof discards the test battle when returning; host-owned real results and live combat are subsequent milestones.
+
 ## Repeatable connected scenario
 
 Use the same paused save and matching local display settings. Join, exercise the six rows above, then leave the recruiting UI open while the campaign creates an officer and unit and resolves a battle. Compare state and visible behavior immediately and after one update. Repeat at low and high compression, switch paper/3D maps, disconnect and reconnect. Preserve both logs, including the first exception stack and the new motion/apply-phase diagnostics. A release passes this scenario only when those observations are recorded; synthetic tests do not substitute for it.

@@ -15,6 +15,7 @@ var type=runtime.GetType("GTIP.MultiplayerCampaign",true)!;
 var schemas=(Array)type.GetProperty("DataSchemas",BindingFlags.NonPublic|BindingFlags.Static)!.GetValue(null)!;
 SnapshotChecks.Run(runtime,schemas);
 BattleChecks.Run(gamePath,runtimePath,schemas);
+TacticalContracts.Run(gamePath,runtimePath);
 ProductionChecks.Run(gamePath,runtimePath,schemas);
 MapPresentationChecks.Run(gamePath,runtimePath,schemas);
 MapStatusIconChecks.Run(gamePath,runtimePath);

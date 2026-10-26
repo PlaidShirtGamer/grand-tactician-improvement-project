@@ -12,7 +12,7 @@ namespace GTIP
     {
         static MultiplayerCampaign instance;
         static int suppressInputUntilFrame = -1;
-        public static bool BlocksInput => (instance != null && (instance.panel || instance.GuestDialogOpen)) || Time.frameCount <= suppressInputUntilFrame;
+        public static bool BlocksInput => TacticalHolding || (instance != null && (instance.panel || instance.GuestDialogOpen)) || Time.frameCount <= suppressInputUntilFrame;
         public static bool HoldsCampaignAi => instance != null && instance.transport != null && instance.host && (instance.mode == "versus" || instance.phase == "sending");
         MpTransport transport;
         BattleUI ui;
@@ -77,9 +77,10 @@ namespace GTIP
         }
         void End(string reason)
         {
+            bool tacticalGuest=EndTactical();
             cursorGuard.EndSession();
             bool wasHost = transport != null && host;
-            bool exitReplica=transport!=null && !host && (hasLiveData || replicaMutated) && root==BattleUnits.unitfolder;
+            bool exitReplica=tacticalGuest || (transport!=null && !host && (hasLiveData || replicaMutated) && root==BattleUnits.unitfolder);
             if (transport != null) {
                 LogDiagnostic(reason+" Phase="+phase);
                 LogDiagnostic("Transport queues: peakIncoming="+transport.PeakIncoming+", pendingIncoming="+transport.PendingIncoming+", pendingOutgoing="+transport.PendingOutgoing+", clocksCoalescedIn="+transport.CoalescedIncoming+", clocksCoalescedOut="+transport.CoalescedOutgoing+", heartbeatsSent="+transport.HeartbeatsSent+", heartbeatsReceived="+transport.HeartbeatsReceived);
@@ -99,11 +100,11 @@ namespace GTIP
                 // Leave without saving; a reconnect obtains the current authoritative checkpoint.
                 originalPositions.Clear();originalRotations.Clear();originalActive.Clear();originalParents.Clear();originalSiblingIndices.Clear();restoreClock=null;hostClock=null;
                 SceneManagement.batchoperation.Add(new SceneManagement.BatchOperation(SceneManagement.bo_showblackscreen));
-                SceneManagement.batchoperation.Add(new SceneManagement.BatchOperation(SceneManagement.bo_exitcampaignscenario,1));
+                SceneManagement.batchoperation.Add(new SceneManagement.BatchOperation(tacticalGuest && ui!=null && !ui.IsCampaign?SceneManagement.bo_closebattlescenario:SceneManagement.bo_exitcampaignscenario,1));
                 SceneManagement.batchoperation.Add(new SceneManagement.BatchOperation(SceneManagement.bo_rebuildscene,1));
                 SceneManagement.batchoperation.Add(new SceneManagement.BatchOperation(SceneManagement.bo_showmainmenu,2));
                 SceneManagement.batchoperation.Add(new SceneManagement.BatchOperation(SceneManagement.bo_hideblackscreen,2));
-            } else RestoreReplicaState();
+            } else if(!TacticalHolding) RestoreReplicaState();
             ClearBootstrap();leavingReplica=exitReplica;hasLiveData=false;guestSelection=null;guestSequence=0;choosingCommander=false;orderStatus="";ClosePanel();
             ids.Clear(); units.Clear(); session = null; message = reason; rejection = null;
             if (wasHost && Ready) GameVars.SetGameSpeed(0, manualset: true);
@@ -132,6 +133,7 @@ namespace GTIP
         void Update()
         {
             cursorGuard.Repair("update");
+            try {TacticalOfflineTick();} catch(Exception error){message="Tactical recovery remains held: "+error.Message;LogDiagnostic(error.ToString());}
             if(mainMenu && transport==null)cursorGuard.MainMenu();
             RestoreMotionSymbols();
             if(leavingReplica && (root!=BattleUnits.unitfolder || (ui!=null && ui.IsMainMenu))){leavingReplica=false;RestoreInput();}
@@ -149,9 +151,9 @@ namespace GTIP
             }
             if (transport == null) return;
             try {
-                if (host && (!Ready || root != BattleUnits.unitfolder || !ReferenceEquals(officers, GameVars.commander) || hostSide != GameVars.playeralliance))
+                if (!TacticalHolding && host && (!Ready || root != BattleUnits.unitfolder || !ReferenceEquals(officers, GameVars.commander) || hostSide != GameVars.playeralliance))
                 { End("Campaign changed or entered a tactical battle. Multiplayer session ended."); return; }
-                if (!host && phase=="live" && (!Ready || root!=BattleUnits.unitfolder || !ReferenceEquals(officers,GameVars.commander))) { End("Guest campaign changed. Session ended."); return; }
+                if (!TacticalHolding && !host && phase=="live" && (!Ready || root!=BattleUnits.unitfolder || !ReferenceEquals(officers,GameVars.commander))) { End("Guest campaign changed. Session ended."); return; }
                 // Drain delivered messages before observing EOF, so a rejection is not lost.
                 int count = 0;
                 while (transport != null && count++ < 8 && transport.Receive(out var payload)) Handle(MpCodec.Decode(payload));
@@ -168,6 +170,7 @@ namespace GTIP
                 }
                 if(host && phase=="waiting" && Time.realtimeSinceStartup-connectedAt>30)throw new TimeoutException("Connected peer did not submit a join request.");
                 if(phase!="live") { BootstrapTick(); return; }
+                if(TacticalTick())return;
                 DataTick();
                 if(!host) {
                     // Pick the symbol at its rendered position without moving the
@@ -187,6 +190,7 @@ namespace GTIP
         void Send(MpMessage value)
         {
             value.protocol = MpRules.Protocol;
+            if(!MpTacticalSession.IsTactical(value))value.worldGeneration=TacticalGeneration;
             string payload = MpCodec.Encode(value);
             if (value.kind == "snapshot" && !loggedSnapshot) {
                 MpRules.ValidateSnapshot(MpCodec.Decode(payload));
@@ -220,6 +224,9 @@ namespace GTIP
                 return;
             }
             if (value.session != session) throw new InvalidOperationException("Session mismatch.");
+            if(TacticalMessage(value))return;
+            if(value.worldGeneration!=TacticalGeneration){LogDiagnostic("Discarded stale campaign frame: "+value.kind);return;}
+            if(TacticalHolding && tacticalStage!="drain")return;
             if(DataMessage(value)) return;
             if(NewspaperMessage(value))return;
             if (host) {
@@ -304,7 +311,7 @@ namespace GTIP
         }
         void Execute(MpMessage value)
         {
-            if (!Ready || panel || CampaignEditor.BlocksInput) throw new InvalidOperationException("Host is editing the campaign or session is not ready.");
+            if (TacticalHolding || !Ready || panel || CampaignEditor.BlocksInput) throw new InvalidOperationException("Host is editing the campaign or session is not ready.");
             if(ExecuteNative(value))return;
             if(ExecuteGlobal(value))return;
             if (!units.TryGetValue(value.unit, out var unit) || unit == null || !BattleUnits.completeunitlist.Contains(unit)) throw new InvalidOperationException("Formation no longer exists.");

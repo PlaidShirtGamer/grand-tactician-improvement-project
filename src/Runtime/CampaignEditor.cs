@@ -49,9 +49,9 @@ namespace GTIP
             if (!BlocksInput) NativeAccess.Call(target, "GTIP_Original_EditorBattleUI");
         }
         public static void EditorCamera(Camera_Battlefield target)
-        { MultiplayerCampaign.RepairShortcutFocus(); if (!BlocksInput && !MultiplayerCampaign.BlocksInput) {if(MultiplayerCampaign.IsReplica)MultiplayerCampaign.ReplicaCamera(target);else NativeAccess.Call(target, "GTIP_Original_EditorCamera");} }
+        { MultiplayerCampaign.RepairShortcutFocus(); if(MultiplayerCampaign.TacticalInBattle && !MultiplayerCampaign.TacticalLoadingInputBlocked){MultiplayerCampaign.TacticalCamera(target);return;} if (!BlocksInput && !MultiplayerCampaign.BlocksInput) {if(MultiplayerCampaign.IsReplica)MultiplayerCampaign.ReplicaCamera(target);else NativeAccess.Call(target, "GTIP_Original_EditorCamera");} }
         public static void EditorCampaignAi(AICampaign target)
-        { if (!BlocksInput && !MultiplayerCampaign.HoldsCampaignAi && !MultiplayerCampaign.IsReplica) NativeAccess.Call(target, "GTIP_Original_EditorCampaignAi"); }
+        { if (!MultiplayerCampaign.TacticalHolding && !BlocksInput && !MultiplayerCampaign.HoldsCampaignAi && !MultiplayerCampaign.IsReplica) NativeAccess.Call(target, "GTIP_Original_EditorCampaignAi"); }
 
         void InputTick(BattleUI target)
         {

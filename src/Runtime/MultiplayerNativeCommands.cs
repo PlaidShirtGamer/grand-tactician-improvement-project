@@ -50,7 +50,7 @@ namespace GTIP
             if(mode!="coop" || guestSide!=hostSide || request.sequence<=lastSequence || request.sequence<=0 || !MpRules.Finite(request.x))throw new InvalidOperationException("Stale or unauthorized native request.");
             lastSequence=request.sequence;
             var parts=(request.text??"").Split(new[]{'|'},2);string action=parts[0],detail=parts.Length>1?parts[1]:"";
-            if(ExecuteAppearanceAction(action,request,detail) || ExecuteRouteAction(action,request,detail) || ExecuteWorldAction(action,request,detail) || ExecuteNavalAction(action,request,detail) || ExecuteEngagementAction(action,request,detail))return true;
+            if(ExecuteTacticalManual(action,request,detail) || ExecuteAppearanceAction(action,request,detail) || ExecuteRouteAction(action,request,detail) || ExecuteWorldAction(action,request,detail) || ExecuteNavalAction(action,request,detail) || ExecuteEngagementAction(action,request,detail))return true;
             if(action=="weapon-order") {
                 int weapon=(int)request.x,quantity=request.unit;
                 if(request.x!=weapon || weapon<0 || weapon>=GameVars.weapon.Length || quantity<1 || quantity>1000000 || GameVars.alliance[guestSide].weaponorders[weapon].quantity>0)throw new InvalidOperationException("Weapon order unavailable.");

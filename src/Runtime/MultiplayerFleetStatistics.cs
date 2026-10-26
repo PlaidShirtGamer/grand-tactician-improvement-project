@@ -7,7 +7,8 @@ namespace GTIP
         // that transaction reinstalls the received fleet and vessel scalars afterward.
         public static void ReplicaFleetStats(Fleet target,bool forceupdate)
         {
-            if(!IsReplica || instance.applyingNaval)NativeAccess.Call(target,"GTIP_Original_ReplicaFleetStats",forceupdate);
+            if(TacticalHolding && !TacticalInitializing)return;
+            if(!IsReplica || TacticalInitializing || instance.applyingNaval)NativeAccess.Call(target,"GTIP_Original_ReplicaFleetStats",forceupdate);
         }
     }
 }

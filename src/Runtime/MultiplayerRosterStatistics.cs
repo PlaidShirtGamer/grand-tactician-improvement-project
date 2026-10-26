@@ -7,11 +7,11 @@ namespace GTIP
         // value with a local hierarchy/preview count.
         public static void ReplicaNationStats(GameVars.Nation target,int stateid)
         {
-            if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaNationStats",stateid);
+            if((!TacticalHolding || TacticalInitializing) && (!IsReplica || TacticalInitializing))NativeAccess.Call(target,"GTIP_Original_ReplicaNationStats",stateid);
         }
         public static void ReplicaNationRecruitData(GameVars.Nation target)
         {
-            if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaNationRecruitData");
+            if((!TacticalHolding || TacticalInitializing) && (!IsReplica || TacticalInitializing))NativeAccess.Call(target,"GTIP_Original_ReplicaNationRecruitData");
         }
     }
 }

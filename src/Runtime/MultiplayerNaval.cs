@@ -131,6 +131,6 @@ namespace GTIP
             return true;
         }
         public static void ReplicaFleetUpdate(Fleet target)
-        {if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaFleetUpdate");else NativeAccess.Call(target,"UpdateModelSize");}
+        {if(TacticalHolding){if(GameVars.frame>=50 && !NativeAccess.Get<bool>(target,"initialized"))InitializeTactical(()=>NativeAccess.Call(target,"GTIP_Original_ReplicaFleetUpdate"));return;}if(!IsReplica)NativeAccess.Call(target,"GTIP_Original_ReplicaFleetUpdate");else NativeAccess.Call(target,"UpdateModelSize");}
     }
 }

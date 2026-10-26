@@ -8,7 +8,16 @@ internal static class SixLevelPatches
         var module = game.MainModule;
         var hooks = new List<string>();
         MethodReference Helper(string type, string name) => module.ImportReference(helper.MainModule.Types.Single(t => t.Name == type).Methods.Single(m => m.Name == name));
-        MethodDefinition Method(string type, string name, string? first = null,string? last=null) => Types(module.Types).Single(t => t.Name == type).Methods.Single(m => m.Name == name && (first == null || m.Parameters[0].ParameterType.Name == first) && (last==null || m.Parameters.Last().ParameterType.Name==last));
+        MethodDefinition Method(string type, string name, string? first = null,string? last=null)
+        {
+            // Native Building also has nested namesakes. Prefer the exact global
+            // type; nested-only targets such as GameVars/Nation retain name lookup.
+            var candidates=Types(module.Types).Where(t=>t.Name==type).ToArray();
+            var owner=candidates.SingleOrDefault(t=>t.FullName==type) ?? candidates.Single();
+            var matches=owner.Methods.Where(m=>m.Name==name && (first==null || m.Parameters[0].ParameterType.Name==first) && (last==null || m.Parameters.Last().ParameterType.Name==last)).ToArray();
+            if(matches.Length!=1)throw new InvalidOperationException("Expected one native hook target: "+owner.FullName+"."+name+"; found "+matches.Length+".");
+            return matches[0];
+        }
         void Wrap(string type, string name, string target, string helperType = "SixLevelRuntime", string? first = null,string? last=null)
         {
             var original = Method(type, name, first,last);
@@ -69,6 +78,23 @@ internal static class SixLevelPatches
         Wrap("AICampaign", "Update", "EditorCampaignAi", "CampaignEditor");
         Wrap("SceneManagement", "SaveAll", "ReplicaSave", "MultiplayerCampaign");
         Wrap("GameVars", "SetGameSpeed", "ReplicaSpeed", "MultiplayerCampaign");
+        Wrap("SceneManagement","PrepareLaunchingBattleFromCampaign","TacticalPrepare","MultiplayerCampaign");
+        Wrap("SceneManagement","ExitCampaignBattleAndRebuildCampaign","TacticalExit","MultiplayerCampaign");
+        Wrap("LoadingScreen","HideBlackBackground","TacticalHideBlack","MultiplayerCampaign");
+        Wrap("BattleController","Update","TacticalBattleController","MultiplayerCampaign");
+        Wrap("AIBattle","Update","TacticalBattleAi","MultiplayerCampaign");
+        Wrap("Projectile","Update","TacticalProjectile","MultiplayerCampaign");
+        Wrap("Regiment","FireBullet","TacticalFireBullet","MultiplayerCampaign");
+        Wrap("Objectives","Update","TacticalObjectives","MultiplayerCampaign");
+        Wrap("Coy","OnTriggerEnter","TacticalCoyEnter","MultiplayerCampaign");
+        Wrap("Coy","OnTriggerExit","TacticalCoyExit","MultiplayerCampaign");
+        Wrap("EntryPoint","OnTriggerEnter","TacticalEntryPointEnter","MultiplayerCampaign");
+        Wrap("Building","Update","TacticalBuilding","MultiplayerCampaign");
+        Wrap("ArmyGroup","Update","TacticalArmyGroup","MultiplayerCampaign");
+        Wrap("BattleFront","Update","TacticalBattleFront","MultiplayerCampaign");
+        Wrap("BattlefieldSetup","Update","TacticalBattlefieldSetup","MultiplayerCampaign");
+        Wrap("Weather","Update","TacticalWeather","MultiplayerCampaign");
+        Wrap("UniStormWeatherSystem_C","Update","TacticalStorm","MultiplayerCampaign");
         Wrap("PanelHandler","CheckGamePausePanel","ReplicaPausePanel","MultiplayerCampaign",first:"Panel");
         Wrap("PanelHandler","CheckGamePausePanel","ReplicaPauseObject","MultiplayerCampaign",first:"GameObject");
         Wrap("RollingText","AddNew","ReplicaMapNotice","MultiplayerCampaign");
@@ -304,7 +330,20 @@ internal static class SixLevelPatches
                 throw new InvalidOperationException("Serialized hook failed verification: " + original.FullName);
             originals++;
         }
-        if (originals != 117) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
+        if (originals != 134) throw new InvalidOperationException("Unexpected number of preserved methods: " + originals);
+        foreach(var expected in new[]{("SceneManagement","PrepareLaunchingBattleFromCampaign","TacticalPrepare"),
+            ("SceneManagement","ExitCampaignBattleAndRebuildCampaign","TacticalExit"),("LoadingScreen","HideBlackBackground","TacticalHideBlack"),
+            ("BattleController","Update","TacticalBattleController"),("AIBattle","Update","TacticalBattleAi"),("Projectile","Update","TacticalProjectile"),
+            ("Regiment","FireBullet","TacticalFireBullet"),("Objectives","Update","TacticalObjectives"),("Coy","OnTriggerEnter","TacticalCoyEnter"),
+            ("Coy","OnTriggerExit","TacticalCoyExit"),("EntryPoint","OnTriggerEnter","TacticalEntryPointEnter"),("Building","Update","TacticalBuilding"),
+            ("ArmyGroup","Update","TacticalArmyGroup"),("BattleFront","Update","TacticalBattleFront"),("BattlefieldSetup","Update","TacticalBattlefieldSetup"),
+            ("Weather","Update","TacticalWeather"),("UniStormWeatherSystem_C","Update","TacticalStorm")}) {
+            var owner=game.MainModule.Types.Single(t=>t.FullName==expected.Item1);
+            var method=owner.Methods.Single(m=>m.Name==expected.Item2);
+            if(method.Body.Instructions.Count(i=>i.OpCode==OpCodes.Call && i.Operand is MethodReference call &&
+                call.DeclaringType.FullName=="GTIP.MultiplayerCampaign" && call.Name==expected.Item3)!=1)
+                throw new InvalidOperationException("Tactical global-type binding failed: "+expected.Item1+"."+expected.Item2);
+        }
         var suitability = game.MainModule.Types.Single(t => t.Name == "GameVars").NestedTypes.Single(t => t.Name == "Commander")
             .Methods.Single(m => m.Name == "CheckSuitableRank" && m.Parameters[0].ParameterType.FullName == "System.Int32");
         if (suitability.Body.Instructions.Count(i => i.Operand is MethodReference r &&
