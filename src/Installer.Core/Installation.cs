@@ -7,7 +7,8 @@ namespace GTIP.Installer;
 public sealed class Installation
 {
     public const string ManagedDirectory = "The Civil War (1861-1865)_Data/Managed";
-    public static readonly string[] Files = ["Assembly-CSharp.dll", "GTIP.Runtime.dll", "campaignprefs.txt", "unitprefs.txt", "battleprefs.txt"];
+    const string AudioFile = "main-menu.mp3";
+    public static readonly string[] Files = ["Assembly-CSharp.dll", "GTIP.Runtime.dll", "campaignprefs.txt", "unitprefs.txt", "battleprefs.txt", AudioFile];
     readonly string root, data;
     public string Managed => Path.Combine(root, ManagedDirectory);
     string StatePath => Path.Combine(data, "state.json");
@@ -26,7 +27,7 @@ public sealed class Installation
         foreach (var f in new[] { "state.json", "state.json.tmp", "pending.json", "pending.json.tmp", "original.dll", "lock.dat" })
             CheckPath(Path.Combine(data, f));
     }
-    string Target(string file) => Path.Combine(file.EndsWith(".dll") ? Managed : Path.Combine(root, "Config"), file);
+    string Target(string file) => Path.Combine(file == AudioFile ? Path.Combine(root, "GTIP", "Audio") : file.EndsWith(".dll") ? Managed : Path.Combine(root, "Config"), file);
     void CheckPath(string path)
     {
         for (string? p = Path.GetFullPath(path); p != null; p = Path.GetDirectoryName(p))
@@ -52,7 +53,10 @@ public sealed class Installation
     {
         var state = JsonSerializer.Deserialize<State>(File.ReadAllText(path)) ?? throw new IOException("Invalid installer record.");
         if (!Guid.TryParseExact(state.Backup, "N", out _)) throw new IOException("Invalid backup identifier.");
-        if (state.Before.Count != Files.Length || Files.Any(f => !state.Before.ContainsKey(f))) throw new IOException("Incomplete backup record.");
+        // Older installers tracked the five game/runtime/preferences files only.
+        // Accept precisely that known prefix or the complete current set.
+        if ((state.Before.Count != Files.Length && state.Before.Count != Files.Length - 1) || Files.Take(state.Before.Count).Any(f => !state.Before.ContainsKey(f)))
+            throw new IOException("Incomplete backup record.");
         return state;
     }
     string BackupPath(State state, string file)
@@ -85,23 +89,23 @@ public sealed class Installation
     }
     void ValidateBackup(State state)
     {
-        foreach (var f in Files)
+        foreach (var f in state.Before.Keys)
             if (state.Before[f] is string hash && (!File.Exists(BackupPath(state, f)) || Hash(BackupPath(state, f)) != hash))
                 throw new IOException("Backup missing or changed: " + f);
     }
     void Restore(State state)
     {
         ValidateBackup(state);
-        foreach (var f in Files)
+        foreach (var f in state.Before.Keys)
         {
             if (state.Before[f] == null) File.Delete(Target(f));
-            else File.Copy(BackupPath(state, f), Target(f), true);
+            else { Directory.CreateDirectory(Path.GetDirectoryName(Target(f))!); File.Copy(BackupPath(state, f), Target(f), true); }
         }
     }
     void CheckInstalled(State state)
     {
-        if (state.Installed.Count != Files.Length) throw new IOException("Incomplete installation record.");
-        foreach (var f in Files)
+        if (state.Installed.Count != state.Before.Count) throw new IOException("Incomplete installation record.");
+        foreach (var f in state.Before.Keys)
             if (!state.Installed.TryGetValue(f, out var hash) || !File.Exists(Target(f)) || Hash(Target(f)) != hash)
                 throw new IOException("File changed since GTIP installation: " + f + ". Preserve your changes and restore the installed version before continuing.");
     }
@@ -145,7 +149,7 @@ public sealed class Installation
         PatchEngine.Stage(root, staged, runtime, original);
         foreach (var f in Files.Where(f => !f.EndsWith(".dll")))
         {
-            using var source = RuntimeCompiler.Resources.GetManifestResourceStream("Config." + f) ?? throw new IOException("Missing bundled preference " + f);
+            using var source = RuntimeCompiler.Resources.GetManifestResourceStream((f == AudioFile ? "Audio." : "Config.") + f) ?? throw new IOException("Missing bundled file " + f);
             using var destination = File.Create(Path.Combine(staged, f)); source.CopyTo(destination);
         }
         // Recheck immediately before touching installed files.
@@ -160,9 +164,17 @@ public sealed class Installation
         if (existing == null) File.Copy(original, Path.Combine(data, "original.dll"), true);
         Progress?.Invoke("Backing up and installing files...");
         Transaction(() => {
+            if (!baseline.Before.ContainsKey(AudioFile))
+            {
+                // A five-file installation has never owned this optional file.
+                // Preserve its current contents before the first managed update.
+                baseline.Before[AudioFile] = File.Exists(Target(AudioFile)) ? Hash(Target(AudioFile)) : null;
+                if (baseline.Before[AudioFile] != null) File.Copy(Target(AudioFile), BackupPath(baseline, AudioFile), true);
+            }
             for (int i = 0; i < Files.Length; i++)
             {
                 string f = Files[i];
+                Directory.CreateDirectory(Path.GetDirectoryName(Target(f))!);
                 File.Copy(Path.Combine(staged, f), Target(f), true);
                 baseline.Installed[f] = Hash(Path.Combine(staged, f));
                 if (Hash(Target(f)) != baseline.Installed[f]) throw new IOException("Verification failed: " + f);

@@ -27,7 +27,7 @@ jobs:
         run: |
           dotnet build src/Patcher/Patcher.csproj -c Release
           if ($LASTEXITCODE -ne 0) { throw 'Patcher build failed' }
-          foreach ($suite in @('Traversal', 'Formation', 'ArmyInsertion', 'AiBehavior', 'LiveEditor', 'EditorData', 'EditorFormation', 'EditorPresentation', 'Multiplayer', 'Installer')) {
+          foreach ($suite in @('Traversal', 'Formation', 'ArmyInsertion', 'AiBehavior', 'LiveEditor', 'EditorData', 'EditorFormation', 'EditorPresentation', 'Multiplayer', 'MainMenuMusic', 'Installer')) {
             dotnet run --project "tests/$suite/$suite.csproj" -c Release
             if ($LASTEXITCODE -ne 0) { throw "$suite tests failed" }
           }
@@ -80,7 +80,7 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           cat > notes.md <<'EOF'
-          Experimental GTIP Windows installer with the tested campaignprefs.txt, unitprefs.txt, and battleprefs.txt.
+          Experimental GTIP Windows installer with the tested campaignprefs.txt, unitprefs.txt, battleprefs.txt, and bundled main-menu music.
 
           Download GTIP-Setup.exe, run it, choose your supported game installation, and click Install / Update. The installer includes .NET and its compiler; no SDK or separate runtime download is required. It compiles and patches locally against your game DLLs, backs up replaced files, and includes Uninstall / Restore. The source build-kit ZIP is available separately. No game DLLs are distributed.
           EOF

@@ -30,6 +30,38 @@ static class NewspaperPresentationChecks
         Check(Calls(bridge.Methods.Single(m=>m.Name=="ReplicaLocalClose"),"GuestNewspaperCloseIntent") &&
             Calls(closeIntent,"AcknowledgeGuestNewspaper") && Calls(closeIntent,"ReplicaNewspaperClose"),
             "The actual guest close-control router must acknowledge the newspaper before native cleanup rather than only fade its window.");
+        var closeComponent=game.MainModule.Types.Single(t=>t.Name=="ClosePanel");
+        var interaction=closeComponent.Methods.Single(m=>m.Name=="CheckInteraction");
+        Check(Calls(interaction,"GetKeyDown") && Calls(interaction,"GetMouseButtonDown") &&
+            interaction.Body.Instructions.Count(i=>i.Operand is MethodReference m && m.Name=="DoClosePanel")==2 &&
+            interaction.Body.Instructions.Any(i=>i.Operand is FieldReference f && f.Name=="key_showmenu") &&
+            interaction.Body.Instructions.Any(i=>i.Operand is FieldReference f && f.Name=="ThisButtonTooltip") &&
+            interaction.Body.Instructions.Any(i=>i.Operand is FieldReference f && f.Name=="mouseonobject"),
+            "The shipped ClosePanel's mouse-hover and native menu-key producers must both enter DoClosePanel.");
+        var nativeClose=closeComponent.Methods.Single(m=>m.Name=="DoClosePanel");
+        Check(Calls(nativeClose,"GetPanelFromGameObject") && Calls(nativeClose,"HidePanel") && Calls(nativeClose,"OpenClosePanelStatic") &&
+            new[]{"PanelHandlerRef","PanelsToClose","ButtonsToDeactivate"}.All(name=>nativeClose.Body.Instructions.Any(i=>i.Operand is FieldReference f && f.Name==name)),
+            "The actual newspaper X producer must retain its registered-panel hide and native target/button arrays.");
+        Check(Calls(nativeClose,"SetState") && Calls(nativeClose,"Blink") && new[]{"mouseonobject","mouseonobject2"}.All(name=>
+            nativeClose.Body.Instructions.Any(i=>i.OpCode==OpCodes.Stfld && i.Operand is FieldReference f && f.Name==name && i.Previous.OpCode==OpCodes.Ldc_I4_0)),
+            "Native ClosePanel cleanup must continue resetting its linked buttons, blinking and both hover flags.");
+        var producer=bridge.Methods.Single(m=>m.Name=="ReplicaNewspaperClosePanel");
+        int guard=producer.Body.Instructions.ToList().FindIndex(i=>i.Operand is MethodReference m && m.Name=="GuestNativeNewspaperCloseAllowed");
+        int acknowledge=producer.Body.Instructions.ToList().FindIndex(i=>i.Operand is MethodReference m && m.Name=="AcknowledgeGuestNewspaper");
+        int original=producer.Body.Instructions.ToList().FindIndex(i=>i.OpCode==OpCodes.Ldstr && Equals(i.Operand,"GTIP_Original_ReplicaNewspaperClosePanel"));
+        Check(guard>=0 && acknowledge>guard && original>acknowledge && Calls(producer,"Call") && Calls(producer,"IsChildOf") && Calls(producer,"Contains") &&
+            new[]{"PanelHandlerRef","PanelsToClose","cpanel_newspaper"}.All(name=>producer.Body.Instructions.Any(i=>i.Operand is FieldReference f && f.Name==name)),
+            "The native producer wrapper must validate the canonical owner and accepted input, acknowledge, then retain original ClosePanel cleanup.");
+        var eligibility=bridge.Methods.Single(m=>m.Name=="GuestNativeNewspaperCloseAllowed");
+        Check(Calls(eligibility,"get_BlocksInput") && Calls(eligibility,"get_GuestDialogOpen") && Calls(eligibility,"NewspaperPanelOpen") &&
+            Calls(eligibility,"get_activeInHierarchy") && new[]{"cpanel_optionspanel","panel_mainmenusmall","cpanel_newspaper"}.All(name=>
+                eligibility.Body.Instructions.Any(i=>i.Operand is FieldReference f && f.Name==name)),
+            "A hidden paper or covering session/native modal must suppress the canonical newspaper producer.");
+        var graphicPredicates=eligibility.Body.Instructions.Where(i=>i.OpCode==OpCodes.Ldftn && i.Operand is MethodReference).Select(i=>((MethodReference)i.Operand).Resolve()).ToArray();
+        Check(Calls(eligibility,"GetKeyDown") && Calls(eligibility,"GetMouseButtonDown") && Calls(eligibility,"RaycastAll") && Calls(eligibility,"FirstOrDefault") && Calls(eligibility,"IsChildOf") &&
+            graphicPredicates.Any(m=>m.Body.Instructions.Any(i=>i.OpCode==OpCodes.Isinst && i.Operand is TypeReference t && t.FullName=="UnityEngine.UI.GraphicRaycaster")) &&
+            !eligibility.Body.Instructions.Any(i=>i.Operand is FieldReference f && f.Name=="mouseonobject"),
+            "Canonical close eligibility must accept the actual native menu key or current first graphic owned by that control, never its potentially stale hover flag.");
         var handler=game.MainModule.Types.Single(t=>t.Name=="PanelHandler");
         Check(handler.Methods.Any(m=>Literal(m,"UI/Newspaper") && Calls(m,"GetComponent")),
             "Native PanelHandler no longer binds the canonical UI/Newspaper component.");

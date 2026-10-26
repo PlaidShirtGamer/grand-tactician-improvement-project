@@ -1,6 +1,7 @@
-> **mp-test branch: GTIP MP Test v0.38.** Multiplayer versioning is independent of base GTIP.
+> **mp-test branch: GTIP MP Test v0.39.** Multiplayer versioning is independent of base GTIP.
 > Guests join from the main menu and receive a host checkpoint. Experimental campaign adapters cover formations, sightings, construction, ships, weapons and native engagement choices, with guest actions validated on the host.
 > See [multiplayer test instructions](docs/multiplayer-test.md). Complete state replication and versus remain unfinished.
+> The installer and build kit include the supplied `Ride to Death` [main-menu music](docs/main-menu-music.md).
 
 > Development branch: native in-game Aide-de-Camp integration preview (GTIP 0.3.8).
 > Press F8 in a loaded regimental main campaign. Full standalone feature parity is

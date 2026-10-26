@@ -1,3 +1,25 @@
+# GTIP MP Test v0.39 — the native newspaper close component
+
+Both copies require **v0.39 / protocol 30**. Restart both games before joining.
+
+An optional [local main-menu music override](main-menu-music.md) was installed subsequently on the same multiplayer protocol. Its notes record the newer cosmetic-runtime hashes and its separate verification; the v0.39 newspaper-only hashes below remain the original build record.
+
+The October 25 v0.38 guest log confirms issue 1 was visible at `20:57:49.560 UTC`, then restored at `20:57:53.675 UTC` without a dismissal acknowledgement. The previous fix covered inferred tooltip and Unity-button close routes, but missed the actual serialized control. Inspecting campaign asset `level45` establishes that `UI/Newspaper/018_ClosePanel` contains the native `ClosePanel` component, has no Unity UI Button, and has a null `ButtonTooltip.CloseThisPanelIfPressed` target. Its `ClosePanel.PanelsToClose` points to the canonical newspaper. The X is also a sibling of `Background`, outside the first-child button collection that `PanelHandler.Panel` normally registers. The v0.38 tests did not reproduce this real binding.
+
+Native `ClosePanel.CheckInteraction` polls the left click or menu key and calls `DoClosePanel`, which hides the target and resets its button state. A wrapper on that actual close producer now acknowledges an owned guest newspaper before the native hide starts. It validates the canonical newspaper target, control ancestry and panel-handler identity, retains the original native cleanup, and leaves passive hides on their existing recovery path. No checkpoint naming or overwrite behavior changes in this build.
+
+Verification: **78 newspaper-presentation** checks pass, including the serialized `ClosePanel` shape, native mouse/menu-key producer timing before and after guest UI routing, original cleanup, explicit dismissal versus passive hide, foreground/modal rejection and both-player pause handling. Suppressed close diagnostics record the issue, frame, reason and full first-graphic path with a bounded per-issue budget. The **736 multiplayer model/protocol/TCP checks** pass. Native checks bind **43 schemas / 775 fields**, including **16 newspaper-contract** checks against original and compiled metadata. Staging in `artifacts/mp039` verifies **129 hooks/changes and 115 preserved methods**. These checks do not exercise live Unity rendering/input; connected acceptance remains pending.
+
+Installed in both desktop test copies with matching SHA-256 hashes: patched game `5627ABDD3E03A8AADFD5E76C0D51348C8F546B0628EE2B4D8808B1C3B2B8DBE0`; runtime `F7C629FDB704F10FEEAF43C4371E7C6D8F95B61CC5895752F6AD7F4B33BA1622`. The installed runtime passes the full native contract/schema suite. Existing installer backups are retained. Actual asset binding evidence is retained locally in ignored `artifacts/mp039-native-newspaper-binding.json`.
+
+## Connected test for v0.39
+
+1. Complete a policy on a connected campaign. Close the guest's newspaper with its native X, wait through several updates and confirm it stays closed. Repeat with the host closing first and guest closing first; resume only after both dismissals.
+2. Repeat with the configured menu key, a later policy/historical paper and a battle-result newspaper. Confirm native hover/button state clears and a new issue can still open.
+3. Cover an unread paper with local menus or options, then return. Confirm the same undismissed issue recovers, and closing another panel does not acknowledge it.
+
+## Earlier build: v0.38
+
 # GTIP MP Test v0.38 — campaign status symbols and newspaper dismissal
 
 Both copies require **v0.38 / protocol 29**. Restart both games before joining.
@@ -6,7 +28,7 @@ The crown-like marks in the October 25 comparison are native entrenchment status
 
 The host now captures its native status choice and the guest applies it to the existing unit status button. The selector is extracted from the original game's status-selection instructions, preserving the full precedence for stance, cavalry orders, camps, entrenchment, double quick, garrison, low supplies, fleets, combat and siege. Its UI gate and texture-writing tail are excluded. Offline/host rendering still uses the original method; the replica render wrapper uses the authoritative choice through later native redraws. This adds one validated formation field, with no synthetic buildings or guest simulation. Both screenshots also contain overlapping Smith's Division and 2nd Division labels; they do not establish that one formation changed alliance or color.
 
-The October 25 guest log records the policy newspaper visibly displayed at `05:41:40.638 UTC`, then visibility restored from native panel state 2 at `05:41:46.114 UTC`, with no dismissal acknowledgement. The actual X uses `ButtonTooltip.CloseThisPanelIfPressed` and a generic panel fade, bypassing `Newspaper.Close`. The v0.37 visibility repair interpreted that fade as an accidental hide and reopened the undismissed issue. The guest close router now records explicit newspaper dismissal before native cleanup. It handles the native tooltip and persistent callback routes, requires the control to belong to the newspaper, and consumes only the frontmost graphic hit so a covered X cannot dismiss a paper. Passive hides remain recoverable; duplicate acknowledgements, next-issue identity and the two-player pause barrier remain enforced.
+The October 25 guest log records the policy newspaper visibly displayed at `05:41:40.638 UTC`, then visibility restored from native panel state 2 at `05:41:46.114 UTC`, with no dismissal acknowledgement. This build added acknowledgement to inferred `ButtonTooltip.CloseThisPanelIfPressed` and Unity persistent callback routes before their panel fades. It requires the control to belong to the newspaper and consumes only the frontmost graphic hit so a covered X cannot dismiss a paper. The later connected failure and v0.39 asset inspection established that the real newspaper X uses a separate `ClosePanel` component, so this fix did not cover the observed control. Passive hides, duplicate acknowledgements, next-issue identity and the two-player pause barrier retained their existing handling.
 
 Verification: **46 map-status**, **49 newspaper-presentation** and **32 replica-boundary** checks pass. The selector checks interpret the actual native selection instructions, verify serialized clone parity and reject a deliberately changed entrenchment choice. The **736 multiplayer model/protocol/TCP checks** pass. Native checks bind **43 schemas / 775 fields**, including **8 map-status** and **10 newspaper-contract** checks. Staging in `artifacts/mp038-final` verifies **128 hooks/changes and 114 preserved methods**. These checks exercise production adapters and native metadata; actual Unity rendering/input still requires the connected comparison below.
 

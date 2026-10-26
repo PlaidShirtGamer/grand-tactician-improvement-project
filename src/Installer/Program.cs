@@ -1,4 +1,5 @@
 using GTIP.Installer;
+using System.Security.Cryptography;
 
 internal static class Program
 {
@@ -12,8 +13,12 @@ internal static class Program
                 var names = RuntimeCompiler.Resources.GetManifestResourceNames();
                 if (names.Count(n => n.StartsWith("Runtime.")) < 8 || names.Count(n => n.StartsWith("Config.")) != 3 || names.Count(n => n.StartsWith("Licenses.")) < 4)
                     throw new Exception("Incomplete embedded payload");
+                using var audio = RuntimeCompiler.Resources.GetManifestResourceStream("Audio.main-menu.mp3")
+                    ?? throw new Exception("Missing bundled main-menu music");
+                if (audio.Length != 1786320 || Convert.ToHexString(SHA256.HashData(audio)) != "368B10C209D23C3146267049C903503D6E9DF19FD504109784753B0948D29196")
+                    throw new Exception("Bundled main-menu music failed integrity verification");
                 RuntimeCompiler.VerifyCompiler();
-                File.WriteAllText(args[1], "PASS: self-contained compiler, patcher, runtime source, configs and licenses load.");
+                File.WriteAllText(args[1], "PASS: self-contained compiler, patcher, runtime source, configs, main-menu MP3 and licenses load; bundled audio size and SHA-256 verified.");
                 return 0;
             }
             catch (Exception e) { File.WriteAllText(args[1], e.ToString()); return 1; }
@@ -41,7 +46,7 @@ sealed class SetupForm : Form
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); layout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         for (int i = 0; i < 7; i++) layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        var intro = new Label { Text = "Install GTIP in your Grand Tactician game folder. Existing files are backed up.\nThe three bundled preferences replace your current campaign, unit, and battle settings.", AutoSize = true, Margin = new Padding(0, 0, 0, 16) };
+        var intro = new Label { Text = "Install GTIP in your Grand Tactician game folder. Existing files are backed up.\nIncludes main-menu music and three preferences replacing your campaign, unit, and battle settings.", AutoSize = true, Margin = new Padding(0, 0, 0, 16) };
         layout.Controls.Add(intro, 0, 0); layout.SetColumnSpan(intro, 2);
         layout.Controls.Add(new Label { Text = "Game installation folder", AutoSize = true }, 0, 1);
         layout.Controls.Add(folder, 0, 2);

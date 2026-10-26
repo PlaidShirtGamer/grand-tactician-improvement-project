@@ -9,6 +9,7 @@
     <Compile Include="../Patcher/MapStatusIndexPatches.cs" Link="MapStatusIndexPatches.cs" />
     <EmbeddedResource Include="../Runtime/*.cs" LogicalName="Runtime.%(Filename)%(Extension)" />
     <EmbeddedResource Include="../../release-config/*.txt" LogicalName="Config.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../../assets/audio/main-menu.mp3" LogicalName="Audio.main-menu.mp3" />
     <EmbeddedResource Include="../../licenses/*.txt" LogicalName="Licenses.%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

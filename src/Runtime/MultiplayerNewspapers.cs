@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace GTIP
 {
@@ -17,10 +19,13 @@ namespace GTIP
         int guestNewsPrepared,guestNewsDisplayed;
         bool guestNewsPresenting,guestNewsDeferred,guestNewsRepairLogged;
         float guestNewsRetryAt;
+        int guestNewsCloseReports;
+        float guestNewsCloseReportAt;
         void ClearNewspaperPresentation()
         {
             guestNewspaper=null;guestNewsSerial=guestNewsPrepared=guestNewsDisplayed=0;
             guestNewsClosed=guestNewsPresenting=guestNewsDeferred=guestNewsRepairLogged=false;guestNewsRetryAt=0;
+            guestNewsCloseReports=0;guestNewsCloseReportAt=0;
         }
         static string NewspaperHeadline(MpNewspaperState state)=>string.Join(" | ",state.Headlines??Array.Empty<string>());
         public static void ReplicaNewspaperShow(Newspaper target,string[] headlines,string prosa,int imgid,string imageheadline,string location,Tools.Date datefrom,bool dontcontinue)
@@ -72,6 +77,58 @@ namespace GTIP
             }
             NativeAccess.Call(target,"GTIP_Original_ReplicaNewspaperClose");
         }
+        public static void ReplicaNewspaperClosePanel(ClosePanel target)
+        {
+            var mp=instance;var handler=target.PanelHandlerRef;
+            if(IsReplica && mp!=null && mp.authenticated && mp.phase=="live" && handler!=null && handler==mp.ui?.panelhandler &&
+                handler.cpanel_newspaper>=0 && handler.cpanel_newspaper<handler.panel.Count) {
+                var panel=handler.panel[handler.cpanel_newspaper];
+                if(panel.go!=null && target.transform.IsChildOf(panel.go.transform) && target.PanelsToClose!=null && target.PanelsToClose.Contains(panel.go)) {
+                    var paper=panel.go.GetComponent<Newspaper>();
+                    if(paper!=null) {
+                        if(!mp.GuestNativeNewspaperCloseAllowed(target,handler))return;
+                        // The shipped X owns a native ClosePanel component. Its
+                        // tooltip target is null and it has no Unity UI Button.
+                        // Both its mouse and menu-key paths reach DoClosePanel;
+                        // acknowledge here before the original HidePanel starts.
+                        NativeAccess.Set(paper,"dontcontinuespeed",true);
+                        mp.AcknowledgeGuestNewspaper("native ClosePanel control");
+                    }
+                }
+            }
+            NativeAccess.Call(target,"GTIP_Original_ReplicaNewspaperClosePanel");
+        }
+        bool GuestNativeNewspaperCloseAllowed(ClosePanel target,PanelHandler handler)
+        {
+            if(BlocksInput)return SuppressGuestNewspaperClose("session input blocked");
+            if(CampaignEditor.BlocksInput)return SuppressGuestNewspaperClose("campaign editor input blocked");
+            if(GuestDialogOpen)return SuppressGuestNewspaperClose("guest dialog open");
+            if(NewspaperPanelOpen(handler,handler.cpanel_optionspanel))return SuppressGuestNewspaperClose("native options open");
+            if(NewspaperPanelOpen(handler,handler.panel_mainmenusmall))return SuppressGuestNewspaperClose("native menu open");
+            if(!handler.panel[handler.cpanel_newspaper].go.activeInHierarchy)return SuppressGuestNewspaperClose("newspaper inactive");
+            if(Input.GetKeyDown(GameVars.keycodes[GameVars.key_showmenu].keycode))return true;
+            if(!Input.GetMouseButtonDown(0))return SuppressGuestNewspaperClose("no current close input");
+            if(EventSystem.current==null)return SuppressGuestNewspaperClose("event system unavailable");
+            // The native component's hover can precede the replica UI update or
+            // outlive a covering panel. Validate this current click against the
+            // front graphic owned by this exact ClosePanel, without a name list.
+            var hits=new List<RaycastResult>();
+            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current){position=Input.mousePosition},hits);
+            var front=hits.FirstOrDefault(h=>h.module is UnityEngine.UI.GraphicRaycaster).gameObject;
+            return front!=null && front.transform.IsChildOf(target.transform) || SuppressGuestNewspaperClose("close control is not the first graphic hit",front);
+        }
+        bool SuppressGuestNewspaperClose(string reason,GameObject front=null)
+        {
+            // A stale hover may repeat every frame. Keep actionable input evidence
+            // without flooding either the log or a later issue's diagnostics.
+            if(guestNewsCloseReports<4 && Time.realtimeSinceStartup>=guestNewsCloseReportAt) {
+                guestNewsCloseReports++;guestNewsCloseReportAt=Time.realtimeSinceStartup+1;
+                string path=front==null?"none":front.name;
+                if(front!=null)for(var parent=front.transform.parent;parent!=null;parent=parent.parent)path=parent.name+"/"+path;
+                LogDiagnostic("Host newspaper close suppressed: issue="+guestNewsSerial+"; frame="+Time.frameCount+"; reason="+reason+"; firstGraphic="+path);
+            }
+            return false;
+        }
         void FinishNewspaper()
         {
             if(!newspaperState.Active || newsBarrier.Waiting)return;
@@ -107,6 +164,7 @@ namespace GTIP
             if(!state.Active)return;
             if(guestNewsSerial!=state.Serial) {
                 guestNewsSerial=state.Serial;guestNewsClosed=false;guestNewsDeferred=guestNewsRepairLogged=false;guestNewsRetryAt=0;
+                guestNewsCloseReports=0;guestNewsCloseReportAt=0;
                 LogDiagnostic("Host newspaper received: issue="+state.Serial+"; headline="+NewspaperHeadline(state)+"; localDisabled="+GameVars.debug_deactivatenewspapermessages);
             }
             RefreshGuestNewspaper();

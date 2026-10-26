@@ -4,7 +4,7 @@ $root = Split-Path -Parent $PSScriptRoot
 [xml]$project = Get-Content (Join-Path $root 'src/Runtime/Runtime.csproj') -Raw
 $version = @($project.Project.PropertyGroup.Version | Where-Object { $_ })[0]
 if ($Tag -and $Tag -cne "v$version") { throw "Tag $Tag must match runtime version v$version" }
-foreach ($file in @('src/Runtime/MenuStatus.cs', 'src/Patcher/PatchEngine.cs')) {
+foreach ($file in @('src/Runtime/MultiplayerIdentity.cs')) {
     if (!(Get-Content (Join-Path $root $file) -Raw).Contains('"' + $version + '"')) { throw "Version mismatch in $file" }
 }
 $Output = [IO.Path]::GetFullPath($Output)
@@ -26,6 +26,8 @@ foreach ($folder in @('src', 'tests', 'docs', 'scripts', 'licenses')) {
     }
 }
 Copy-Item (Join-Path $root 'README.md'),(Join-Path $root 'build.ps1'),(Join-Path $root 'global.json') -Destination $stage
+New-Item -ItemType Directory -Force -Path (Join-Path $stage 'assets/audio') | Out-Null
+Copy-Item -LiteralPath (Join-Path $root 'assets/audio/main-menu.mp3') -Destination (Join-Path $stage 'assets/audio/main-menu.mp3')
 New-Item -ItemType Directory -Path (Join-Path $stage 'release-config') | Out-Null
 foreach ($file in @('campaignprefs.txt', 'unitprefs.txt', 'battleprefs.txt')) {
     Copy-Item -LiteralPath (Join-Path $root "release-config/$file") -Destination (Join-Path $stage 'release-config')

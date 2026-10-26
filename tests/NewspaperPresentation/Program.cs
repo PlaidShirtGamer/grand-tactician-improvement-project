@@ -148,19 +148,129 @@ barrierGuest.Click(barrierGuest.CloseControl(barrierGuest.Panel.go,true,"ClosePa
 Check(barrierHost.Waiting && GameVars.gamepaused,"An actual guest X click leaves the authoritative campaign paused until the host also dismisses");
 MultiplayerCampaign.ReplicaNewspaperClose(barrierHost.Paper);
 Check(!barrierHost.Waiting && !GameVars.gamepaused,"The matching routed guest acknowledgement and host dismissal release the normal two-player pause barrier");
+
+foreach(bool producerFirst in new[]{true,false}) {
+    var actual=new MultiplayerCampaign();actual.Receive(Issue(1));actual.FadeIn();actual.Tick();
+    var close=actual.NativeCloseControl(actual.Panel.go);close.ThisButtonTooltip.mouseonobject=true;
+    bool acknowledgedBeforeHide=false;close.BeforeHide=()=>acknowledgedBeforeHide=actual.Sent.Count==1;
+    Check(close.ThisButtonTooltip.CloseThisPanelIfPressed==null && close.gameObject.Button==null,
+        "The shipped newspaper X shape is reproduced with ClosePanel, a null tooltip target and no Unity Button");
+    if(producerFirst)close.NativeInteraction(mouse:true,menuKey:false);
+    actual.Click(close.gameObject);
+    if(!producerFirst)close.NativeInteraction(mouse:true,menuKey:false);
+    actual.Tick();
+    Check(actual.Sent.Count==1 && acknowledgedBeforeHide && close.NativeCloses==1 && actual.Panel.timeremaining==0,
+        "The actual native ClosePanel mouse producer acknowledges before HidePanel when it runs "+(producerFirst?"before":"after")+" replica UI routing");
+    Check(close.ThisButtonTooltip.mouseonobject==false && close.ThisButtonTooltip.mouseonobject2==false && close.ButtonsToDeactivate[0].StateResets==1,
+        "The native ClosePanel cleanup still clears hover and deactivates its configured buttons");
+    actual.Panel.go.SetActive(false);MultiplayerCampaign.ReplicaNewspaperClose(actual.Paper);actual.Tick();
+    Check(actual.Sent.Count==1 && !actual.Panel.go.activeInHierarchy && actual.Paper.Shows==1 && actual.Paper.runningnumber==2,
+        "Native fade completion and OnDisable cannot reopen or acknowledge twice after the actual ClosePanel producer");
+}
+var nativeKey=new MultiplayerCampaign();nativeKey.Receive(Issue(1));nativeKey.FadeIn();nativeKey.Tick();
+var keyClose=nativeKey.NativeCloseControl(nativeKey.Panel.go);
+keyClose.NativeInteraction(mouse:false,menuKey:true);nativeKey.Tick();
+Check(nativeKey.Sent.Count==1 && keyClose.NativeCloses==1 && nativeKey.Panel.timeremaining==0,
+    "The native menu-key path dismisses the newspaper through the same DoClosePanel producer without mouse hover");
+keyClose.NativeInteraction(mouse:false,menuKey:true);nativeKey.Tick();
+Check(nativeKey.Sent.Count==1 && nativeKey.Paper.Shows==1,
+    "Repeated native menu-key closes preserve the consumed newspaper identity");
+
+var noClick=new MultiplayerCampaign();noClick.Receive(Issue(1));noClick.FadeIn();noClick.Tick();
+var noClickControl=noClick.NativeCloseControl(noClick.Panel.go);noClickControl.NativeInteraction(mouse:true,menuKey:false);
+Check(noClick.Sent.Count==0 && noClickControl.NativeCloses==0 && noClick.Panel.timeremaining>0,
+    "The native ClosePanel producer does not run for a mouse click without its own hover eligibility");
+noClick.Handler.HidePanel(noClick.Panel);noClick.Tick();
+Check(noClick.Sent.Count==0 && noClick.Panel.timeremaining>0 && noClick.Paper.Shows==1,
+    "A passive direct HidePanel remains recoverable and cannot become an explicit newspaper acknowledgement");
+
+var foreignNative=new MultiplayerCampaign();foreignNative.Receive(Issue(1));foreignNative.FadeIn();foreignNative.Tick();
+foreignNative.MenuPanel.state=2;foreignNative.MenuPanel.go.SetActive(true);
+var foreignClose=foreignNative.NativeCloseControl(foreignNative.MenuPanel.go);foreignClose.ThisButtonTooltip.mouseonobject=true;
+foreignClose.NativeInteraction(mouse:true,menuKey:false);
+Check(foreignNative.Sent.Count==0 && foreignClose.NativeCloses==1 && foreignNative.MenuPanel.timeremaining==0,
+    "A native ClosePanel for another panel retains its original cleanup without acknowledging the newspaper");
+foreignClose.PanelsToClose=new[]{foreignNative.Panel.go};foreignClose.ThisButtonTooltip.mouseonobject=true;foreignClose.NativeInteraction(mouse:true,menuKey:false);
+Check(foreignNative.Sent.Count==0,
+    "A foreign native close component cannot acknowledge a newspaper merely by naming it in PanelsToClose");
+var wrongHandler=foreignNative.NativeCloseControl(foreignNative.Panel.go);wrongHandler.PanelHandlerRef=new PanelHandler();wrongHandler.ThisButtonTooltip.mouseonobject=true;
+wrongHandler.NativeInteraction(mouse:true,menuKey:false);
+Check(foreignNative.Sent.Count==0 && wrongHandler.NativeCloses==1,
+    "A close component bound to a different native handler cannot acknowledge the canonical newspaper");
+
+var producerHost=new MultiplayerCampaign(true);
+MultiplayerCampaign.ReplicaNewspaperShow(producerHost.Paper,new[]{"Policy enacted"},"Body",1,"","",new Tools.Date(20,3,1863),false);
+var producerGuest=new MultiplayerCampaign();producerGuest.Receive(Issue(1));producerGuest.FadeIn();producerGuest.Tick();
+var producerX=producerGuest.NativeCloseControl(producerGuest.Panel.go);producerX.ThisButtonTooltip.mouseonobject=true;producerX.NativeInteraction(mouse:true,menuKey:false);
+producerHost.Ack(producerGuest.Sent.Single().unit);
+Check(producerHost.Waiting && GameVars.gamepaused,"The actual native X producer sends its matching guest acknowledgement while retaining the host's pause barrier");
+var hostX=producerHost.NativeCloseControl(producerHost.Panel.go);hostX.ThisButtonTooltip.mouseonobject=true;hostX.NativeInteraction(mouse:true,menuKey:false);
+Check(producerHost.Waiting && hostX.NativeCloses==1 && producerHost.Sent.Count==0,
+    "Host native ClosePanel still follows its original hide path and does not manufacture a guest acknowledgement");
+producerHost.Panel.go.SetActive(false);MultiplayerCampaign.ReplicaNewspaperClose(producerHost.Paper);
+Check(!producerHost.Waiting && !GameVars.gamepaused,"The original host fade and OnDisable complete the native two-player newspaper pause barrier");
+
+var coveredNative=new MultiplayerCampaign();coveredNative.Receive(Issue(1));coveredNative.FadeIn();coveredNative.Tick();
+var coveredNativeX=coveredNative.NativeCloseControl(coveredNative.Panel.go);coveredNativeX.ThisButtonTooltip.mouseonobject=true;
+var foregroundGraphic=new GameObject("Covering graphic");foregroundGraphic.SetActive(true);coveredNative.PointAt((foregroundGraphic,true),(coveredNativeX.gameObject,true));
+coveredNativeX.NativeInteraction(mouse:true,menuKey:false);
+Check(coveredNative.Sent.Count==0 && coveredNativeX.NativeCloses==0 && coveredNative.Panel.timeremaining>0,
+    "A stale native hover behind the front graphic cannot acknowledge or hide the newspaper at the actual producer");
+Check(coveredNative.Diagnostics.Any(t=>t.StartsWith("Host newspaper close suppressed: issue=1; frame=") && t.Contains("firstGraphic=Covering graphic")),
+    "A suppressed native close records its issue, frame and actual covering graphic");
+var nativeGlyph=new GameObject("Native close glyph");nativeGlyph.transform.Parent=coveredNativeX.transform;nativeGlyph.SetActive(true);
+coveredNative.PointAt((new GameObject("Physics terrain"),false),(nativeGlyph,true));coveredNativeX.NativeInteraction(mouse:true,menuKey:false);
+Check(coveredNative.Sent.Count==1 && coveredNativeX.NativeCloses==1,
+    "A current front graphic child of the actual ClosePanel is accepted without a Unity Button or button-name lookup");
+
+var modalNative=new MultiplayerCampaign();modalNative.Receive(Issue(1));modalNative.FadeIn();modalNative.Tick();
+var modalX=modalNative.NativeCloseControl(modalNative.Panel.go);modalX.ThisButtonTooltip.mouseonobject=true;modalNative.LocalMenu=true;
+modalX.NativeInteraction(mouse:true,menuKey:false);
+Check(modalNative.Sent.Count==0 && modalX.NativeCloses==0,"A local session modal suppresses the canonical native newspaper close producer");
+Check(modalNative.Diagnostics.Any(t=>t.Contains("reason=session input blocked")),"A suppressed native close explains the local modal that owns input");
+modalNative.LocalMenu=false;modalNative.OptionsPanel.state=2;modalX.NativeInteraction(mouse:false,menuKey:true);
+Check(modalNative.Sent.Count==0 && modalX.NativeCloses==0,"The native menu key cannot dismiss the newspaper while native options cover it");
+modalNative.OptionsPanel.state=0;modalX.NativeInteraction(mouse:false,menuKey:true);
+Check(modalNative.Sent.Count==1 && modalX.NativeCloses==1,"The deliberate native menu key dismisses the same active newspaper after the covering modal closes");
+Check(modalNative.Diagnostics.Any(t=>t.Contains("reason=native ClosePanel control")),"Accepted native producer diagnostics identify the actual ClosePanel acknowledgement route");
+
+var boundedNative=new MultiplayerCampaign();boundedNative.Receive(Issue(1));boundedNative.FadeIn();boundedNative.Tick();
+var boundedX=boundedNative.NativeCloseControl(boundedNative.Panel.go);boundedX.ThisButtonTooltip.mouseonobject=true;
+var overlayParent=new GameObject("Overlay");var overlayChild=new GameObject("Foreground");overlayChild.transform.Parent=overlayParent.transform;
+boundedNative.PointAt((overlayChild,true),(boundedX.gameObject,true));
+boundedX.NativeInteraction(mouse:true,menuKey:false);boundedX.NativeInteraction(mouse:true,menuKey:false);
+Check(boundedNative.Diagnostics.Count(t=>t.StartsWith("Host newspaper close suppressed:"))==1,
+    "Suppression diagnostics are rate limited when a stale native producer repeats within the same frame");
+for(int i=0;i<8;i++){Time.realtimeSinceStartup+=2;Time.frameCount++;boundedX.NativeInteraction(mouse:true,menuKey:false);}
+Check(boundedNative.Sent.Count==0 && boundedX.NativeCloses==0 && boundedNative.Diagnostics.Count(t=>t.StartsWith("Host newspaper close suppressed:"))==4 &&
+    boundedNative.Diagnostics.Any(t=>t.Contains("firstGraphic=Overlay/Foreground")),
+    "Suppression evidence includes the full graphic path and is capped at four reports per issue");
+boundedNative.Receive(Issue(2));boundedNative.FadeIn();boundedNative.Tick();boundedX.NativeInteraction(mouse:true,menuKey:false);
+Check(boundedNative.Diagnostics.Count(t=>t.StartsWith("Host newspaper close suppressed: issue=2;"))==1,
+    "A later issue gets a fresh bounded diagnostic budget without acknowledging the covered control");
 Console.WriteLine($"Newspaper presentation: {checks} checks using production delivery and barrier code; Unity rendering and native UI callbacks are doubled.");
 
 public static class GameVars
 {
     public static bool debug_deactivatenewspapermessages,remainspausedpanelclosed,gamepaused;
     public static float gamespeed=5;
+    public const int key_showmenu=0;public sealed class KeyBinding {public UnityEngine.KeyCode keycode=UnityEngine.KeyCode.Escape;}
+    public static readonly KeyBinding[] keycodes={new()};
     public static void SetGameSpeed(float value){gamepaused=value==0;if(value>0)gamespeed=value;}
 }
 public static class Tools {public sealed class Date {public int day,month,year;public Date(int d,int m,int y){day=d;month=m;year=y;}}}
 namespace TMPro {public sealed class TextMeshProUGUI {public string text="";}}
 namespace UnityEngine
 {
-    public static class Time {public static float realtimeSinceStartup;}
+    public static class Time {public static float realtimeSinceStartup;public static int frameCount;}
+    public enum KeyCode {Escape}
+    public readonly struct Vector2 {}
+    public static class Input
+    {
+        public static bool MouseDown,MenuDown;public static Vector2 mousePosition=>new();
+        public static bool GetMouseButtonDown(int button)=>button==0&&MouseDown;
+        public static bool GetKeyDown(KeyCode key)=>key==KeyCode.Escape&&MenuDown;
+    }
     public sealed class CanvasGroup {public float alpha;}
     public sealed class Canvas {public int sortingOrder;public bool overrideSorting;}
     public sealed class Transform
@@ -171,10 +281,10 @@ namespace UnityEngine
     }
     public sealed class GameObject
     {
-        public readonly string name;public readonly Transform transform;public bool activeInHierarchy;public Newspaper Component;public ButtonTooltip Tooltip;public UnityEngine.UI.Button Button;
+        public readonly string name;public readonly Transform transform;public bool activeInHierarchy;public Newspaper Component;public ButtonTooltip Tooltip;public UnityEngine.UI.Button Button;public ClosePanel CloseControl;
         public GameObject(string value){name=value;transform=new Transform(this);}
         public void SetActive(bool active)=>activeInHierarchy=active;
-        public T GetComponent<T>() where T:class=>(Component as T)??(Tooltip as T)??(Button as T);
+        public T GetComponent<T>() where T:class=>(Component as T)??(Tooltip as T)??(Button as T)??(CloseControl as T);
         public T GetComponentInParent<T>() where T:class
         {for(var p=transform;p!=null;p=p.parent){var value=p.gameObject.GetComponent<T>();if(value!=null)return value;}return null;}
         public T GetComponentInChildren<T>(bool includeInactive) where T:class=>Component as T;
@@ -183,7 +293,16 @@ namespace UnityEngine
     public readonly struct Scene {public bool IsValid()=>true;}
     public static class Resources {public static Newspaper[] Views=Array.Empty<Newspaper>();public static T[] FindObjectsOfTypeAll<T>()=>Views.OfType<T>().ToArray();}
 }
-namespace UnityEngine.EventSystems {public struct RaycastResult {public GameObject gameObject;public object module;}}
+namespace UnityEngine.EventSystems
+{
+    public struct RaycastResult {public GameObject gameObject;public object module;}
+    public sealed class EventSystem
+    {
+        public static EventSystem current=new();public List<RaycastResult> Hits=new();
+        public void RaycastAll(PointerEventData data,List<RaycastResult> hits)=>hits.AddRange(Hits);
+    }
+    public sealed class PointerEventData {public Vector2 position;public PointerEventData(EventSystem system){}}
+}
 namespace UnityEngine.UI
 {
     public sealed class GraphicRaycaster {}
@@ -202,9 +321,29 @@ namespace UnityEngine.UI
 }
 public sealed class ButtonTooltip
 {
-    public bool isActiveAndEnabled=true;
+    public bool isActiveAndEnabled=true,mouseonobject,mouseonobject2;public int StateResets;
     public GameObject CloseThisPanelIfPressed;public readonly GameObject gameObject;public string name=>gameObject.name;public Transform transform=>gameObject.transform;
     public ButtonTooltip(GameObject go){gameObject=go;go.Tooltip=this;}
+    public void SetState(){StateResets++;}
+}
+public sealed class ClosePanel
+{
+    public readonly GameObject gameObject;public Transform transform=>gameObject.transform;
+    public PanelHandler PanelHandlerRef;public GameObject[] PanelsToClose;public ButtonTooltip[] ButtonsToDeactivate;public ButtonTooltip ThisButtonTooltip;
+    public int NativeCloses;public Action BeforeHide;
+    public ClosePanel(GameObject go){gameObject=go;go.CloseControl=this;}
+    public void NativeInteraction(bool mouse,bool menuKey)
+    {Input.MouseDown=mouse;Input.MenuDown=menuKey;if(menuKey || mouse&&ThisButtonTooltip.mouseonobject)MultiplayerCampaign.ReplicaNewspaperClosePanel(this);}
+    public void NativeDoClosePanel()
+    {
+        NativeCloses++;BeforeHide?.Invoke();
+        foreach(var go in PanelsToClose) {
+            if(PanelHandlerRef!=null) {var p=PanelHandlerRef.GetPanelFromGameObject(go);if(p!=null)PanelHandlerRef.HidePanel(p);}
+            else ModularUIFunctions.OpenClosePanelStatic(go,false,true);
+        }
+        foreach(var button in ButtonsToDeactivate)button.SetState();
+        ThisButtonTooltip.mouseonobject=ThisButtonTooltip.mouseonobject2=false;
+    }
 }
 public sealed class Options {}
 public sealed class Messages {public void CloseMessage(){}}
@@ -267,11 +406,13 @@ namespace GTIP
         public readonly List<string> Diagnostics=new();public readonly List<MpMessage> Sent=new();
         public static bool IsReplica=>instance!=null&&!instance.host;public static bool BlocksInput=>instance?.LocalMenu==true;
         public Newspaper Paper {get;}public PanelHandler.Panel Panel=>ui.panelhandler.panel[0];public PanelHandler.Panel OptionsPanel=>ui.panelhandler.panel[1];public PanelHandler.Panel MenuPanel=>ui.panelhandler.panel[2];
+        public PanelHandler Handler=>ui.panelhandler;
         public bool Waiting=>newsBarrier.Waiting;
         public string Status=>orderStatus;
         public MultiplayerCampaign(bool isHost=false)
         {
             instance=this;host=isHost;Newspaper.newspapershown=false;
+            UnityEngine.EventSystems.EventSystem.current=new();Input.MouseDown=Input.MenuDown=false;
             var handler=new PanelHandler();ui.panelhandler=handler;
             Paper=new Newspaper(new GameObject("Native newspaper")){Handler=handler};
             handler.panel.Add(new PanelHandler.Panel{go=Paper.gameObject});
@@ -289,9 +430,20 @@ namespace GTIP
             if(tooltip)new ButtonTooltip(go){CloseThisPanelIfPressed=target};
             var control=new UnityEngine.UI.Button(go);control.onClick.Callbacks.Add((receiver??new ModularUIFunctions(),method));return go;
         }
+        public ClosePanel NativeCloseControl(GameObject target)
+        {
+            instance=this;
+            var go=new GameObject("018_ClosePanel");go.transform.Parent=target.transform;go.SetActive(true);
+            var tooltip=new ButtonTooltip(go);
+            var close=new ClosePanel(go){PanelHandlerRef=ui.panelhandler,PanelsToClose=new[]{target},ThisButtonTooltip=tooltip,
+                ButtonsToDeactivate=new[]{new ButtonTooltip(new GameObject("Linked button"))}};
+            PointAt((go,true));return close;
+        }
         public void Click(params GameObject[] targets)=>ClickHits(targets.Select(target=>(target,true)).ToArray());
         public void ClickHits(params (GameObject target,bool graphic)[] targets)
-        {instance=this;ReplicaLocalClose(targets.Select(h=>new UnityEngine.EventSystems.RaycastResult{gameObject=h.target,module=h.graphic?new UnityEngine.UI.GraphicRaycaster():null}).ToList(),ui.panelhandler);}
+        {instance=this;PointAt(targets);Input.MouseDown=true;Input.MenuDown=false;ReplicaLocalClose(UnityEngine.EventSystems.EventSystem.current.Hits,ui.panelhandler);}
+        public void PointAt(params (GameObject target,bool graphic)[] targets)
+        {instance=this;UnityEngine.EventSystems.EventSystem.current.Hits=targets.Select(h=>new UnityEngine.EventSystems.RaycastResult{gameObject=h.target,module=h.graphic?new UnityEngine.UI.GraphicRaycaster():null}).ToList();}
         static ButtonTooltip HitReplicaButton(List<UnityEngine.EventSystems.RaycastResult> hits)=>hits.Select(h=>h.gameObject.Tooltip).FirstOrDefault(t=>t!=null);
         void LogDiagnostic(string text)=>Diagnostics.Add(text);void Send(MpMessage value)=>Sent.Add(value);
         T ReadData<T>(MpStateRow row) where T:class=>row.State as T;
@@ -303,6 +455,7 @@ namespace GTIP
         public static void Set(object target,string name,object value)=>target.GetType().GetField(name).SetValue(target,value);
         public static object Call(object target,string method,params object[] args)
         {
+            if(target is ClosePanel close){if(method=="GTIP_Original_ReplicaNewspaperClosePanel")close.NativeDoClosePanel();return null;}
             var paper=(Newspaper)target;
             if(method=="GTIP_Original_ReplicaNewspaperShow")paper.NativeShow(args);
             else if(method=="GTIP_Original_ReplicaNewspaperClose")paper.NativeClose();
